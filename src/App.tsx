@@ -19,6 +19,7 @@ import { differenceInDays, parseISO, format } from 'date-fns';
 
 // Pages
 import LoginPage from './pages/LoginPage';
+import LandingPage from './pages/LandingPage';
 import Dashboard from './pages/Dashboard';
 import Workouts from './pages/Workouts';
 import Progress from './pages/Progress';
@@ -208,11 +209,13 @@ export default function App() {
           <div className="min-h-screen bg-background text-on-surface font-body selection:bg-primary selection:text-on-primary">
             <Toaster position="top-center" expand={false} richColors theme="dark" />
             <Routes>
-              <Route path="/login" element={!user ? <LoginPage /> : <Navigate to="/" />} />
+              {/* Public Routes */}
+              <Route path="/" element={!user ? <LandingPage /> : <Navigate to="/dashboard" />} />
+              <Route path="/login" element={!user ? <LoginPage /> : <Navigate to="/dashboard" />} />
               
               {/* Protected Routes */}
               <Route element={user ? <Layout profile={profile}><Outlet /></Layout> : <Navigate to="/login" />}>
-                <Route path="/" element={
+                <Route path="/dashboard" element={
                   profile?.role === 'owner' ? (
                     <Navigate to="/admin" />
                   ) : profile && !profile.gymId && profile.role !== 'admin' ? (
@@ -224,7 +227,7 @@ export default function App() {
                 <Route path="/onboarding" element={
                   profile && !profile.gymId
                     ? <OnboardingPage profile={profile} onProfileUpdate={(p) => setProfile(p)} />
-                    : <Navigate to="/" />
+                    : <Navigate to="/dashboard" />
                 } />
                 <Route path="/workouts" element={<Workouts profile={profile} />} />
             <Route path="/analytics" element={<AnalyticsPage profile={profile} />} />
@@ -234,7 +237,7 @@ export default function App() {
                 <Route path="/scanner" element={<ScannerPortal />} />
                 <Route path="/scan" element={<ScanPage profile={profile} />} />
                 <Route path="/challenges" element={<Challenges profile={profile} />} />
-                <Route path="/admin" element={profile?.role === 'admin' || profile?.role === 'owner' ? <AdminPage profile={profile} /> : <Navigate to="/" />} />
+                <Route path="/admin" element={profile?.role === 'admin' || profile?.role === 'owner' ? <AdminPage profile={profile} /> : <Navigate to="/dashboard" />} />
               </Route>
 
               <Route path="*" element={<Navigate to="/" />} />
@@ -252,7 +255,7 @@ function Layout({ children, profile }: { children: React.ReactNode, profile: Use
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const baseNavItems = [
-    { path: '/', icon: Home, label: 'Home' },
+    { path: '/dashboard', icon: Home, label: 'Home' },
     { path: '/challenges', icon: Trophy, label: 'Challenges' },
     { path: '/workouts', icon: Dumbbell, label: 'Workouts' },
     { path: '/scan', icon: QrCode, label: 'Scan', primary: true },

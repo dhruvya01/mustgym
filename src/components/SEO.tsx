@@ -8,11 +8,11 @@ interface SEOProps {
 }
 
 export const SEO: React.FC<SEOProps> = ({ 
-  title = 'Yuvi Fitness Studio | Elite Gym Management', 
+  title = 'MustGym | Professional Gym Management System', 
   description = 'Elite gym management platform featuring real-time biometric attendance, AI-personalized workout plans, and comprehensive performance analytics.',
   canonical
 }) => {
-  const siteName = 'Yuvi Fitness Studio';
+  const siteName = 'MustGym';
   const fullTitle = title.includes(siteName) ? title : `${title} | ${siteName}`;
 
   return (

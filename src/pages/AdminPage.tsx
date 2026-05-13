@@ -604,14 +604,14 @@ export default function AdminPage({ profile }: { profile: UserProfile | null }) 
                 <X size={24} />
               </button>
               <h3 className="font-headline font-black text-2xl uppercase italic mb-2 text-neutral-900">Access Terminal 04</h3>
-              <p className="text-neutral-500 text-xs mb-8 uppercase tracking-widest font-bold">Main Entrance • Yuvi Fitness Studio</p>
+              <p className="text-neutral-500 text-xs mb-8 uppercase tracking-widest font-bold">Main Entrance • MustGym</p>
               
               <div className="p-4 bg-white rounded-xl shadow-inner border-2 border-neutral-100 mb-8">
-                <QRCodeSVG value={`${publicUrl}/scan?terminal=YUVI_GYM_MAIN_ENTRANCE_04`} size={200} />
+                <QRCodeSVG value={`${publicUrl}/scan?terminal=MUSTGYM_MAIN_ENTRANCE_01`} size={200} />
               </div>
               
               <p className="text-neutral-900 text-[10px] font-mono font-bold mb-4 break-all px-4">
-                {publicUrl}/scan?terminal=YUVI_GYM_MAIN_ENTRANCE_04
+                {publicUrl}/scan?terminal=MUSTGYM_MAIN_ENTRANCE_01
               </p>
               
               <p className="text-neutral-400 text-[10px] font-medium uppercase tracking-tighter">Scan this code with the member app to log attendance</p>

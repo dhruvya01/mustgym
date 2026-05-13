@@ -236,7 +236,7 @@ export default function SettingsPage({ profile }: { profile: UserProfile | null 
                   <Award size={32} className="text-primary" />
                 </div>
                 <h3 className="font-headline font-black text-2xl uppercase italic text-center">Membership Plans</h3>
-                <p className="text-xs text-on-surface-variant mt-1 text-center">Elite access to Yuvi Fitness Studio</p>
+                <p className="text-xs text-on-surface-variant mt-1 text-center">Elite access to MustGym</p>
               </div>
 
               <div className="space-y-3">

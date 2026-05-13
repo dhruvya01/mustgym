@@ -613,7 +613,7 @@ export default function Dashboard({ profile }: { profile: UserProfile | null }) 
               </p>
               <div className="flex items-center gap-2">
                 <div className="w-6 h-[1px] bg-on-primary-fixed opacity-40" />
-                <span className="text-[10px] font-bold uppercase tracking-widest opacity-60">Yuvi Fitness Philosophy</span>
+                <span className="text-[10px] font-bold uppercase tracking-widest opacity-60">MustGym Philosophy</span>
               </div>
             </div>
           </section>

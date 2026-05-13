@@ -45,7 +45,7 @@ export default function ScannerPortal() {
             <span className="text-primary-dim">VERIFICATION.</span>
           </h2>
           <p className="text-on-surface-variant font-medium text-sm max-w-md leading-relaxed mb-8">
-            Use your device's camera to scan the official Yuvi Fitness Studio QR code located at the entrance or on gym equipment.
+            Use your device's camera to scan the official MustGym QR code located at the entrance or on gym equipment.
           </p>
         </motion.div>
       </section>

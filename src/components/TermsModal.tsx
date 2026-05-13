@@ -54,7 +54,7 @@ export function TermsModal({ isOpen, onClose }: TermsModalProps) {
                   <h3 className="font-headline font-bold uppercase tracking-widest text-sm italic">1. Acceptance of Terms</h3>
                 </div>
                 <p className="text-sm text-on-surface-variant leading-relaxed">
-                  By accessing and using the Yuvi Fitness Studio application, you agree to be bound by these Terms and Conditions. If you do not agree with any part of these terms, you must not use our services.
+                  By accessing and using the MustGym application, you agree to be bound by these Terms and Conditions. If you do not agree with any part of these terms, you must not use our services.
                 </p>
               </section>
 
@@ -97,7 +97,7 @@ export function TermsModal({ isOpen, onClose }: TermsModalProps) {
                   <h3 className="font-headline font-bold uppercase tracking-widest text-sm italic">5. Intellectual Property</h3>
                 </div>
                 <p className="text-sm text-on-surface-variant leading-relaxed">
-                  All content, including the app design, workout plans, and branding, is the property of Yuvi Fitness Studio and Regulus. Unauthorized reproduction is strictly prohibited.
+                  All content, including the app design, workout plans, and branding, is the property of MustGym and its partners. Unauthorized reproduction is strictly prohibited.
                 </p>
               </section>
 

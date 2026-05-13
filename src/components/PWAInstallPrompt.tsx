@@ -75,7 +75,7 @@ export function PWAInstallPrompt() {
               
               <div className="flex-1 pr-6">
                 <h3 className="font-headline font-bold text-on-surface text-lg leading-tight mb-1">
-                  Install Yuvi Studio
+                  Install MustGym
                 </h3>
                 <p className="text-on-surface-variant text-xs leading-relaxed">
                   Add to your home screen for the full elite experience and faster access.
