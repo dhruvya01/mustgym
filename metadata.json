@@ -1,0 +1,7 @@
+{
+  "name": "Remix: MustGym",
+  "description": "I want to change this app for oprating only for one gym to multiple gym now we will get the option to creat new gym id and add old gym id in the login page there will two login page one for members and another for owner when owner ogin he should onlyy see his admin dashboard wehere he can manage everthing of his gym and in when a member will login with the spesific gym id his gym will give him that he should only see the details about his gym only ",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}

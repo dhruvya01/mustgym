@@ -1,0 +1,348 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User profile and membership details",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "description": "Firebase Auth UID" },
+        "email": { "type": "string", "format": "email" },
+        "displayName": { "type": "string" },
+        "photoURL": { "type": "string" },
+        "role": { "type": "string", "enum": ["admin", "owner", "member"] },
+        "gymId": { "type": "string", "description": "ID of the gym this user belongs to" },
+        "membershipType": { "type": "string", "enum": ["elite", "standard", "basic"] },
+        "membershipStatus": { "type": "string", "enum": ["active", "expired", "pending"] },
+        "membershipExpiry": { "type": "string", "format": "date-time" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "email", "role"]
+    },
+    "Gym": {
+      "title": "Gym",
+      "description": "Gym location details",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "ownerId": { "type": "string" },
+        "address": { "type": "string" },
+        "brandingColor": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "name", "ownerId", "createdAt"]
+    },
+    "Attendance": {
+      "title": "Attendance",
+      "description": "Attendance record for a member",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "userName": { "type": "string" },
+        "gymId": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" },
+        "checkOutTime": { "type": "string", "format": "date-time" },
+        "terminalId": { "type": "string" },
+        "isDuplicate": { "type": "boolean" },
+        "entryCount": { "type": "number" }
+      },
+      "required": ["userId", "timestamp", "gymId"]
+    },
+    "WorkoutPlan": {
+      "title": "WorkoutPlan",
+      "description": "Personalized workout plan",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "gymId": { "type": "string" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "exercises": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": { "type": "string" },
+              "sets": { "type": "number" },
+              "reps": { "type": "string" },
+              "notes": { "type": "string" }
+            }
+          }
+        },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "title", "exercises"]
+    },
+    "Equipment": {
+      "title": "Equipment",
+      "description": "Gym equipment and reservation status",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "gymId": { "type": "string" },
+        "name": { "type": "string" },
+        "status": { "type": "string", "enum": ["available", "reserved", "maintenance"] },
+        "reservedBy": { "type": "string" },
+        "reservationExpiry": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "name", "status", "gymId"]
+    },
+    "Payment": {
+      "title": "Payment",
+      "description": "Membership payment record",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "gymId": { "type": "string" },
+        "amount": { "type": "number" },
+        "currency": { "type": "string" },
+        "status": { "type": "string", "enum": ["paid", "pending", "failed"] },
+        "date": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "amount", "status", "date", "gymId"]
+    },
+    "Announcement": {
+      "title": "Announcement",
+      "description": "Gym-wide announcement or news",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "content": { "type": "string" },
+        "type": { "type": "string", "enum": ["info", "alert", "event"] },
+        "gymId": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "createdBy": { "type": "string" }
+      },
+      "required": ["title", "content", "type", "createdAt", "createdBy", "gymId"]
+    },
+    "DietPlan": {
+      "title": "DietPlan",
+      "description": "Personalized AI-powered Indian diet plan",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "gymId": { "type": "string" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "meals": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": { "type": "string" },
+              "time": { "type": "string" },
+              "items": { "type": "array", "items": { "type": "string" } },
+              "calories": { "type": "number" },
+              "protein": { "type": "string" },
+              "notes": { "type": "string" }
+            }
+          }
+        },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "title", "meals", "createdAt"]
+    },
+    "PersonalRecord": {
+      "title": "PersonalRecord",
+      "description": "User's personal record for a specific lift",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "gymId": { "type": "string" },
+        "lift": { "type": "string", "enum": ["bench", "deadlift", "squat"] },
+        "weight": { "type": "number" },
+        "date": { "type": "string", "format": "date-time" },
+        "notes": { "type": "string" }
+      },
+      "required": ["userId", "lift", "weight", "date", "gymId"]
+    },
+    "Notification": {
+      "title": "Notification",
+      "description": "User-specific notification",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "gymId": { "type": "string" },
+        "title": { "type": "string" },
+        "message": { "type": "string" },
+        "type": { "type": "string", "enum": ["info", "warning", "success", "error"] },
+        "read": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "title", "message", "type", "read", "createdAt", "gymId"]
+    },
+    "LiveAlert": {
+      "title": "LiveAlert",
+      "description": "Real-time alert for administrators",
+      "type": "object",
+      "properties": {
+        "type": { "type": "string", "enum": ["expired_scan", "security", "system"] },
+        "title": { "type": "string" },
+        "message": { "type": "string" },
+        "userId": { "type": "string" },
+        "userName": { "type": "string" },
+        "gymId": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" },
+        "resolved": { "type": "boolean" }
+      },
+      "required": ["type", "title", "message", "timestamp", "resolved", "gymId"]
+    },
+    "MemberGamification": {
+      "title": "MemberGamification",
+      "description": "User's points and total stats",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "totalPoints": { "type": "number" },
+        "level": { "type": "number" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "totalPoints", "level", "updatedAt"]
+    },
+    "BadgeDefinition": {
+      "title": "BadgeDefinition",
+      "description": "Static definition of a badge",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "icon": { "type": "string" },
+        "requirement": { "type": "string" }
+      },
+      "required": ["id", "name", "description", "requirement"]
+    },
+    "UserBadge": {
+      "title": "UserBadge",
+      "description": "Record of a badge earned by a user",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "badgeId": { "type": "string" },
+        "earnedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "badgeId", "earnedAt"]
+    },
+    "Challenge": {
+      "title": "Challenge",
+      "description": "Gym-wide fitness challenge",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "gymId": { "type": "string" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "type": { "type": "string", "enum": ["attendance", "steps", "weight", "sets"] },
+        "target": { "type": "number" },
+        "startDate": { "type": "string", "format": "date-time" },
+        "endDate": { "type": "string", "format": "date-time" },
+        "badgeId": { "type": "string" }
+      },
+      "required": ["id", "title", "type", "target", "startDate", "endDate", "gymId"]
+    },
+    "ChallengeParticipant": {
+      "title": "ChallengeParticipant",
+      "description": "User participation in a challenge",
+      "type": "object",
+      "properties": {
+        "challengeId": { "type": "string" },
+        "userId": { "type": "string" },
+        "userName": { "type": "string" },
+        "gymId": { "type": "string" },
+        "progress": { "type": "number" },
+        "completed": { "type": "boolean" },
+        "joinedAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["challengeId", "userId", "progress", "completed", "joinedAt", "gymId"]
+    },
+    "MembershipTier": {
+      "title": "MembershipTier",
+      "description": "Definition of a membership level",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "gymId": { "type": "string" },
+        "name": { "type": "string" },
+        "price": { "type": "number" },
+        "benefits": { "type": "array", "items": { "type": "string" } },
+        "accessLevel": { "type": "number", "description": "Higher number means more access" }
+      },
+      "required": ["id", "name", "price", "benefits", "gymId"]
+    }
+  },
+  "firestore": {
+    "/gyms/{gymId}": {
+      "schema": "Gym",
+      "description": "Registered gyms"
+    },
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "User profiles"
+    },
+    "/attendance/{attendanceId}": {
+      "schema": "Attendance",
+      "description": "Attendance logs"
+    },
+    "/workoutPlans/{planId}": {
+      "schema": "WorkoutPlan",
+      "description": "Workout plans"
+    },
+    "/equipment/{equipmentId}": {
+      "schema": "Equipment",
+      "description": "Equipment inventory"
+    },
+    "/payments/{paymentId}": {
+      "schema": "Payment",
+      "description": "Payment history"
+    },
+    "/announcements/{announcementId}": {
+      "schema": "Announcement",
+      "description": "Gym announcements"
+    },
+    "/dietPlans/{planId}": {
+      "schema": "DietPlan",
+      "description": "Indian diet plans"
+    },
+    "/personalRecords/{recordId}": {
+      "schema": "PersonalRecord",
+      "description": "User personal records"
+    },
+    "/notifications/{notificationId}": {
+      "schema": "Notification",
+      "description": "User notifications"
+    },
+    "/live_alerts/{alertId}": {
+      "schema": "LiveAlert",
+      "description": "Real-time admin alerts"
+    },
+    "/memberGamification/{userId}": {
+      "schema": "MemberGamification",
+      "description": "User points and levels"
+    },
+    "/badgeDefinitions/{badgeId}": {
+      "schema": "BadgeDefinition",
+      "description": "Definitions for badges"
+    },
+    "/userBadges/{userBadgeId}": {
+      "schema": "UserBadge",
+      "description": "Badges earned by users"
+    },
+    "/challenges/{challengeId}": {
+      "schema": "Challenge",
+      "description": "Fitness challenges"
+    },
+    "/challengeParticipants/{participantId}": {
+      "schema": "ChallengeParticipant",
+      "description": "User challenge tracking"
+    },
+    "/membershipTiers/{tierId}": {
+      "schema": "MembershipTier",
+      "description": "Tiers definitions"
+    },
+    "/system_settings/{settingId}": {
+      "schema": "object",
+      "description": "Application-wide settings"
+    }
+  }
+}

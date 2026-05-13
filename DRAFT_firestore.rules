@@ -1,0 +1,215 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 0. Default Deny Catch-all
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // --- Helpers ---
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isEmailVerified() {
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    // SuperAdmin explicitly allowing the developer email
+    function isSuperAdmin() {
+      return isSignedIn() && 
+             (request.auth.token.email == 'tgfhiyfvhtfghug@gmail.com') && 
+             isEmailVerified();
+    }
+
+    function getUserProfile(uid) {
+      return get(/databases/$(database)/documents/users/$(uid)).data;
+    }
+
+    function isGymOwner(gymId) {
+      // Fast path for SuperAdmin
+      if (isSuperAdmin()) { return true; }
+      if (!isSignedIn()) { return false; }
+      
+      // We check if the user doc exists first to avoid evaluation error
+      let profilePath = /databases/$(database)/documents/users/$(request.auth.uid);
+      if (!exists(profilePath)) { return false; }
+      
+      let profile = get(profilePath).data;
+      return profile.role == 'owner' && profile.gymId == gymId;
+    }
+
+    function isGymMember(gymId) {
+      if (isSuperAdmin()) { return true; }
+      if (!isSignedIn()) { return false; }
+      
+      let profilePath = /databases/$(database)/documents/users/$(request.auth.uid);
+      if (!exists(profilePath)) { return false; }
+      
+      let profile = get(profilePath).data;
+      return profile.gymId == gymId;
+    }
+
+    // --- Validation Blueprints ---
+
+    function isValidUser(data) {
+      return data.uid == request.auth.uid &&
+             data.email is string && data.email.size() <= 256 &&
+             data.displayName is string && data.displayName.size() <= 100 &&
+             data.role in ['admin', 'owner', 'member'] &&
+             (!('gymId' in data) || (data.gymId is string && data.gymId.size() <= 128)) &&
+             (!('membershipStatus' in data) || data.membershipStatus in ['active', 'expired', 'pending', 'halted']);
+    }
+
+    function isValidAttendance(data) {
+      return data.userId is string && data.userId.size() <= 128 &&
+             data.gymId is string && data.gymId.size() <= 128 &&
+             data.timestamp is string && data.timestamp.size() <= 64;
+    }
+
+    // --- Collection Rules ---
+
+    // Gyms
+    match /gyms/{gymId} {
+      allow get: if isSignedIn();
+      allow list: if isSignedIn();
+      allow create: if isSuperAdmin() || (isSignedIn() && isEmailVerified() && isValidId(gymId));
+      allow update: if isGymOwner(gymId) && 
+                      incoming().diff(existing()).affectedKeys().hasOnly(['name', 'address', 'brandingColor']);
+      allow delete: if isSuperAdmin();
+    }
+
+    // Users
+    match /users/{userId} {
+      // 1. Static self-access check
+      allow get: if isOwner(userId) || isSuperAdmin();
+      
+      // 2. Administrative access for OTHER profiles
+      allow get: if isSignedIn() && 
+                    request.auth.uid != userId && 
+                    (isSuperAdmin() || (resource != null && isGymOwner(resource.data.gymId)));
+      
+      // 3. Secure listing (Scoped to gym or SuperAdmin)
+      allow list: if isSuperAdmin() || (
+        isSignedIn() && 
+        resource != null && 
+        isGymOwner(resource.data.gymId)
+      );
+      
+      allow create: if (isOwner(userId) && isValidUser(incoming())) || isSuperAdmin();
+      
+      allow update: if isSuperAdmin() || (
+        isSignedIn() && (
+          // Self-update
+          (isOwner(userId) && (
+            incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'photoURL', 'onboardingCompleted']) ||
+            (incoming().diff(existing()).affectedKeys().hasOnly(['gymId', 'membershipStatus', 'role', 'onboardingCompleted']) &&
+             incoming().membershipStatus in ['pending', 'active'])
+          )) ||
+          // Owner/Admin path
+          (resource != null && isGymOwner(resource.data.gymId) && userId != request.auth.uid &&
+           incoming().diff(existing()).affectedKeys().hasOnly(['membershipStatus', 'membershipType', 'membershipExpiry', 'role']))
+        )
+      );
+    }
+
+    // Attendance
+    match /attendance/{atId} {
+      allow read: if isSignedIn() && (isOwner(resource.data.userId) || isGymOwner(resource.data.gymId));
+      allow create: if isSignedIn() && isEmailVerified() && incoming().userId == request.auth.uid && 
+                      isGymMember(incoming().gymId) && isValidAttendance(incoming());
+      allow update: if isSignedIn() && (
+        (isOwner(existing().userId) && incoming().diff(existing()).affectedKeys().hasOnly(['checkOutTime'])) ||
+        isGymOwner(existing().gymId)
+      );
+    }
+
+    // Equipment
+    match /equipment/{eqId} {
+      allow read: if isSignedIn(); 
+      allow create: if isGymOwner(incoming().gymId);
+      allow update: if isGymOwner(existing().gymId) || 
+                      (isSignedIn() && isGymMember(existing().gymId) &&
+                       incoming().diff(existing()).affectedKeys().hasOnly(['status', 'reservedBy', 'reservationExpiry']));
+      allow delete: if isGymOwner(existing().gymId);
+    }
+
+    // Payments
+    match /payments/{payId} {
+      allow read: if isSignedIn() && (isOwner(resource.data.userId) || isGymOwner(resource.data.gymId));
+      allow create, update: if isGymOwner(incoming().gymId || (resource != null && resource.data.gymId));
+    }
+
+    // Announcements
+    match /announcements/{annId} {
+      allow read: if isSignedIn() && (isSuperAdmin() || isGymMember(resource.data.gymId));
+      allow create, update, delete: if isGymOwner(incoming().gymId || (resource != null && resource.data.gymId));
+    }
+
+    // Challenges
+    match /challenges/{chId} {
+      allow read: if isSignedIn() && (isSuperAdmin() || isGymMember(resource.data.gymId));
+      allow write: if isGymOwner(incoming().gymId || (resource != null && resource.data.gymId));
+    }
+
+    match /challengeParticipants/{pId} {
+      allow read: if isSignedIn() && (isOwner(resource.data.userId) || isGymMember(resource.data.gymId));
+      allow create: if isSignedIn() && isEmailVerified() && (incoming().userId == request.auth.uid) && isGymMember(incoming().gymId);
+      allow update: if isSignedIn() && (isOwner(existing().userId) || isGymOwner(existing().gymId));
+    }
+
+    // Personal Records
+    match /personalRecords/{prId} {
+      allow read: if isSignedIn() && isOwner(resource.data.userId);
+      allow create: if isSignedIn() && isEmailVerified() && incoming().userId == request.auth.uid && isGymMember(incoming().gymId);
+      allow update, delete: if isSignedIn() && isOwner(existing().userId);
+    }
+
+    // Notifications
+    match /notifications/{nId} {
+      allow read: if isSignedIn() && (isOwner(resource.data.userId) || isSuperAdmin());
+      allow create: if isSignedIn() && (isSuperAdmin() || (incoming().gymId is string && isGymOwner(incoming().gymId)));
+      allow update: if isSignedIn() && isOwner(existing().userId) && 
+                      incoming().diff(existing()).affectedKeys().hasOnly(['read']);
+    }
+
+    // Live Alerts
+    match /live_alerts/{alertId} {
+      allow read: if isGymOwner(resource.data.gymId);
+      allow create: if isSignedIn() && isEmailVerified() && isGymMember(incoming().gymId);
+      allow update: if isGymOwner(existing().gymId);
+    }
+
+    // Plans
+    match /workoutPlans/{plId} {
+      allow read, delete: if isSignedIn() && isOwner(resource.data.userId || existing().userId);
+      allow create: if isSignedIn() && isEmailVerified() && incoming().userId == request.auth.uid && isGymMember(incoming().gymId);
+    }
+
+    match /dietPlans/{plId} {
+      allow read, delete: if isSignedIn() && isOwner(resource.data.userId || existing().userId);
+      allow create: if isSignedIn() && isEmailVerified() && incoming().userId == request.auth.uid && isGymMember(incoming().gymId);
+    }
+
+    match /membershipTiers/{tId} {
+      allow read: if isSignedIn();
+      allow write: if isGymOwner(incoming().gymId || (resource != null && resource.data.gymId));
+    }
+  }
+}

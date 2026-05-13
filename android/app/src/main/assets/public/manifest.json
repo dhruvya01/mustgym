@@ -1,0 +1,22 @@
+{
+  "name": "Yuvi Fitness Studio",
+  "short_name": "Yuvi Studio",
+  "description": "Elite gym management platform.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0e0e0e",
+  "theme_color": "#ff4d00",
+  "icons": [
+    {
+      "src": "https://picsum.photos/seed/gym-elite/192/192",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "https://picsum.photos/seed/gym-elite/512/512",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
