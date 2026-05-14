@@ -553,6 +553,22 @@ export default function AdminPage({ profile }: { profile: UserProfile | null }) 
     );
   }
 
+  if (profile.role === 'owner' && profile.membershipStatus === 'pending') {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 text-center">
+        <Lock size={64} className="text-amber-500 mb-6" />
+        <h2 className="font-headline text-3xl font-black uppercase italic mb-2">Awaiting Verification</h2>
+        <p className="text-on-surface-variant max-w-md">Your owner account is currently pending manual verification. Please complete the WhatsApp verification step to gain access to the Command Center.</p>
+        <button 
+          onClick={() => window.open(`https://wa.me/917889686144?text=${encodeURIComponent(`Hi, I've registered my gym (${gymInfo?.name || profile.gymId}) and am awaiting verification.\nEmail: ${profile.email}`)}`, '_blank')} 
+          className="mt-8 bg-primary hover:bg-primary-bright px-6 py-3 rounded-xl font-bold uppercase tracking-widest text-on-primary-fixed text-xs transition-colors"
+        >
+          Complete Verification via WhatsApp
+        </button>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-12 pb-20">
       <SEO title="Admin Command Center" />

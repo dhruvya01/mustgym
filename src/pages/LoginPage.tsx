@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import { signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
-import { auth } from '../lib/firebase';
+import { signInWithPopup, GoogleAuthProvider, signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
+import { auth, db } from '../lib/firebase';
 import { motion, AnimatePresence } from 'motion/react';
-import { Chrome } from 'lucide-react';
+import { Chrome, Lock, Mail } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { SEO } from '../components/SEO';
 import { TermsModal } from '../components/TermsModal';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
 
 export default function LoginPage() {
   const [error, setError] = useState('');
@@ -17,6 +18,10 @@ export default function LoginPage() {
   
   const [activePortal, setActivePortal] = useState<'member' | 'owner'>(initialGymParam ? 'member' : 'member');
   const [gymId, setGymId] = useState(initialGymParam.toUpperCase());
+  
+  // Owner Login State
+  const [ownerEmail, setOwnerEmail] = useState('');
+  const [ownerPassword, setOwnerPassword] = useState('');
 
   const handleGoogleLogin = async () => {
     try {
@@ -37,6 +42,31 @@ export default function LoginPage() {
       } else {
         setError(err.message);
       }
+    }
+  };
+
+  const handleOwnerLogin = async () => {
+    try {
+      setError('');
+      sessionStorage.setItem('portal_intent', 'owner');
+      await signInWithEmailAndPassword(auth, ownerEmail, ownerPassword);
+    } catch (err: any) {
+      if (err.code === 'auth/invalid-credential') {
+        setError('Invalid email or password.');
+      } else {
+        setError(err.message);
+      }
+    }
+  };
+
+  const handleOwnerSignup = async () => {
+    try {
+      setError('');
+      sessionStorage.setItem('portal_intent', 'owner');
+      const userCredential = await createUserWithEmailAndPassword(auth, ownerEmail, ownerPassword);
+      // Let the Onboarding components handle creating the firestore profile.
+    } catch (err: any) {
+      setError(err.message);
     }
   };
 
@@ -151,19 +181,55 @@ export default function LoginPage() {
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
-                  className="space-y-6"
+                  className="space-y-4"
                 >
-                  <div className="bg-surface-container-low p-6 rounded-2xl border border-white/5 text-center">
-                    <p className="text-xs text-on-surface-variant font-medium leading-relaxed italic">
-                      "Managing a single location or a global chain — all from one unified command center."
-                    </p>
+                  <div className="bg-surface-container-low p-6 rounded-2xl border border-white/5 space-y-4">
+                    <div>
+                      <label className="block text-[10px] font-bold text-primary uppercase tracking-[0.2em] mb-3 ml-1">Admin Email</label>
+                      <div className="relative">
+                        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                          <Mail size={18} className="text-outline-variant" />
+                        </div>
+                        <input 
+                          type="email"
+                          placeholder="owner@gym.com"
+                          value={ownerEmail}
+                          onChange={(e) => setOwnerEmail(e.target.value)}
+                          className="w-full bg-surface-container-highest border border-white/5 rounded-xl py-4 pl-12 pr-4 text-white font-headline text-sm focus:outline-none focus:border-primary/50 transition-all placeholder:text-outline-variant"
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold text-primary uppercase tracking-[0.2em] mb-3 ml-1">Password</label>
+                      <div className="relative">
+                        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                          <Lock size={18} className="text-outline-variant" />
+                        </div>
+                        <input 
+                          type="password"
+                          placeholder="••••••••"
+                          value={ownerPassword}
+                          onChange={(e) => setOwnerPassword(e.target.value)}
+                          className="w-full bg-surface-container-highest border border-white/5 rounded-xl py-4 pl-12 pr-4 text-white font-headline text-sm focus:outline-none focus:border-primary/50 transition-all placeholder:text-outline-variant"
+                        />
+                      </div>
+                    </div>
                   </div>
+                  
                   <button 
-                    onClick={handleGoogleLogin}
-                    className="flex items-center justify-center gap-4 w-full py-5 bg-primary text-on-primary-fixed rounded-xl hover:bg-primary-bright transition-all group active:scale-[0.98] shadow-2xl shadow-primary/20"
+                    onClick={handleOwnerLogin}
+                    disabled={!ownerEmail || !ownerPassword}
+                    className="flex items-center justify-center gap-4 w-full py-5 bg-primary text-on-primary-fixed rounded-xl hover:bg-primary-bright transition-all group active:scale-[0.98] shadow-2xl shadow-primary/20 disabled:opacity-50"
                   >
-                    <Chrome size={24} className="group-hover:scale-110 transition-transform" />
-                    <span className="text-sm font-black uppercase italic tracking-tighter">Admin Sync / New Gym</span>
+                    <span className="text-sm font-black uppercase italic tracking-tighter">Owner Login</span>
+                  </button>
+
+                  <button 
+                    onClick={handleOwnerSignup}
+                    disabled={!ownerEmail || !ownerPassword}
+                    className="flex items-center justify-center gap-4 w-full py-3 border border-white/10 text-white rounded-xl hover:bg-white/5 transition-all group active:scale-[0.98] disabled:opacity-50"
+                  >
+                    <span className="text-xs font-bold uppercase tracking-widest text-[10px]">Create Account</span>
                   </button>
                 </motion.div>
               )}

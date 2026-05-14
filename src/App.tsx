@@ -43,6 +43,13 @@ async function testConnection() {
   }
 }
 
+const MemberProtectedRoute = ({ children, profile }: { children: React.ReactNode, profile: UserProfile | null }) => {
+  if (profile?.role === 'member' && (profile.membershipStatus === 'pending' || profile.membershipStatus === 'halted')) {
+    return <Navigate to="/dashboard" />;
+  }
+  return <>{children}</>;
+};
+
 export default function App() {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -229,14 +236,14 @@ export default function App() {
                     ? <OnboardingPage profile={profile} onProfileUpdate={(p) => setProfile(p)} />
                     : <Navigate to="/dashboard" />
                 } />
-                <Route path="/workouts" element={<Workouts profile={profile} />} />
-            <Route path="/analytics" element={<AnalyticsPage profile={profile} />} />
-                <Route path="/progress" element={<Progress profile={profile} />} />
+                <Route path="/workouts" element={<MemberProtectedRoute profile={profile}><Workouts profile={profile} /></MemberProtectedRoute>} />
+            <Route path="/analytics" element={<MemberProtectedRoute profile={profile}><AnalyticsPage profile={profile} /></MemberProtectedRoute>} />
+                <Route path="/progress" element={<MemberProtectedRoute profile={profile}><Progress profile={profile} /></MemberProtectedRoute>} />
                 <Route path="/settings" element={<SettingsPage profile={profile} />} />
-                <Route path="/profile" element={<ProfilePage profile={profile} />} />
+                <Route path="/profile" element={<MemberProtectedRoute profile={profile}><ProfilePage profile={profile} /></MemberProtectedRoute>} />
                 <Route path="/scanner" element={<ScannerPortal />} />
-                <Route path="/scan" element={<ScanPage profile={profile} />} />
-                <Route path="/challenges" element={<Challenges profile={profile} />} />
+                <Route path="/scan" element={<MemberProtectedRoute profile={profile}><ScanPage profile={profile} /></MemberProtectedRoute>} />
+                <Route path="/challenges" element={<MemberProtectedRoute profile={profile}><Challenges profile={profile} /></MemberProtectedRoute>} />
                 <Route path="/admin" element={profile?.role === 'admin' || profile?.role === 'owner' ? <AdminPage profile={profile} /> : <Navigate to="/dashboard" />} />
               </Route>
 
@@ -263,13 +270,19 @@ function Layout({ children, profile }: { children: React.ReactNode, profile: Use
     { path: '/settings', icon: Settings, label: 'Settings' },
   ];
 
+  const restrictedNavItems = [
+    { path: '/dashboard', icon: Home, label: 'Home' },
+    { path: '/settings', icon: Settings, label: 'Settings' },
+  ];
+
   const ownerNavItems = [
     { path: '/admin', icon: Shield, label: 'Dashboard' },
     { path: '/scan', icon: QrCode, label: 'Scan', primary: true },
     { path: '/settings', icon: Settings, label: 'Settings' },
   ];
 
-  const navItems = profile?.role === 'owner' ? ownerNavItems : baseNavItems;
+  const isRestricted = profile?.role === 'member' && (profile?.membershipStatus === 'pending' || profile?.membershipStatus === 'halted');
+  const navItems = profile?.role === 'owner' ? ownerNavItems : (isRestricted ? restrictedNavItems : baseNavItems);
 
   return (
     <div className="flex flex-col min-h-screen">

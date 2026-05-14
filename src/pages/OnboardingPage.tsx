@@ -125,12 +125,18 @@ export default function OnboardingPage({ profile, onProfileUpdate }: OnboardingP
         displayName: fullName,
         phoneNumber: phone,
         role: 'owner' as const,
-        membershipStatus: 'active' as const
+        membershipStatus: 'pending' as const
       };
       await updateDoc(doc(db, 'users', profile.uid), updatedProfile);
       onProfileUpdate(updatedProfile);
       
-      toast.success(`Gym created! Your ID is: ${newGymId}`);
+      const message = `Hi, I want to confirm my owner account for MustGym.\n\nName: ${fullName}\nEmail: ${profile.email}\nGym: ${gymName}\nGym ID: ${newGymId}\nPlan: ${tier.toUpperCase()}`;
+      const whatsappUrl = `https://wa.me/917889686144?text=${encodeURIComponent(message)}`;
+      
+      // Open WhatsApp in a new tab
+      window.open(whatsappUrl, '_blank');
+      
+      toast.success(`Gym setup initiated! Please verify via WhatsApp.`);
       navigate('/admin');
     } catch (error) {
       console.error(error);

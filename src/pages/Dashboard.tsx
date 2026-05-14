@@ -319,15 +319,38 @@ export default function Dashboard({ profile }: { profile: UserProfile | null }) 
           </div>
         </motion.div>
       )}
-      
-      {/* Hero Section: Personal Greeting */}
-      <section className="relative pt-4">
+
+      {profile?.membershipStatus === 'halted' && (
         <motion.div 
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          className="max-w-3xl"
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="p-6 bg-error/10 border border-error/20 rounded-2xl flex flex-col sm:flex-row items-center gap-4 text-center sm:text-left"
         >
-          <div className="flex items-center gap-3 mb-4">
+          <div className="w-12 h-12 bg-error/20 rounded-xl flex items-center justify-center shrink-0">
+            <Lock className="text-error" size={24} />
+          </div>
+          <div className="flex-1">
+            <h4 className="font-headline font-black text-sm uppercase italic text-white mb-1">Membership Suspended</h4>
+            <p className="text-[10px] text-on-surface-variant font-medium leading-relaxed uppercase tracking-widest">
+              Your membership access has been halted by the gym administration. Please contact your gym owner to resolve any underlying issues.
+            </p>
+          </div>
+          <div className="px-4 py-2 bg-error/20 rounded-lg text-error text-[8px] font-black uppercase tracking-widest">
+            Access Revoked
+          </div>
+        </motion.div>
+      )}
+      
+      {profile?.role === 'member' && profile?.membershipStatus === 'active' && (
+        <React.Fragment>
+          {/* Hero Section: Personal Greeting */}
+          <section className="relative pt-4">
+            <motion.div 
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              className="max-w-3xl"
+            >
+              <div className="flex items-center gap-3 mb-4">
             <div className="h-[1px] w-12 bg-primary" />
             <span className="font-headline font-bold uppercase tracking-[0.3em] text-primary text-[10px]">Elite Member Access</span>
           </div>
@@ -697,6 +720,8 @@ export default function Dashboard({ profile }: { profile: UserProfile | null }) 
             ))}
           </div>
         </section>
+      )}
+      </React.Fragment>
       )}
     </div>
   );
