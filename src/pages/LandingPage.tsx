@@ -427,7 +427,7 @@ export default function LandingPage() {
                   </li>
                 ))}
               </ul>
-              <a href={WHATSAPP_URL} target="_blank" rel="noopener noreferrer" className="block w-full py-4 text-center rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 font-bold transition-colors">Start Trial</a>
+              <a href="https://wa.me/917889686144?text=Hi!%20I%20want%20to%20subscribe%20to%20MustGym%20STARTER%20plan%20and%20get%20my%20owner%20account." target="_blank" rel="noopener noreferrer" className="block w-full py-4 text-center rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 font-bold transition-colors">Continue</a>
             </motion.div>
 
             {/* Pro */}
@@ -448,7 +448,7 @@ export default function LandingPage() {
                   </li>
                 ))}
               </ul>
-              <a href={WHATSAPP_URL} target="_blank" rel="noopener noreferrer" className="block w-full py-4 text-center rounded-xl bg-[#00f0ff] hover:bg-[#00d0ff] text-black font-bold transition-colors shadow-[0_4px_20px_rgba(0,240,255,0.2)]">Get Pro Plan</a>
+              <a href="https://wa.me/917889686144?text=Hi!%20I%20want%20to%20subscribe%20to%20MustGym%20PRO%20plan%20and%20get%20my%20owner%20account." target="_blank" rel="noopener noreferrer" className="block w-full py-4 text-center rounded-xl bg-[#00f0ff] hover:bg-[#00d0ff] text-black font-bold transition-colors shadow-[0_4px_20px_rgba(0,240,255,0.2)]">Continue</a>
             </motion.div>
 
             {/* Elite */}
@@ -468,7 +468,7 @@ export default function LandingPage() {
                   </li>
                 ))}
               </ul>
-              <a href={WHATSAPP_URL} target="_blank" rel="noopener noreferrer" className="block w-full py-4 text-center rounded-xl bg-white/5 hover:bg-[#39ff14]/10 border border-white/10 hover:border-[#39ff14]/30 hover:text-[#39ff14] font-bold transition-colors">Contact Sales</a>
+              <a href="https://wa.me/917889686144?text=Hi!%20I%20want%20to%20subscribe%20to%20MustGym%20ELITE%20plan%20and%20get%20my%20owner%20account." target="_blank" rel="noopener noreferrer" className="block w-full py-4 text-center rounded-xl bg-white/5 hover:bg-[#39ff14]/10 border border-white/10 hover:border-[#39ff14]/30 hover:text-[#39ff14] font-bold transition-colors">Continue</a>
             </motion.div>
           </div>
         </div>
