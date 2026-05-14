@@ -26,7 +26,6 @@ import Progress from './pages/Progress';
 import SettingsPage from './pages/SettingsPage';
 import ScanPage from './pages/ScanPage';
 import AdminPage from './pages/AdminPage';
-import VerificationPage from './pages/VerificationPage';
 import ProfilePage from './pages/ProfilePage';
 import ScannerPortal from './pages/ScannerPortal';
 import Challenges from './pages/Challenges';
@@ -263,7 +262,7 @@ function Layout({ children, profile }: { children: React.ReactNode, profile: Use
   const location = useLocation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
-  const baseNavItems = [
+  const baseNavItems: { path: string; icon: any; label: string; primary?: boolean }[] = [
     { path: '/dashboard', icon: Home, label: 'Home' },
     { path: '/challenges', icon: Trophy, label: 'Challenges' },
     { path: '/workouts', icon: Dumbbell, label: 'Workouts' },
@@ -273,11 +272,11 @@ function Layout({ children, profile }: { children: React.ReactNode, profile: Use
   ];
 
   const restrictedNavItems = [
-    { path: '/dashboard', icon: Home, label: 'Home' },
-    { path: '/settings', icon: Settings, label: 'Settings' },
+    { path: '/dashboard', icon: Home, label: 'Home', primary: false },
+    { path: '/settings', icon: Settings, label: 'Settings', primary: false },
   ];
 
-  const ownerNavItems = [
+  const ownerNavItems: { path: string; icon: any; label: string; primary?: boolean }[] = [
     { path: '/admin', icon: Shield, label: 'Dashboard' },
     { path: '/scan', icon: QrCode, label: 'Scan', primary: true },
     { path: '/settings', icon: Settings, label: 'Settings' },

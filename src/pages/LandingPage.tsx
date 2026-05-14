@@ -127,20 +127,20 @@ export default function LandingPage() {
               </motion.h1>
 
               <motion.p variants={fadeInUp} className="text-lg md:text-xl text-gray-400 mb-8 max-w-xl leading-relaxed">
-                AI-powered gym management with QR check-ins, live occupancy tracking, payments, analytics, gamification, and member engagement.
+                A seamless, automated operating system for modern fitness centers. Features instant QR check-ins, live occupancy, automated revenue tracking, and gamified member engagement.
               </motion.p>
               
               <motion.div variants={fadeInUp} className="flex flex-col sm:flex-row items-center gap-4">
                 <a
                   href={WHATSAPP_URL}
                   target="_blank" rel="noopener noreferrer"
-                  className="w-full sm:w-auto flex items-center justify-center gap-2 bg-[#00f0ff] text-black hover:bg-[#00d0ff] px-8 py-4 rounded-xl font-bold tracking-wide transition-all hover:shadow-[0_0_30px_rgba(0,240,255,0.3)] hover:-translate-y-1"
+                  className="w-full sm:w-auto flex items-center justify-center gap-2 bg-[#00f0ff] text-black hover:bg-[#00d0ff] px-8 py-4 rounded-xl font-bold tracking-wide transition-all shadow-[0_0_20px_rgba(0,240,255,0.2)] hover:shadow-[0_0_30px_rgba(0,240,255,0.4)] hover:-translate-y-1"
                 >
                   <MessageCircle size={20} /> Book Free Demo
                 </a>
                 <Link
                   to="/login"
-                  className="w-full sm:w-auto flex items-center justify-center gap-2 bg-white/5 hover:bg-white/10 text-white border border-white/10 px-8 py-4 rounded-xl font-bold tracking-wide transition-all backdrop-blur-sm"
+                  className="w-full sm:w-auto flex items-center justify-center gap-2 bg-[#111] hover:bg-[#1a1a1a] text-white border border-white/10 px-8 py-4 rounded-xl font-bold tracking-wide transition-all shadow-xl"
                 >
                   Gym Owner Login
                 </Link>

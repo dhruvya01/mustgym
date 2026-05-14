@@ -586,45 +586,6 @@ export default function Dashboard({ profile }: { profile: UserProfile | null }) 
             </section>
           )}
 
-          {/* Alerts Section */}
-          {(profile?.membershipStatus === 'halted' || profile?.membershipStatus === 'pending') && (
-            <section className="space-y-3">
-              <h4 className="font-headline font-bold uppercase tracking-widest text-[10px] text-on-surface-variant">System Alerts</h4>
-              {profile?.membershipStatus === 'halted' && (
-                <motion.div 
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="bg-amber-500/10 border border-amber-500/20 p-4 rounded-2xl flex items-start gap-4"
-                >
-                  <div className="w-10 h-10 bg-amber-500/20 rounded-xl flex items-center justify-center shrink-0">
-                    <Lock className="text-amber-500" size={20} />
-                  </div>
-                  <div>
-                    <p className="text-xs font-black uppercase tracking-tight text-amber-500 mb-1">Membership Halted</p>
-                    <p className="text-[10px] text-on-surface-variant leading-relaxed mb-3">Your access is suspended due to inactivity. Visit the owner to reactivate.</p>
-                    <Link to="/settings" className="text-[10px] font-black uppercase text-amber-500 hover:underline">View Details</Link>
-                  </div>
-                </motion.div>
-              )}
-              {profile?.membershipStatus === 'pending' && (
-                <motion.div 
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="bg-primary/10 border border-primary/20 p-4 rounded-2xl flex items-start gap-4"
-                >
-                  <div className="w-10 h-10 bg-primary/20 rounded-xl flex items-center justify-center shrink-0">
-                    <Activity className="text-primary" size={20} />
-                  </div>
-                  <div>
-                    <p className="text-xs font-black uppercase tracking-tight text-primary mb-1">Approval Pending</p>
-                    <p className="text-[10px] text-on-surface-variant leading-relaxed mb-3">Your membership is awaiting admin verification. Check back soon.</p>
-                    <Link to="/settings" className="text-[10px] font-black uppercase text-primary hover:underline">Profile Status</Link>
-                  </div>
-                </motion.div>
-              )}
-            </section>
-          )}
-
           {/* Motivation Card */}
           <section className="bg-primary rounded-3xl p-6 sm:p-8 text-on-primary-fixed relative overflow-hidden group">
             <Quote className="absolute -top-4 -right-4 w-20 sm:w-24 h-20 sm:h-24 opacity-10 rotate-12 group-hover:rotate-0 transition-transform duration-700" />
