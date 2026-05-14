@@ -2,11 +2,12 @@ import React, { useState } from 'react';
 import { signInWithPopup, GoogleAuthProvider, signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
 import { auth, db } from '../lib/firebase';
 import { motion, AnimatePresence } from 'motion/react';
-import { Chrome, Lock, Mail } from 'lucide-react';
+import { Chrome, Lock, Mail, ArrowLeft, Zap } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { SEO } from '../components/SEO';
 import { TermsModal } from '../components/TermsModal';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { Link } from 'react-router-dom';
 
 export default function LoginPage() {
   const [error, setError] = useState('');
@@ -71,18 +72,22 @@ export default function LoginPage() {
   };
 
   return (
-    <main className="min-h-screen flex flex-col md:flex-row relative overflow-hidden bg-mesh">
-      <SEO title="Login" />
+    <main className="min-h-screen flex flex-col md:flex-row relative overflow-hidden bg-[#050505] selection:bg-[#00f0ff]/30 selection:text-white">
+      <SEO title="Login | MustGym" />
       
+      {/* Glowing Orbs */}
+      <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-[#00f0ff]/10 rounded-full blur-[120px] pointer-events-none z-0" />
+      <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-[#39ff14]/5 rounded-full blur-[120px] pointer-events-none z-0" />
+
       {/* Visual Side */}
-      <div className="hidden md:flex md:w-5/12 relative items-center justify-center p-12 overflow-hidden border-r border-white/5">
+      <div className="hidden md:flex md:w-5/12 relative items-center justify-center p-12 overflow-hidden border-r border-white/5 bg-[#0a0a0a]">
         <div className="absolute inset-0 z-0">
           <img 
-            className="w-full h-full object-cover opacity-30 grayscale" 
-            src="https://picsum.photos/seed/gym/1920/1080?grayscale" 
+            className="w-full h-full object-cover opacity-20 grayscale mix-blend-overlay" 
+            src="https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=1470&auto=format&fit=crop" 
             alt="Gym Interior"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent"></div>
+          <div className="absolute inset-0 bg-gradient-to-t from-[#050505] via-[#050505]/80 to-transparent"></div>
         </div>
         <div className="relative z-10 w-full">
           <motion.div
@@ -90,43 +95,51 @@ export default function LoginPage() {
             animate={{ opacity: 1, x: 0 }}
           >
             <h1 className="font-headline font-black text-6xl lg:text-8xl italic tracking-tighter text-white leading-none mb-6">
-              MUST<br/><span className="text-primary italic">GYM</span>
+              MUST<br/><span className="text-[#00f0ff]">GYM</span>
             </h1>
-            <div className="h-1 w-20 bg-primary mb-8" />
-            <p className="text-on-surface-variant font-headline font-bold text-sm uppercase tracking-[0.2em] max-w-xs leading-relaxed">
-              Multi-Gym Management <br/>& Elite Performance Tracking.
+            <div className="flex items-center gap-2 mb-8">
+              <Zap className="text-[#39ff14]" size={24} />
+              <div className="h-1 w-20 bg-gradient-to-r from-[#00f0ff] to-[#39ff14]" />
+            </div>
+            <p className="text-gray-400 font-bold text-sm uppercase tracking-[0.2em] max-w-xs leading-relaxed">
+              Run Your Gym <br/>Without a Reception Desk.
             </p>
           </motion.div>
         </div>
       </div>
 
       {/* Auth Side */}
-      <div className="flex-1 flex items-center justify-center p-6 md:p-12 z-10">
-        <motion.div 
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          className="w-full max-w-md"
-        >
-          <div className="md:hidden mb-12 flex justify-center">
-            <h1 className="font-headline font-black text-4xl italic tracking-tighter text-primary">MUSTGYM</h1>
+      <div className="flex-1 flex flex-col p-6 md:p-12 z-10 relative">
+        <div className="w-full max-w-md mx-auto flex-1 flex flex-col justify-center">
+          
+          <Link 
+            to="/" 
+            className="absolute top-6 left-6 md:top-12 flex items-center gap-2 text-gray-500 hover:text-white transition-colors font-bold text-xs uppercase tracking-widest"
+          >
+            <ArrowLeft size={16} />
+            Back to Home
+          </Link>
+          
+          <div className="md:hidden mt-12 mb-12 flex justify-center">
+            <h1 className="font-headline font-black text-4xl italic tracking-tighter text-white">MUST<span className="text-[#00f0ff]">GYM</span></h1>
           </div>
           
           <div className="mb-10 text-center md:text-left">
-            <h2 className="font-headline font-black text-3xl sm:text-4xl tracking-tighter mb-2 uppercase italic">
-              Access <span className="text-primary">Portal</span>
+            <h2 className="font-headline font-black text-3xl sm:text-4xl tracking-tighter mb-2 text-white">
+              Access <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#00f0ff] to-[#39ff14]">Portal</span>
             </h2>
-            <p className="text-on-surface-variant text-[10px] font-bold uppercase tracking-[0.2em]">
+            <p className="text-gray-500 text-[10px] font-bold uppercase tracking-[0.2em]">
               Select your entrance to the system
             </p>
           </div>
 
           {/* Portal Switcher */}
-          <div className="grid grid-cols-2 gap-2 p-1 bg-surface-container rounded-xl mb-8">
+          <div className="grid grid-cols-2 gap-2 p-1 bg-white/5 rounded-xl border border-white/10 mb-8">
             <button 
               onClick={() => setActivePortal('member')}
               className={cn(
-                "py-3 rounded-lg font-headline font-bold text-[10px] uppercase tracking-widest transition-all",
-                activePortal === 'member' ? "bg-primary text-on-primary-fixed shadow-lg shadow-primary/20" : "text-on-surface-variant hover:text-white"
+                "py-3 rounded-lg font-bold text-[10px] uppercase tracking-widest transition-all",
+                activePortal === 'member' ? "bg-[#111] text-white shadow-lg border border-white/10" : "text-gray-500 hover:text-white"
               )}
             >
               Member Portal
@@ -134,8 +147,8 @@ export default function LoginPage() {
             <button 
               onClick={() => setActivePortal('owner')}
               className={cn(
-                "py-3 rounded-lg font-headline font-bold text-[10px] uppercase tracking-widest transition-all",
-                activePortal === 'owner' ? "bg-primary text-on-primary-fixed shadow-lg shadow-primary/20" : "text-on-surface-variant hover:text-white"
+                "py-3 rounded-lg font-bold text-[10px] uppercase tracking-widest transition-all",
+                activePortal === 'owner' ? "bg-[#111] text-white shadow-lg border border-white/10" : "text-gray-500 hover:text-white"
               )}
             >
               Owner Portal
@@ -152,16 +165,16 @@ export default function LoginPage() {
                   exit={{ opacity: 0, y: -10 }}
                   className="space-y-6"
                 >
-                  <div className="bg-surface-container-low p-6 rounded-2xl border border-white/5">
-                    <label className="block text-[10px] font-bold text-primary uppercase tracking-[0.2em] mb-3 ml-1">Establishment ID</label>
+                  <div className="bg-[#111] p-6 rounded-2xl border border-white/5">
+                    <label className="block text-[10px] font-bold text-[#00f0ff] uppercase tracking-[0.2em] mb-3 ml-1">Establishment ID</label>
                     <input 
                       type="text"
                       placeholder="e.g. GYM-XXXXXX"
                       value={gymId}
                       onChange={(e) => setGymId(e.target.value.toUpperCase())}
-                      className="w-full bg-surface-container-highest border border-white/5 rounded-xl py-4 px-4 text-white font-headline font-bold focus:outline-none focus:border-primary/50 transition-all uppercase tracking-widest text-center placeholder:text-outline-variant"
+                      className="w-full bg-[#050505] border border-white/10 rounded-xl py-4 px-4 text-white font-bold focus:outline-none focus:border-[#00f0ff]/50 transition-all uppercase tracking-widest text-center placeholder:text-gray-600"
                     />
-                    <p className="text-[9px] text-on-surface-variant mt-3 text-center uppercase tracking-tighter font-medium">
+                    <p className="text-[9px] text-gray-500 mt-3 text-center uppercase tracking-tighter font-medium">
                       Enter the ID provided by your gym to sync your data.
                     </p>
                   </div>
@@ -169,7 +182,7 @@ export default function LoginPage() {
                   <button 
                     onClick={handleGoogleLogin}
                     disabled={!gymId}
-                    className="flex items-center justify-center gap-4 w-full py-5 bg-white text-black rounded-xl hover:bg-primary transition-all group active:scale-[0.98] disabled:opacity-50 disabled:grayscale"
+                    className="flex items-center justify-center gap-4 w-full py-5 bg-[#00f0ff] text-black rounded-xl hover:bg-[#00d0ff] transition-all group active:scale-[0.98] shadow-[0_0_20px_rgba(0,240,255,0.2)] disabled:opacity-50 disabled:grayscale"
                   >
                     <Chrome size={24} className="group-hover:scale-110 transition-transform" />
                     <span className="text-sm font-black uppercase italic tracking-tighter">Enter Member Portal</span>
@@ -183,34 +196,34 @@ export default function LoginPage() {
                   exit={{ opacity: 0, y: -10 }}
                   className="space-y-4"
                 >
-                  <div className="bg-surface-container-low p-6 rounded-2xl border border-white/5 space-y-4">
+                  <div className="bg-[#111] p-6 rounded-2xl border border-white/5 space-y-4">
                     <div>
-                      <label className="block text-[10px] font-bold text-primary uppercase tracking-[0.2em] mb-3 ml-1">Admin Email</label>
+                      <label className="block text-[10px] font-bold text-[#00f0ff] uppercase tracking-[0.2em] mb-3 ml-1">Admin Email</label>
                       <div className="relative">
                         <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                          <Mail size={18} className="text-outline-variant" />
+                          <Mail size={18} className="text-gray-500" />
                         </div>
                         <input 
                           type="email"
                           placeholder="owner@gym.com"
                           value={ownerEmail}
                           onChange={(e) => setOwnerEmail(e.target.value)}
-                          className="w-full bg-surface-container-highest border border-white/5 rounded-xl py-4 pl-12 pr-4 text-white font-headline text-sm focus:outline-none focus:border-primary/50 transition-all placeholder:text-outline-variant"
+                          className="w-full bg-[#050505] border border-white/10 rounded-xl py-4 pl-12 pr-4 text-white font-headline text-sm focus:outline-none focus:border-[#00f0ff]/50 transition-all placeholder:text-gray-600"
                         />
                       </div>
                     </div>
                     <div>
-                      <label className="block text-[10px] font-bold text-primary uppercase tracking-[0.2em] mb-3 ml-1">Password</label>
+                      <label className="block text-[10px] font-bold text-[#00f0ff] uppercase tracking-[0.2em] mb-3 ml-1">Password</label>
                       <div className="relative">
                         <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                          <Lock size={18} className="text-outline-variant" />
+                          <Lock size={18} className="text-gray-500" />
                         </div>
                         <input 
                           type="password"
                           placeholder="••••••••"
                           value={ownerPassword}
                           onChange={(e) => setOwnerPassword(e.target.value)}
-                          className="w-full bg-surface-container-highest border border-white/5 rounded-xl py-4 pl-12 pr-4 text-white font-headline text-sm focus:outline-none focus:border-primary/50 transition-all placeholder:text-outline-variant"
+                          className="w-full bg-[#050505] border border-white/10 rounded-xl py-4 pl-12 pr-4 text-white font-headline text-sm focus:outline-none focus:border-[#00f0ff]/50 transition-all placeholder:text-gray-600"
                         />
                       </div>
                     </div>
@@ -219,7 +232,7 @@ export default function LoginPage() {
                   <button 
                     onClick={handleOwnerLogin}
                     disabled={!ownerEmail || !ownerPassword}
-                    className="flex items-center justify-center gap-4 w-full py-5 bg-primary text-on-primary-fixed rounded-xl hover:bg-primary-bright transition-all group active:scale-[0.98] shadow-2xl shadow-primary/20 disabled:opacity-50"
+                    className="flex items-center justify-center gap-4 w-full py-5 bg-[#00f0ff] text-black rounded-xl hover:bg-[#00d0ff] transition-all group active:scale-[0.98] shadow-[0_0_20px_rgba(0,240,255,0.2)] disabled:opacity-50 disabled:grayscale"
                   >
                     <span className="text-sm font-black uppercase italic tracking-tighter">Owner Login</span>
                   </button>
@@ -236,8 +249,8 @@ export default function LoginPage() {
             </AnimatePresence>
 
             {error && (
-              <div className="p-4 bg-error/10 border border-error/20 rounded-lg">
-                <p className="text-error text-xs font-bold uppercase tracking-widest text-center leading-relaxed">
+              <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-lg">
+                <p className="text-red-400 text-xs font-bold uppercase tracking-widest text-center leading-relaxed">
                   {error}
                 </p>
               </div>
@@ -245,23 +258,23 @@ export default function LoginPage() {
           </div>
 
           <div className="mt-12 text-center opacity-40">
-            <p className="text-[10px] text-outline-variant font-bold uppercase tracking-widest leading-relaxed">
+            <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest leading-relaxed">
               Encrypted Auth Pipeline <br/> Secure Performance Logging Enabled
             </p>
           </div>
-        </motion.div>
+        </div>
       </div>
 
-      <footer className="fixed bottom-6 left-6 right-6 flex flex-col sm:flex-row justify-between items-center gap-4 pointer-events-none">
+      <footer className="fixed bottom-6 left-6 right-6 flex flex-col sm:flex-row justify-between items-center gap-4 pointer-events-none z-10">
         <div className="flex flex-col items-center sm:items-start">
-          <div className="text-[10px] font-bold text-outline-variant uppercase tracking-[0.3em]">
+          <div className="text-[10px] font-bold text-gray-600 uppercase tracking-[0.3em]">
             MULTIGYM_SUPPORT_v3.0
           </div>
         </div>
         <div className="flex gap-6 pointer-events-auto">
           <button 
             onClick={() => setShowTerms(true)}
-            className="text-[10px] font-bold text-outline-variant hover:text-primary transition-colors uppercase tracking-[0.2em]"
+            className="text-[10px] font-bold text-gray-500 hover:text-[#00f0ff] transition-colors uppercase tracking-[0.2em]"
           >
             TERMS & PRIVACY
           </button>
