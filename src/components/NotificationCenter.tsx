@@ -26,8 +26,7 @@ export function NotificationCenter() {
 
     const q = query(
       collection(db, 'notifications'),
-      where('userId', '==', auth.currentUser.uid),
-      orderBy('createdAt', 'desc')
+      where('userId', '==', auth.currentUser.uid)
     );
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -35,6 +34,8 @@ export function NotificationCenter() {
         id: doc.id,
         ...doc.data()
       })) as Notification[];
+      // Sort client-side to avoid needing a Firestore composite index
+      docs.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
       setNotifications(docs);
     }, (error) => {
       setTimeout(() => {

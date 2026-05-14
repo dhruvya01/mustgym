@@ -140,15 +140,14 @@ export default function Dashboard({ profile }: { profile: UserProfile | null }) 
 
     const qNotifications = query(
       collection(db, 'notifications'),
-      where('userId', '==', profile.uid),
-      where('read', '==', false),
-      orderBy('createdAt', 'desc'),
-      limit(2)
+      where('userId', '==', profile.uid) // fetch all for this user, filter and sort client-side
     );
 
     const unsubNotifications = onSnapshot(qNotifications, (snapshot) => {
-      const docs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      setNotifications(docs);
+      let docs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as any));
+      docs = docs.filter(doc => !doc.read);
+      docs.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      setNotifications(docs.slice(0, 2));
     }, (error) => {
       setTimeout(() => {
         handleFirestoreError(error, OperationType.LIST, 'notifications');

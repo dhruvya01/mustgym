@@ -81,16 +81,18 @@ export default function App() {
               photoURL: firebaseUser.photoURL || '',
               role: portalIntent === 'owner' ? 'owner' : 'member',
               membershipStatus: portalIntent === 'owner' ? 'active' : 'pending',
-              gymId: pendingGymId || undefined,
               createdAt: new Date().toISOString()
             };
+            if (pendingGymId) {
+              newProfile.gymId = pendingGymId;
+            }
 
             // Verify gym exists if trying to join
             if (pendingGymId) {
               const gymSnap = await getDoc(doc(db, 'gyms', pendingGymId));
               if (!gymSnap.exists()) {
                 toast.error('The gym ID you entered is invalid. Please complete onboarding.');
-                newProfile.gymId = undefined;
+                delete newProfile.gymId;
                 newProfile.membershipStatus = 'pending';
               } else {
                 toast.success(`Welcome to ${gymSnap.data().name}!`);
@@ -143,12 +145,12 @@ export default function App() {
             // Create a notification in Firestore
             const q = query(
               collection(db, 'notifications'),
-              where('userId', '==', user.uid),
-              where('title', '==', 'Membership Expiring Soon')
+              where('userId', '==', user.uid) // Filter by title client-side to avoid composite index
             );
-            const existing = await getDocs(q);
+            const existingQuery = await getDocs(q);
+            const existingStatus = existingQuery.docs.some(doc => doc.data().title === 'Membership Expiring Soon');
             
-            if (existing.empty) {
+            if (!existingStatus) {
               await addDoc(collection(db, 'notifications'), {
                 userId: user.uid,
                 title: 'Membership Expiring Soon',

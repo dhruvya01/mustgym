@@ -545,7 +545,10 @@ export default function LandingPage() {
               <p className="text-gray-500 text-sm max-w-sm mb-6 leading-relaxed">
                 Automating gym operations across India. Focus on training, we'll handle the management.
               </p>
-              <div className="text-xs text-gray-400 font-bold tracking-widest uppercase flex items-center gap-2">Built by <span className="text-white">RegulusLabs</span></div>
+              <div className="text-xs text-gray-400 font-bold tracking-widest uppercase flex flex-col gap-1 mt-2">
+                <div>Built by <a href="https://reguluslabs.in" target="_blank" rel="noopener noreferrer" className="text-white hover:text-[#00f0ff] transition-colors">RegulusLabs.in</a></div>
+                <div className="text-gray-500">Dhruvya Malhotra</div>
+              </div>
             </div>
             
             <div>
@@ -570,7 +573,7 @@ export default function LandingPage() {
           </div>
           
           <div className="pt-8 border-t border-white/5 text-center text-sm text-gray-600 flex flex-col sm:flex-row justify-between items-center gap-4">
-             <span>© {new Date().getFullYear()} MustGym. All rights reserved.</span>
+             <span>© {new Date().getFullYear()} MustGym. All rights reserved. | Dhruvya Malhotra</span>
              <div className="flex gap-4">
                <a href="#" className="hover:text-white transition-colors">Twitter</a>
                <a href="#" className="hover:text-white transition-colors">Instagram</a>
