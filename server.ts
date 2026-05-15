@@ -43,7 +43,15 @@ async function startServer() {
 
       let link;
       try {
-        link = await admin.auth().generatePasswordResetLink(email);
+        const customLink = await admin.auth().generatePasswordResetLink(email);
+        
+        // Use FRONTEND_URL if set, otherwise default to the production web app URL
+        const appOrigin = process.env.FRONTEND_URL || 'https://mustgymm.web.app';
+        
+        const urlObj = new URL(customLink);
+        // Point to our app's /reset-password route, carrying over the query parameters (oobCode, apiKey, etc.)
+        link = `${appOrigin}/reset-password${urlObj.search}`;
+        
       } catch (authError: any) {
         if (
           authError.code === 'auth/internal-error' &&
@@ -111,6 +119,8 @@ async function startServer() {
       let errorMessage = error.message;
       if (errorMessage && errorMessage.includes('Unauthorized IP address')) {
         errorMessage = 'Brevo blocked the request due to IP restrictions. Please go to your Brevo account -> Security -> Authorized IPs, and disable the IP restriction, since this app runs on dynamic IPs.';
+      } else if (errorMessage && errorMessage.includes('451 4.0.0 Invalid from')) {
+        errorMessage = 'Invalid sender email. Please set SMTP_FROM_EMAIL in the secrets panel (Settings -> Environment) to a verified sender email address in your Brevo account (e.g., "Your Name" <youremail@yourdomain.com>).';
       }
       res.status(500).json({ error: errorMessage });
     }
