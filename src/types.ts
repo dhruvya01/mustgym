@@ -63,12 +63,19 @@ export interface Exercise {
   notes?: string;
 }
 
+export interface WorkoutDay {
+  dayName: string;
+  focus?: string;
+  exercises: Exercise[];
+}
+
 export interface WorkoutPlan {
   id?: string;
   userId: string;
   title: string;
   description?: string;
-  exercises: Exercise[];
+  exercises?: Exercise[]; // Legacy format
+  days?: WorkoutDay[]; // Weekly plan format
   createdAt: string;
 }
 

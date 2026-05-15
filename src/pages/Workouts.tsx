@@ -27,6 +27,8 @@ export default function Workouts({ profile }: { profile: UserProfile | null }) {
   const [preferences, setPreferences] = useState('');
   const [fitnessLevel, setFitnessLevel] = useState('Intermediate');
   const [goals, setGoals] = useState('Muscle Gain');
+  const [workoutDays, setWorkoutDays] = useState('4');
+  const [dietType, setDietType] = useState('nonveg');
   const [gymTier, setGymTier] = useState<string>('starter');
 
   // Manual Form State
@@ -120,19 +122,20 @@ export default function Workouts({ profile }: { profile: UserProfile | null }) {
     setGenerating(true);
     try {
       if (activeTab === 'workouts') {
-        const newPlanData = await generateWorkoutPlan(profile.uid, preferences, fitnessLevel, goals, equipment);
+        const newPlanData = await generateWorkoutPlan(profile.uid, preferences, fitnessLevel, goals, equipment, parseInt(workoutDays));
         const plan: any = {
           userId: profile.uid,
           title: newPlanData.title,
           description: newPlanData.description,
           exercises: newPlanData.exercises,
+          days: newPlanData.days,
           createdAt: new Date().toISOString(),
           gymId: profile.gymId
         };
         await addDoc(collection(db, 'workoutPlans'), plan);
         toast.success('AI Workout Plan generated!');
       } else {
-        const newPlanData = await generateDietPlan(profile.uid, preferences, fitnessLevel, goals);
+        const newPlanData = await generateDietPlan(profile.uid, preferences, fitnessLevel, goals, dietType);
         const plan: any = {
           userId: profile.uid,
           title: newPlanData.title,
@@ -471,6 +474,36 @@ export default function Workouts({ profile }: { profile: UserProfile | null }) {
                     {activeTab === 'diet' && <option>General Health</option>}
                   </select>
                 </div>
+                {activeTab === 'diet' && (
+                  <div>
+                    <label className="block text-[10px] font-bold uppercase tracking-widest text-primary mb-2">Diet Preference</label>
+                    <select 
+                      value={dietType}
+                      onChange={(e) => setDietType(e.target.value)}
+                      className="w-full bg-surface-container-highest border-none text-on-surface py-3 px-4 rounded-lg focus:ring-2 focus:ring-primary/40"
+                    >
+                      <option value="veg">Vegetarian</option>
+                      <option value="nonveg">Non-Vegetarian</option>
+                      <option value="vegan">Vegan</option>
+                    </select>
+                  </div>
+                )}
+                {activeTab === 'workouts' && (
+                  <div>
+                    <label className="block text-[10px] font-bold uppercase tracking-widest text-primary mb-2">Days per Week</label>
+                    <select 
+                      value={workoutDays}
+                      onChange={(e) => setWorkoutDays(e.target.value)}
+                      className="w-full bg-surface-container-highest border-none text-on-surface py-3 px-4 rounded-lg focus:ring-2 focus:ring-primary/40"
+                    >
+                      <option value="2">2 Days</option>
+                      <option value="3">3 Days</option>
+                      <option value="4">4 Days</option>
+                      <option value="5">5 Days</option>
+                      <option value="6">6 Days</option>
+                    </select>
+                  </div>
+                )}
                 <div>
                   <label className="block text-[10px] font-bold uppercase tracking-widest text-primary mb-2">
                     {activeTab === 'workouts' ? 'Preferences / Injuries' : 'Preferences / Restrictions'}
@@ -525,22 +558,50 @@ export default function Workouts({ profile }: { profile: UserProfile | null }) {
                 </button>
               </div>
               <p className="text-on-surface-variant mb-8">{selectedPlan.description}</p>
-              <div className="space-y-4">
-                {selectedPlan.exercises.map((ex, i) => (
-                  <div key={i} className="bg-surface-container-highest p-4 rounded-lg flex items-center gap-4">
-                    <div className="w-10 h-10 bg-primary/10 rounded flex items-center justify-center text-primary font-headline font-bold">
-                      {i + 1}
+              <div className="space-y-6">
+                {selectedPlan.days ? (
+                  selectedPlan.days.map((day, dIdx) => (
+                    <div key={dIdx} className="space-y-4">
+                      <div className="border-b border-white/10 pb-2">
+                        <h4 className="font-headline font-bold text-xl uppercase tracking-tight text-primary">{day.dayName}</h4>
+                        {day.focus && <p className="text-sm text-on-surface-variant uppercase tracking-widest">{day.focus}</p>}
+                      </div>
+                      <div className="space-y-4">
+                        {day.exercises.map((ex, i) => (
+                          <div key={i} className="bg-surface-container-highest p-4 rounded-lg flex items-center gap-4">
+                            <div className="w-10 h-10 bg-primary/10 rounded flex items-center justify-center text-primary font-headline font-bold">
+                              {i + 1}
+                            </div>
+                            <div className="flex-1">
+                              <h5 className="font-bold uppercase tracking-tight">{ex.name}</h5>
+                              <p className="text-xs text-on-surface-variant">{ex.notes}</p>
+                            </div>
+                            <div className="text-right">
+                              <div className="font-headline font-black text-primary">{ex.sets} Sets</div>
+                              <div className="text-xs font-bold uppercase text-on-surface-variant">{ex.reps} Reps</div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                    <div className="flex-1">
-                      <h4 className="font-bold uppercase tracking-tight">{ex.name}</h4>
-                      <p className="text-xs text-on-surface-variant">{ex.notes}</p>
+                  ))
+                ) : (
+                  selectedPlan.exercises?.map((ex, i) => (
+                    <div key={i} className="bg-surface-container-highest p-4 rounded-lg flex items-center gap-4">
+                      <div className="w-10 h-10 bg-primary/10 rounded flex items-center justify-center text-primary font-headline font-bold">
+                        {i + 1}
+                      </div>
+                      <div className="flex-1">
+                        <h4 className="font-bold uppercase tracking-tight">{ex.name}</h4>
+                        <p className="text-xs text-on-surface-variant">{ex.notes}</p>
+                      </div>
+                      <div className="text-right">
+                        <div className="font-headline font-black text-primary">{ex.sets} Sets</div>
+                        <div className="text-xs font-bold uppercase text-on-surface-variant">{ex.reps} Reps</div>
+                      </div>
                     </div>
-                    <div className="text-right">
-                      <div className="font-headline font-black text-primary">{ex.sets} Sets</div>
-                      <div className="text-xs font-bold uppercase text-on-surface-variant">{ex.reps} Reps</div>
-                    </div>
-                  </div>
-                ))}
+                  ))
+                )}
               </div>
               <button 
                 onClick={() => setSelectedPlan(null)}
