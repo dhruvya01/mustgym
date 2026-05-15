@@ -47,31 +47,26 @@ export default function AnalyticsPage({ profile }: { profile: UserProfile | null
       try {
         const gymId = profile.gymId;
         
-        if (gymId) {
-          const gymQuery = query(collection(db, 'gyms'));
-          const gymDocs = await getDocs(gymQuery);
-          const gymDoc = gymDocs.docs.find(d => d.id === gymId);
-          if (gymDoc && gymDoc.data().subscriptionTier === 'starter') {
-            navigate('/admin');
-            return;
-          }
+        if (!gymId) {
+          navigate('/admin');
+          return;
+        }
+
+        const gymQuery = query(collection(db, 'gyms'));
+        const gymDocs = await getDocs(gymQuery);
+        const gymDoc = gymDocs.docs.find(d => d.id === gymId);
+        if (gymDoc && gymDoc.data().subscriptionTier === 'starter') {
+          navigate('/admin');
+          return;
         }
         
-        const membersReq = profile.role === 'admin' 
-          ? getDocs(collection(db, 'users'))
-          : getDocs(query(collection(db, 'users'), where('gymId', '==', gymId)));
+        const membersReq = getDocs(query(collection(db, 'users'), where('gymId', '==', gymId)));
           
-        const attendanceReq = profile.role === 'admin'
-          ? getDocs(collection(db, 'attendance'))
-          : getDocs(query(collection(db, 'attendance'), where('gymId', '==', gymId)));
+        const attendanceReq = getDocs(query(collection(db, 'attendance'), where('gymId', '==', gymId)));
           
-        const paymentsReq = profile.role === 'admin'
-          ? getDocs(collection(db, 'payments'))
-          : getDocs(query(collection(db, 'payments'), where('gymId', '==', gymId)));
+        const paymentsReq = getDocs(query(collection(db, 'payments'), where('gymId', '==', gymId)));
           
-        const usageReq = profile.role === 'admin'
-          ? getDocs(collection(db, 'equipmentUsage'))
-          : getDocs(query(collection(db, 'equipmentUsage'), where('gymId', '==', gymId)));
+        const usageReq = getDocs(query(collection(db, 'equipmentUsage'), where('gymId', '==', gymId)));
 
         const [mSnap, aSnap, pSnap, uSnap] = await Promise.all([
           membersReq, attendanceReq, paymentsReq, usageReq

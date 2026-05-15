@@ -46,19 +46,19 @@ export default function Dashboard({ profile }: { profile: UserProfile | null }) 
   ];
 
   useEffect(() => {
-    if (!profile?.uid) return;
+    if (!profile?.uid || !profile?.gymId) return;
 
     const attendancePath = 'attendance';
     const qAttendance = query(
       collection(db, attendancePath),
       where('userId', '==', profile.uid),
-      orderBy('timestamp', 'desc'),
-      limit(30)
+      where('gymId', '==', profile.gymId)
     );
 
     const unsubAttendance = onSnapshot(qAttendance, (snapshot) => {
       const records = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as AttendanceRecord));
-      setAttendance(records);
+      records.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+      setAttendance(records.slice(0, 30));
     }, (error) => {
       setTimeout(() => {
         handleFirestoreError(error, OperationType.LIST, attendancePath);
@@ -69,13 +69,14 @@ export default function Dashboard({ profile }: { profile: UserProfile | null }) 
     const qPlans = query(
       collection(db, plansPath),
       where('userId', '==', profile.uid),
-      orderBy('createdAt', 'desc'),
-      limit(1)
+      where('gymId', '==', profile.gymId)
     );
 
     const unsubPlans = onSnapshot(qPlans, (snapshot) => {
       if (!snapshot.empty) {
-        setLatestPlan({ id: snapshot.docs[0].id, ...snapshot.docs[0].data() } as WorkoutPlan);
+        const plans = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as WorkoutPlan));
+        plans.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+        setLatestPlan(plans[0]);
       }
       setLoading(false);
     }, (error) => {
@@ -101,14 +102,13 @@ export default function Dashboard({ profile }: { profile: UserProfile | null }) 
 
       const qAnnouncements = query(
         collection(db, announcementsPath),
-        where('gymId', '==', profile.gymId),
-        orderBy('createdAt', 'desc'),
-        limit(3)
+        where('gymId', '==', profile.gymId)
       );
 
       unsubAnnouncements = onSnapshot(qAnnouncements, (snapshot) => {
         const records = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Announcement));
-        setAnnouncements(records);
+        records.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+        setAnnouncements(records.slice(0, 3));
       }, (error) => {
         setTimeout(() => {
           handleFirestoreError(error, OperationType.LIST, announcementsPath);
@@ -350,9 +350,23 @@ export default function Dashboard({ profile }: { profile: UserProfile | null }) 
               className="max-w-3xl"
             >
               <div className="flex items-center gap-3 mb-4">
-            <div className="h-[1px] w-12 bg-primary" />
-            <span className="font-headline font-bold uppercase tracking-[0.3em] text-primary text-[10px]">Elite Member Access</span>
-          </div>
+                {gymInfo?.logoUrl ? (
+                  <img src={gymInfo.logoUrl} alt={gymInfo?.name} className="w-8 h-8 rounded-lg object-cover border border-white/10" />
+                ) : (
+                  <div className="w-8 h-8 bg-primary/20 flex items-center justify-center rounded-lg border border-primary/30">
+                    <Dumbbell className="text-primary w-4 h-4" />
+                  </div>
+                )}
+                <span className="font-headline font-bold uppercase tracking-[0.3em] text-primary text-[10px] break-words">
+                  {gymInfo?.name ? `${gymInfo.name.toUpperCase()} MEMBER` : 'ELITE MEMBER ACCESS'}
+                </span>
+                
+                {gymInfo?.subscriptionTier && (
+                   <span className="ml-2 px-2 py-0.5 bg-white/10 text-white rounded text-[8px] font-bold uppercase tracking-widest border border-white/5">
+                     {gymInfo.subscriptionTier} Plan
+                   </span>
+                )}
+              </div>
           <h2 className="font-headline font-black text-3xl sm:text-6xl md:text-8xl leading-[0.85] uppercase italic tracking-tighter mb-4">
             WELCOME,<br/>
             <span className="text-primary-dim">{profile?.displayName?.split(' ')[0] || 'CHAMPION'}</span>
@@ -365,22 +379,24 @@ export default function Dashboard({ profile }: { profile: UserProfile | null }) 
 
       {/* Stats Bento Grid */}
       <section className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-4">
-        <motion.div 
-          whileHover={{ y: -5 }}
-          className="bg-surface-container p-3 sm:p-6 rounded-2xl border border-white/5 flex flex-col justify-between aspect-square md:aspect-auto"
-        >
-          <div className="w-8 h-8 sm:w-10 sm:h-10 bg-orange-500/10 rounded-xl flex items-center justify-center mb-2 sm:mb-4">
-            <Flame className={cn("text-orange-500", streak > 0 && "animate-pulse")} size={16} />
-          </div>
-          <div>
-            <div className="text-[7px] sm:text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mb-1">Streak</div>
-            <div className="font-headline font-black text-xl sm:text-3xl">{streak} <span className="text-[8px] sm:text-xs font-bold text-on-surface-variant">DAYS</span></div>
-          </div>
-        </motion.div>
+        {gymInfo?.subscriptionTier !== 'starter' && (
+          <motion.div 
+            whileHover={{ y: -5 }}
+            className="bg-surface-container p-3 sm:p-6 rounded-2xl border border-white/5 flex flex-col justify-between aspect-square md:aspect-auto"
+          >
+            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-orange-500/10 rounded-xl flex items-center justify-center mb-2 sm:mb-4">
+              <Flame className={cn("text-orange-500", streak > 0 && "animate-pulse")} size={16} />
+            </div>
+            <div>
+              <div className="text-[7px] sm:text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mb-1">Streak</div>
+              <div className="font-headline font-black text-xl sm:text-3xl">{streak} <span className="text-[8px] sm:text-xs font-bold text-on-surface-variant">DAYS</span></div>
+            </div>
+          </motion.div>
+        )}
 
         <motion.div 
           whileHover={{ y: -5 }}
-          className="bg-surface-container p-3 sm:p-6 rounded-2xl border border-white/5 flex flex-col justify-between aspect-square md:aspect-auto"
+          className={cn("bg-surface-container p-3 sm:p-6 rounded-2xl border border-white/5 flex flex-col justify-between aspect-square md:aspect-auto", gymInfo?.subscriptionTier === 'starter' ? "col-span-2 md:col-span-4" : "")}
         >
           <div className="w-8 h-8 sm:w-10 sm:h-10 bg-primary/10 rounded-xl flex items-center justify-center mb-2 sm:mb-4">
             <Trophy className="text-primary" size={16} />
@@ -391,38 +407,42 @@ export default function Dashboard({ profile }: { profile: UserProfile | null }) 
           </div>
         </motion.div>
 
-        <motion.div 
-          whileHover={{ y: -5 }}
-          className="bg-surface-container p-3 sm:p-6 rounded-2xl border border-white/5 flex flex-col justify-between aspect-square md:aspect-auto"
-        >
-          <div className="w-8 h-8 sm:w-10 sm:h-10 bg-blue-500/10 rounded-xl flex items-center justify-center mb-2 sm:mb-4">
-            <Dumbbell className="text-blue-500" size={16} />
-          </div>
-          <div>
-            <div className="text-[7px] sm:text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mb-1">Training Goal</div>
-            <div className="font-headline font-black text-sm sm:text-lg uppercase truncate">{latestPlan?.title.split(' ')[0] || 'STRENGTH'}</div>
-          </div>
-        </motion.div>
+        {gymInfo?.subscriptionTier !== 'starter' && (
+          <motion.div 
+            whileHover={{ y: -5 }}
+            className="bg-surface-container p-3 sm:p-6 rounded-2xl border border-white/5 flex flex-col justify-between aspect-square md:aspect-auto"
+          >
+            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-blue-500/10 rounded-xl flex items-center justify-center mb-2 sm:mb-4">
+              <Dumbbell className="text-blue-500" size={16} />
+            </div>
+            <div>
+              <div className="text-[7px] sm:text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mb-1">Training Goal</div>
+              <div className="font-headline font-black text-sm sm:text-lg uppercase truncate">{latestPlan?.title.split(' ')[0] || 'STRENGTH'}</div>
+            </div>
+          </motion.div>
+        )}
 
-        <motion.div 
-          whileHover={{ y: -5 }}
-          className="bg-surface-container p-3 sm:p-6 rounded-2xl border border-white/5 flex flex-col justify-between aspect-square md:aspect-auto"
-        >
-          <div className="w-8 h-8 sm:w-10 sm:h-10 bg-yellow-500/10 rounded-xl flex items-center justify-center mb-2 sm:mb-4">
-            <Zap className="text-yellow-500" size={16} />
-          </div>
-          <div>
-            <div className="text-[7px] sm:text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mb-1">Level {level}</div>
-            <div className="font-headline font-black text-xl sm:text-3xl">{points} <span className="text-[8px] sm:text-xs font-bold text-on-surface-variant">PTS</span></div>
-          </div>
-        </motion.div>
+        {gymInfo?.subscriptionTier !== 'starter' && (
+          <motion.div 
+            whileHover={{ y: -5 }}
+            className="bg-surface-container p-3 sm:p-6 rounded-2xl border border-white/5 flex flex-col justify-between aspect-square md:aspect-auto"
+          >
+            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-yellow-500/10 rounded-xl flex items-center justify-center mb-2 sm:mb-4">
+              <Zap className="text-yellow-500" size={16} />
+            </div>
+            <div>
+              <div className="text-[7px] sm:text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mb-1">Level {level}</div>
+              <div className="font-headline font-black text-xl sm:text-3xl">{points} <span className="text-[8px] sm:text-xs font-bold text-on-surface-variant">PTS</span></div>
+            </div>
+          </motion.div>
+        )}
       </section>
 
       {/* Main Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-8">
         {/* Left Column: Training & Live Status */}
         <div className="lg:col-span-8 space-y-4 sm:space-y-8">
-          {/* Compact Training Status */}
+           {/* Compact Training Status */}
           <section className="bg-surface-container-low p-4 sm:p-6 rounded-2xl border border-white/5 flex flex-col sm:flex-row items-center justify-between gap-4 sm:gap-6">
             <div className="flex items-center gap-4">
               <div className="w-10 h-10 sm:w-12 sm:h-12 bg-primary/10 rounded-xl flex items-center justify-center text-primary shrink-0">
@@ -434,7 +454,7 @@ export default function Dashboard({ profile }: { profile: UserProfile | null }) 
                   <span className="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">Current Phase</span>
                 </div>
                 <h3 className="font-headline font-black text-lg sm:text-xl uppercase italic leading-tight">
-                  {latestPlan?.title || 'Hypertrophy'}
+                  {gymInfo?.subscriptionTier === 'starter' ? 'Self-Guided Training' : (latestPlan?.title || 'Hypertrophy')}
                 </h3>
               </div>
             </div>
@@ -447,6 +467,11 @@ export default function Dashboard({ profile }: { profile: UserProfile | null }) 
                 >
                   {checkingOut ? <Loader2 className="animate-spin" size={14} /> : <LogOut size={14} />}
                   Check Out
+                </button>
+              ) : gymInfo?.subscriptionTier === 'starter' ? (
+                <button disabled className="bg-white/5 text-on-surface-variant border border-white/10 font-headline font-bold uppercase py-3 px-6 rounded-lg flex items-center gap-2 text-[10px] tracking-widest whitespace-nowrap flex-1 sm:flex-none justify-center opacity-70 cursor-not-allowed cursor-help" title="AI Workouts require PRO Plan">
+                  Pro Feature
+                  <Lock size={14} />
                 </button>
               ) : (
                 <Link to="/workouts" className="kinetic-gradient text-on-primary-fixed font-headline font-bold uppercase py-3 px-6 rounded-lg flex items-center gap-2 text-[10px] tracking-widest shadow-lg active:scale-95 transition-all whitespace-nowrap flex-1 sm:flex-none justify-center">

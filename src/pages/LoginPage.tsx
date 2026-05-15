@@ -13,13 +13,6 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const [showTerms, setShowTerms] = useState(false);
   
-  // Extract gym parameter from URL if it exists
-  const gymParams = new URLSearchParams(window.location.search);
-  const initialGymParam = gymParams.get('gym') || '';
-  
-  const [activePortal, setActivePortal] = useState<'member' | 'owner'>(initialGymParam ? 'member' : 'member');
-  const [gymId, setGymId] = useState(initialGymParam.toUpperCase());
-  
   // Owner Login State
   const [ownerEmail, setOwnerEmail] = useState('');
   const [ownerPassword, setOwnerPassword] = useState('');
@@ -157,69 +150,15 @@ export default function LoginPage() {
           
           <div className="mb-10 text-center md:text-left">
             <h2 className="font-headline font-black text-3xl sm:text-4xl tracking-tighter mb-2 text-white">
-              Access <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#00f0ff] to-[#39ff14]">Portal</span>
+              Owner <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#00f0ff] to-[#39ff14]">Portal</span>
             </h2>
             <p className="text-gray-500 text-[10px] font-bold uppercase tracking-[0.2em]">
-              Select your entrance to the system
+              Access your command center
             </p>
-          </div>
-
-          {/* Portal Switcher */}
-          <div className="grid grid-cols-2 gap-2 p-1 bg-white/5 rounded-xl border border-white/10 mb-8">
-            <button 
-              onClick={() => setActivePortal('member')}
-              className={cn(
-                "py-3 rounded-lg font-bold text-[10px] uppercase tracking-widest transition-all",
-                activePortal === 'member' ? "bg-[#111] text-white shadow-lg border border-white/10" : "text-gray-500 hover:text-white"
-              )}
-            >
-              Member Portal
-            </button>
-            <button 
-              onClick={() => setActivePortal('owner')}
-              className={cn(
-                "py-3 rounded-lg font-bold text-[10px] uppercase tracking-widest transition-all",
-                activePortal === 'owner' ? "bg-[#111] text-white shadow-lg border border-white/10" : "text-gray-500 hover:text-white"
-              )}
-            >
-              Owner Portal
-            </button>
           </div>
 
           <div className="space-y-6">
             <AnimatePresence mode="wait">
-              {activePortal === 'member' ? (
-                <motion.div 
-                  key="member"
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  className="space-y-6"
-                >
-                  <div className="bg-[#111] p-6 rounded-2xl border border-white/5">
-                    <label className="block text-[10px] font-bold text-[#00f0ff] uppercase tracking-[0.2em] mb-3 ml-1">Establishment ID</label>
-                    <input 
-                      type="text"
-                      placeholder="e.g. GYM-XXXXXX"
-                      value={gymId}
-                      onChange={(e) => setGymId(e.target.value.toUpperCase())}
-                      className="w-full bg-[#050505] border border-white/10 rounded-xl py-4 px-4 text-white font-bold focus:outline-none focus:border-[#00f0ff]/50 transition-all uppercase tracking-widest text-center placeholder:text-gray-600"
-                    />
-                    <p className="text-[9px] text-gray-500 mt-3 text-center uppercase tracking-tighter font-medium">
-                      Enter the ID provided by your gym to sync your data.
-                    </p>
-                  </div>
-                  
-                  <button 
-                    onClick={handleGoogleLogin}
-                    disabled={!gymId}
-                    className="flex items-center justify-center gap-4 w-full py-5 bg-[#00f0ff] text-black rounded-xl hover:bg-[#00d0ff] transition-all group active:scale-[0.98] shadow-[0_0_20px_rgba(0,240,255,0.2)] disabled:opacity-50 disabled:grayscale"
-                  >
-                    <Chrome size={24} className="group-hover:scale-110 transition-transform" />
-                    <span className="text-sm font-black uppercase italic tracking-tighter">Enter Member Portal</span>
-                  </button>
-                </motion.div>
-              ) : (
                 <motion.div 
                   key="owner"
                   initial={{ opacity: 0, y: 10 }}
@@ -366,7 +305,6 @@ export default function LoginPage() {
                       </>
                     )}
                 </motion.div>
-              )}
             </AnimatePresence>
 
             {error && (

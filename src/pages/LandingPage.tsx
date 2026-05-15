@@ -59,9 +59,6 @@ export default function LandingPage() {
           </div>
 
           <div className="hidden md:flex items-center gap-4">
-            <Link to="/login" className="text-gray-400 hover:text-[#00f0ff] font-medium text-sm transition-colors">
-              Member Login
-            </Link>
             <Link to="/login" className="text-white hover:text-[#00f0ff] font-medium text-sm transition-colors border border-white/10 px-4 py-2 rounded-lg hover:border-[#00f0ff]/50 bg-white/5 backdrop-blur-sm">
               Gym Owner Login
             </Link>
@@ -89,7 +86,6 @@ export default function LandingPage() {
             exit={{ opacity: 0, y: -20 }}
             className="fixed inset-0 z-40 bg-[#050505]/95 backdrop-blur-xl pt-24 px-6 md:hidden flex flex-col gap-6"
           >
-            <Link to="/login" className="text-xl font-bold border-b border-white/10 pb-4">Member Login</Link>
             <Link to="/login" className="text-xl font-bold border-b border-white/10 pb-4">Gym Owner Login</Link>
             <a href={WHATSAPP_URL} target="_blank" rel="noopener noreferrer" className="text-xl font-bold text-[#00f0ff] flex items-center gap-2">Book Demo on WhatsApp</a>
           </motion.div>
@@ -557,7 +553,7 @@ export default function LandingPage() {
                 <li><a href="#features" className="hover:text-[#00f0ff] transition-colors">Features</a></li>
                 <li><a href="#pricing" className="hover:text-[#00f0ff] transition-colors">Pricing</a></li>
                 <li><Link to="/login" className="hover:text-[#00f0ff] transition-colors">Gym Owner Login</Link></li>
-                <li><Link to="/login" className="hover:text-[#00f0ff] transition-colors">Member App</Link></li>
+                <li><Link to="/memberlogin" className="hover:text-[#00f0ff] transition-colors">Member Login</Link></li>
               </ul>
             </div>
 

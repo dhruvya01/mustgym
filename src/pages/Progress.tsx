@@ -37,12 +37,12 @@ export default function Progress({ profile }: { profile: UserProfile | null }) {
     const attendanceQ = query(
       collection(db, attendancePath), 
       where('userId', '==', profile.uid),
-      where('gymId', '==', profile.gymId),
-      orderBy('timestamp', 'desc')
+      where('gymId', '==', profile.gymId)
     );
 
     const unsubAttendance = onSnapshot(attendanceQ, (snapshot) => {
       const fetched = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as AttendanceRecord));
+      fetched.sort((a,b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
       setAttendance(fetched);
       calculateStreak(fetched);
       setLoading(false);
@@ -57,12 +57,12 @@ export default function Progress({ profile }: { profile: UserProfile | null }) {
     const prQ = query(
       collection(db, prPath),
       where('userId', '==', profile.uid),
-      where('gymId', '==', profile.gymId),
-      orderBy('date', 'asc')
+      where('gymId', '==', profile.gymId)
     );
 
     const unsubPR = onSnapshot(prQ, (snapshot) => {
       const fetched = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as PersonalRecord));
+      fetched.sort((a,b) => new Date(a.date).getTime() - new Date(b.date).getTime());
       setPersonalRecords(fetched);
     }, (error) => {
       setTimeout(() => {

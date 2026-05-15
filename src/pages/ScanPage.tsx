@@ -52,14 +52,13 @@ export default function ScanPage({ profile }: { profile: UserProfile | null }) {
         const q = query(
           collection(db, 'attendance'),
           where('userId', '==', profile.uid),
-          where('gymId', '==', profile.gymId),
-          orderBy('timestamp', 'desc'),
-          limit(5) // Get a few to find active one
+          where('gymId', '==', profile.gymId)
         );
         const snapshot = await getDocs(q);
         
         if (!snapshot.empty) {
           const records = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as AttendanceRecord));
+          records.sort((a,b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
           const lastRecord = records[0];
           
           // Check for active session
@@ -175,7 +174,7 @@ export default function ScanPage({ profile }: { profile: UserProfile | null }) {
   }, [checkingStatus, isHalted, startScanner]);
 
   async function onScanSuccess(decodedText: string) {
-    if (!profile || isProcessingRef.current) return;
+    if (!profile || !profile.gymId || isProcessingRef.current) return;
     
     isProcessingRef.current = true;
 

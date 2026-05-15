@@ -37,7 +37,7 @@ export default function Workouts({ profile }: { profile: UserProfile | null }) {
   });
 
   useEffect(() => {
-    if (!profile?.uid) return;
+    if (!profile?.uid || !profile?.gymId) return;
 
     setLoading(true);
 
@@ -46,11 +46,12 @@ export default function Workouts({ profile }: { profile: UserProfile | null }) {
     const workoutQ = query(
       collection(db, workoutPath), 
       where('userId', '==', profile.uid),
-      orderBy('createdAt', 'desc')
+      where('gymId', '==', profile.gymId)
     );
 
     const unsubWorkouts = onSnapshot(workoutQ, (snapshot) => {
       const fetchedPlans = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as WorkoutPlan));
+      fetchedPlans.sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
       setPlans(fetchedPlans);
       if (activeTab === 'workouts') setLoading(false);
     }, (error) => {
@@ -64,11 +65,12 @@ export default function Workouts({ profile }: { profile: UserProfile | null }) {
     const dietQ = query(
       collection(db, dietPath), 
       where('userId', '==', profile.uid),
-      orderBy('createdAt', 'desc')
+      where('gymId', '==', profile.gymId)
     );
 
     const unsubDiet = onSnapshot(dietQ, (snapshot) => {
       const fetchedDietPlans = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as DietPlan));
+      fetchedDietPlans.sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
       setDietPlans(fetchedDietPlans);
       if (activeTab === 'diet') setLoading(false);
     }, (error) => {

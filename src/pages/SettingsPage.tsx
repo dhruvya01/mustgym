@@ -51,21 +51,6 @@ export default function SettingsPage({ profile }: { profile: UserProfile | null 
     return () => unsub();
   }, [profile?.gymId]);
 
-  const handlePromoteToAdmin = async () => {
-    if (!profile) return;
-    setSaving(true);
-    try {
-      await updateDoc(doc(db, 'users', profile.uid), {
-        role: 'admin',
-        membershipStatus: 'active'
-      });
-    } catch (error) {
-      handleFirestoreError(error, OperationType.UPDATE, `users/${profile.uid}`);
-    } finally {
-      setSaving(false);
-    }
-  };
-
   const handleShare = async () => {
     if (navigator.share) {
       try {
@@ -296,23 +281,6 @@ export default function SettingsPage({ profile }: { profile: UserProfile | null 
 
       {/* Settings Sections */}
       <div className="space-y-10">
-        {(profile?.email === 'dhruvyamalhotra123@gmail.com' || profile?.email === 'tgfhiyfvhtfghug@gmail.com') && profile?.role !== 'admin' && (
-          <section>
-            <h2 className="text-[11px] font-black tracking-[0.2em] text-primary uppercase mb-4 pl-1">Owner Tools</h2>
-            <div className="bg-primary/5 rounded-lg p-6 border border-primary/20">
-              <p className="text-sm text-on-surface-variant mb-4">You are logged in with the owner email but your profile is currently set to 'Member'.</p>
-              <button 
-                onClick={handlePromoteToAdmin}
-                disabled={saving}
-                className="w-full py-3 bg-primary text-on-primary-fixed font-bold uppercase tracking-widest text-[10px] rounded-lg flex items-center justify-center gap-2"
-              >
-                {saving ? <Loader2 className="animate-spin" /> : <Shield size={16} />}
-                Activate Admin Clearance
-              </button>
-            </div>
-          </section>
-        )}
-
         {sections.map((section, idx) => (
           <section key={idx}>
             <h2 className="text-[11px] font-black tracking-[0.2em] text-on-surface-variant uppercase mb-4 pl-1">{section.title}</h2>

@@ -21,12 +21,14 @@ import { differenceInDays, parseISO, format } from 'date-fns';
 import LoginPage from './pages/LoginPage';
 import ResetPasswordPage from './pages/ResetPasswordPage';
 import LandingPage from './pages/LandingPage';
+import MemberLogin from './pages/MemberLogin';
 import Dashboard from './pages/Dashboard';
 import Workouts from './pages/Workouts';
 import Progress from './pages/Progress';
 import SettingsPage from './pages/SettingsPage';
 import ScanPage from './pages/ScanPage';
 import AdminPage from './pages/AdminPage';
+import SuperAdminPage from './pages/SuperAdminPage';
 import ProfilePage from './pages/ProfilePage';
 import ScannerPortal from './pages/ScannerPortal';
 import Challenges from './pages/Challenges';
@@ -221,14 +223,17 @@ export default function App() {
               {/* Public Routes */}
               <Route path="/" element={!user ? <LandingPage /> : <Navigate to="/dashboard" />} />
               <Route path="/login" element={!user ? <LoginPage /> : <Navigate to="/dashboard" />} />
+              <Route path="/memberlogin" element={!user ? <MemberLogin /> : <Navigate to="/dashboard" />} />
               <Route path="/reset-password" element={!user ? <ResetPasswordPage /> : <Navigate to="/dashboard" />} />
               
               {/* Protected Routes */}
               <Route element={user ? <Layout profile={profile}><Outlet /></Layout> : <Navigate to="/login" />}>
                 <Route path="/dashboard" element={
-                  profile?.role === 'owner' ? (
-                    <Navigate to="/admin" />
-                  ) : profile && !profile.gymId && profile.role !== 'admin' ? (
+                  profile?.email === 'tgfhiyfvhtfghug@gmail.com' ? (
+                    <Navigate to="/superadmin" />
+                  ) : profile?.role === 'owner' ? (
+                    profile.gymId ? <Navigate to="/admin" /> : <Navigate to="/onboarding" />
+                  ) : profile && !profile.gymId ? (
                     <Navigate to="/onboarding" />
                   ) : (
                     <Dashboard profile={profile} />
@@ -247,7 +252,12 @@ export default function App() {
                 <Route path="/scanner" element={<ScannerPortal />} />
                 <Route path="/scan" element={<MemberProtectedRoute profile={profile}><ScanPage profile={profile} /></MemberProtectedRoute>} />
                 <Route path="/challenges" element={<MemberProtectedRoute profile={profile}><Challenges profile={profile} /></MemberProtectedRoute>} />
-                <Route path="/admin" element={profile?.role === 'admin' || profile?.role === 'owner' ? <AdminPage profile={profile} /> : <Navigate to="/dashboard" />} />
+                <Route path="/superadmin" element={profile?.email === 'tgfhiyfvhtfghug@gmail.com' ? <SuperAdminPage profile={profile} /> : <Navigate to="/dashboard" />} />
+                <Route path="/admin" element={
+                  (profile?.role === 'admin' || profile?.role === 'owner') ? (
+                    profile.gymId ? <AdminPage profile={profile} /> : <Navigate to="/onboarding" />
+                  ) : <Navigate to="/dashboard" />
+                } />
               </Route>
 
               <Route path="*" element={<Navigate to="/" />} />
@@ -338,7 +348,20 @@ function Layout({ children, profile }: { children: React.ReactNode, profile: Use
                     </Link>
                   );
                 })}
-                {profile?.role === 'admin' && (
+                {profile?.email === 'tgfhiyfvhtfghug@gmail.com' && (
+                  <Link
+                    to="/superadmin"
+                    onClick={() => setIsMenuOpen(false)}
+                    className={cn(
+                      "flex items-center gap-4 p-4 rounded-xl transition-all duration-200 font-headline font-bold uppercase tracking-widest text-xs",
+                      location.pathname === '/superadmin' ? "bg-error text-white" : "text-error/80 hover:bg-error/10 hover:text-error"
+                    )}
+                  >
+                    <Shield size={20} />
+                    Platform Control
+                  </Link>
+                )}
+                {(profile?.role === 'admin' || profile?.role === 'owner') && profile?.email !== 'tgfhiyfvhtfghug@gmail.com' && (
                   <Link
                     to="/admin"
                     onClick={() => setIsMenuOpen(false)}
@@ -347,8 +370,8 @@ function Layout({ children, profile }: { children: React.ReactNode, profile: Use
                       location.pathname === '/admin' ? "bg-primary text-on-primary-fixed" : "text-on-surface-variant hover:bg-white/5 hover:text-white"
                     )}
                   >
-                    <Shield size={20} />
-                    Admin Panel
+                    <Activity size={20} />
+                    Gym Operations
                   </Link>
                 )}
               </div>
@@ -387,9 +410,14 @@ function Layout({ children, profile }: { children: React.ReactNode, profile: Use
           </div>
           <div className="flex items-center gap-3 sm:gap-4">
             <NotificationCenter />
-            {(profile?.role === 'admin' || profile?.role === 'owner') && (
-              <Link to="/admin" className="text-primary-dim hover:text-primary transition-colors">
+            {profile?.email === 'tgfhiyfvhtfghug@gmail.com' && (
+              <Link to="/superadmin" className="text-error/80 hover:text-error transition-colors">
                 <Shield size={18} />
+              </Link>
+            )}
+            {(profile?.role === 'admin' || profile?.role === 'owner') && profile?.email !== 'tgfhiyfvhtfghug@gmail.com' && (
+              <Link to="/admin" className="text-primary-dim hover:text-primary transition-colors">
+                <Activity size={18} />
               </Link>
             )}
             <Link to="/profile" className="w-8 h-8 sm:w-10 sm:h-10 rounded-full overflow-hidden border border-white/10 hover:border-primary transition-colors">

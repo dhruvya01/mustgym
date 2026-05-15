@@ -122,6 +122,44 @@ export default function Challenges({ profile }: { profile: UserProfile | null })
   const activeChallenges = challenges.filter(c => isAfter(parseISO(c.endDate), new Date()));
   const pastChallenges = challenges.filter(c => isBefore(parseISO(c.endDate), new Date()));
 
+  if (gymTier === 'starter') {
+    return (
+      <div className="space-y-10 pb-20 relative">
+        <SEO title="Fitness Challenges" />
+        
+        {/* Lock Overlay */}
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-md rounded-3xl">
+          <div className="text-center p-8 bg-surface-container-high rounded-3xl border border-white/10 max-w-sm">
+            <div className="w-16 h-16 bg-primary/20 flex items-center justify-center rounded-full mx-auto mb-4">
+              <Lock className="text-primary w-8 h-8" />
+            </div>
+            <h3 className="font-headline font-black text-2xl uppercase italic mb-2">Pro Feature</h3>
+            <p className="text-sm text-on-surface-variant font-medium">
+              Challenges and Leaderboards require a Professional or Elite gym subscription. Contact your Gym Admin for upgrades.
+            </p>
+          </div>
+        </div>
+
+        <header className="relative pt-4 opacity-30 pointer-events-none">
+          <motion.div 
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="max-w-3xl"
+          >
+            <div className="flex items-center gap-3 mb-4">
+              <div className="h-[1px] w-12 bg-primary" />
+              <span className="font-headline font-bold uppercase tracking-[0.3em] text-primary text-[10px]">Peak Performance</span>
+            </div>
+            <h2 className="font-headline font-black text-4xl sm:text-7xl lg:text-8xl leading-none uppercase italic tracking-tighter mb-6">
+              FITNESS<br/>
+              <span className="text-primary-dim">CHALLENGES</span>
+            </h2>
+          </motion.div>
+        </header>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-10 pb-20">
       <SEO title="Fitness Challenges" />
@@ -197,7 +235,7 @@ export default function Challenges({ profile }: { profile: UserProfile | null })
       {/* Leaderboard Section (Optional) */}
       <section className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         <div className="lg:col-span-12">
-            <ChallengeLeaderboard challenges={activeChallenges} />
+            <ChallengeLeaderboard challenges={activeChallenges} gymId={profile?.gymId} />
         </div>
       </section>
 
@@ -322,17 +360,18 @@ function ChallengeCard({ challenge, participation, onJoin, onLog, index }: {
   );
 }
 
-function ChallengeLeaderboard({ challenges }: { challenges: Challenge[] }) {
+function ChallengeLeaderboard({ challenges, gymId }: { challenges: Challenge[], gymId?: string }) {
     const [selectedId, setSelectedId] = useState<string | null>(challenges[0]?.id || null);
     const [leaderboard, setLeaderboard] = useState<ChallengeParticipant[]>([]);
     const [loading, setLoading] = useState(false);
 
     useEffect(() => {
-        if (!selectedId) return;
+        if (!selectedId || !gymId) return;
         setLoading(true);
         const q = query(
             collection(db, 'challengeParticipants'),
             where('challengeId', '==', selectedId),
+            where('gymId', '==', gymId),
             orderBy('progress', 'desc'),
             limit(10)
         );

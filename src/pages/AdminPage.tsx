@@ -107,7 +107,10 @@ export default function AdminPage({ profile }: { profile: UserProfile | null }) 
 
   useEffect(() => {
     if (!profile || (profile.role !== 'admin' && profile.role !== 'owner')) return;
-    if (profile.role === 'owner' && !profile.gymId) return;
+    if (!profile.gymId) {
+      setLoading(false);
+      return;
+    }
 
     const membersPath = 'users';
     const attendancePath = 'attendance';
@@ -127,21 +130,9 @@ export default function AdminPage({ profile }: { profile: UserProfile | null }) 
           handleFirestoreError(error, OperationType.GET, `gyms/${profile.gymId}`);
         }, 0);
       });
-    } else if (profile.role === 'admin') {
-      unsubGym = onSnapshot(query(collection(db, 'gyms'), limit(1)), (snapshot) => {
-        if (!snapshot.empty) {
-          setGymInfo(snapshot.docs[0].data());
-        }
-      }, (error) => {
-        setTimeout(() => {
-          handleFirestoreError(error, OperationType.LIST, `gyms`);
-        }, 0);
-      });
     }
 
-    const membersQuery = profile.role === 'admin' 
-      ? collection(db, membersPath)
-      : query(collection(db, membersPath), where('gymId', '==', profile.gymId));
+    const membersQuery = query(collection(db, membersPath), where('gymId', '==', profile.gymId));
 
     const unsubMembers = onSnapshot(membersQuery, (snapshot) => {
       const fetchedMembers = snapshot.docs.map(doc => doc.data() as UserProfile);
@@ -152,12 +143,11 @@ export default function AdminPage({ profile }: { profile: UserProfile | null }) 
       }, 0);
     });
 
-    const attendanceQuery = profile.role === 'admin'
-      ? query(collection(db, attendancePath), orderBy('timestamp', 'desc'))
-      : query(collection(db, attendancePath), where('gymId', '==', profile.gymId), orderBy('timestamp', 'desc'));
+    const attendanceQuery = query(collection(db, attendancePath), where('gymId', '==', profile.gymId));
 
     const unsubAttendance = onSnapshot(attendanceQuery, (snapshot) => {
       const fetchedAttendance = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as AttendanceRecord));
+      fetchedAttendance.sort((a,b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
       setAttendance(fetchedAttendance);
     }, (error) => {
       setTimeout(() => {
@@ -165,9 +155,7 @@ export default function AdminPage({ profile }: { profile: UserProfile | null }) 
       }, 0);
     });
 
-    const equipmentQuery = profile.role === 'admin'
-      ? collection(db, equipmentPath)
-      : query(collection(db, equipmentPath), where('gymId', '==', profile.gymId));
+    const equipmentQuery = query(collection(db, equipmentPath), where('gymId', '==', profile.gymId));
 
     const unsubEquipment = onSnapshot(equipmentQuery, (snapshot) => {
       const fetchedEquip = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Equipment));
@@ -178,12 +166,11 @@ export default function AdminPage({ profile }: { profile: UserProfile | null }) 
       }, 0);
     });
 
-    const paymentsQuery = profile.role === 'admin'
-      ? query(collection(db, paymentsPath), orderBy('date', 'desc'))
-      : query(collection(db, paymentsPath), where('gymId', '==', profile.gymId), orderBy('date', 'desc'));
+    const paymentsQuery = query(collection(db, paymentsPath), where('gymId', '==', profile.gymId));
 
     const unsubPayments = onSnapshot(paymentsQuery, (snapshot) => {
       const fetchedPayments = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as PaymentRecord));
+      fetchedPayments.sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime());
       setPayments(fetchedPayments);
       setLoading(false);
     }, (error) => {
@@ -192,12 +179,11 @@ export default function AdminPage({ profile }: { profile: UserProfile | null }) 
       }, 0);
     });
 
-    const announcementsQuery = profile.role === 'admin'
-      ? query(collection(db, announcementsPath), orderBy('createdAt', 'desc'))
-      : query(collection(db, announcementsPath), where('gymId', '==', profile.gymId), orderBy('createdAt', 'desc'));
+    const announcementsQuery = query(collection(db, announcementsPath), where('gymId', '==', profile.gymId));
 
     const unsubAnnouncements = onSnapshot(announcementsQuery, (snapshot) => {
       const fetchedAnnouncements = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Announcement));
+      fetchedAnnouncements.sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
       setAnnouncements(fetchedAnnouncements);
     }, (error) => {
       setTimeout(() => {
@@ -205,9 +191,7 @@ export default function AdminPage({ profile }: { profile: UserProfile | null }) 
       }, 0);
     });
 
-    const tiersQuery = profile.role === 'admin'
-      ? collection(db, 'membershipTiers')
-      : query(collection(db, 'membershipTiers'), where('gymId', '==', profile.gymId));
+    const tiersQuery = query(collection(db, 'membershipTiers'), where('gymId', '==', profile.gymId));
 
     const unsubTiers = onSnapshot(tiersQuery, (snapshot) => {
       const fetchedTiers = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as MembershipTier));
@@ -229,12 +213,12 @@ export default function AdminPage({ profile }: { profile: UserProfile | null }) 
       }, 0);
     });
 
-    const alertsQuery = profile.role === 'admin'
-      ? query(collection(db, 'live_alerts'), where('resolved', '==', false), orderBy('timestamp', 'desc'))
-      : query(collection(db, 'live_alerts'), where('gymId', '==', profile.gymId), where('resolved', '==', false), orderBy('timestamp', 'desc'));
+    const alertsQuery = query(collection(db, 'live_alerts'), where('gymId', '==', profile.gymId), where('resolved', '==', false));
 
     const unsubAlerts = onSnapshot(alertsQuery, (snapshot) => {
       const fetchedAlerts = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      // @ts-ignore
+      fetchedAlerts.sort((a,b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
       setLiveAlerts(fetchedAlerts);
       
       // Show toast for new alerts
@@ -543,7 +527,7 @@ export default function AdminPage({ profile }: { profile: UserProfile | null }) 
     );
   }
 
-  if (!profile || (profile.role !== 'admin' && profile.role !== 'owner')) {
+  if (!profile || (profile.role !== 'admin' && profile.role !== 'owner') || !profile.gymId) {
     return (
       <div className="flex flex-col items-center justify-center py-20 text-center">
         <Lock size={64} className="text-error mb-6" />
@@ -1512,7 +1496,18 @@ export default function AdminPage({ profile }: { profile: UserProfile | null }) 
         <section className="space-y-6">
           <div className="flex flex-col md:flex-row gap-4 justify-between items-center">
             <h3 className="font-headline text-xl font-bold uppercase tracking-tight">Member Directory</h3>
-            <div className="flex gap-2 w-full md:w-auto">
+            <div className="flex flex-wrap gap-2 w-full md:w-auto">
+              <button
+                onClick={() => {
+                  const link = `${window.location.origin}/memberlogin?gym=${profile?.gymId}`;
+                  navigator.clipboard.writeText(link);
+                  toast.success('Member Invite Link copied to clipboard!');
+                }}
+                className="bg-surface-container-highest text-on-surface border border-white/10 px-4 py-2 rounded-lg text-[10px] font-bold uppercase tracking-widest hover:bg-white/10 transition-all flex items-center gap-2"
+              >
+                <Share2 size={16} />
+                Invite Link
+              </button>
               {members.some(m => m.membershipStatus === 'pending' || !m.membershipStatus) && (
                 <button 
                   onClick={async () => {
@@ -1527,11 +1522,11 @@ export default function AdminPage({ profile }: { profile: UserProfile | null }) 
                   Approve All Pending
                 </button>
               )}
-              <div className="relative flex-1 md:w-64">
+              <div className="relative flex-1 md:w-48">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-outline" size={18} />
                 <input 
                   type="text" 
-                  placeholder="Search members..."
+                  placeholder="Search..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="w-full bg-surface-container-highest border-none text-on-surface py-2 pl-10 pr-4 rounded-lg focus:ring-2 focus:ring-primary/40 text-sm"
@@ -1570,7 +1565,7 @@ export default function AdminPage({ profile }: { profile: UserProfile | null }) 
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-white/5">
-                  {filteredMembers.map((member) => (
+                  {filteredMembers.filter(m => m.role === 'member').map((member) => (
                     <tr key={member.uid} className="hover:bg-white/5 transition-colors group">
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
@@ -1633,11 +1628,34 @@ export default function AdminPage({ profile }: { profile: UserProfile | null }) 
                             {member.membershipStatus === 'halted' ? <CheckCircle size={18} className="text-amber-500" /> : <CheckCircle size={18} />}
                           </button>
                           <button 
+                            onClick={() => updateStatus(member.uid, 'halted')}
+                            className="p-1.5 hover:bg-amber-500/10 text-on-surface-variant hover:text-amber-500 rounded transition-colors"
+                            title="Suspend Membership"
+                          >
+                            <Lock size={18} />
+                          </button>
+                          <button 
                             onClick={() => updateStatus(member.uid, 'expired')}
                             className="p-1.5 hover:bg-error/10 text-on-surface-variant hover:text-error rounded transition-colors"
                             title="Expire Membership"
                           >
                             <XCircle size={18} />
+                          </button>
+                          <button 
+                            onClick={async () => {
+                              if (window.confirm('Are you sure you want to permanently remove this member?')) {
+                                try {
+                                  await deleteDoc(doc(db, 'users', member.uid));
+                                  toast.success('Member removed');
+                                } catch(e) {
+                                  toast.error('Failed to remove member');
+                                }
+                              }
+                            }}
+                            className="p-1.5 hover:bg-error/10 text-error/50 hover:text-error rounded transition-colors"
+                            title="Remove Member"
+                          >
+                            <Trash2 size={18} />
                           </button>
                         </div>
                       </td>
@@ -1649,7 +1667,7 @@ export default function AdminPage({ profile }: { profile: UserProfile | null }) 
 
             {/* Mobile Cards */}
             <div className="md:hidden divide-y divide-white/5">
-              {filteredMembers.map((member) => (
+              {filteredMembers.filter(m => m.role === 'member').map((member) => (
                 <div key={member.uid} className="p-4 space-y-4">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
@@ -1704,10 +1722,31 @@ export default function AdminPage({ profile }: { profile: UserProfile | null }) 
                         <CheckCircle size={18} />
                       </button>
                       <button 
+                        onClick={() => updateStatus(member.uid, 'halted')}
+                        className="p-2 bg-amber-500/10 text-amber-500 rounded"
+                      >
+                        <Lock size={18} />
+                      </button>
+                      <button 
                         onClick={() => updateStatus(member.uid, 'expired')}
                         className="p-2 bg-error/10 text-error rounded"
                       >
                         <XCircle size={18} />
+                      </button>
+                      <button 
+                        onClick={async () => {
+                          if (window.confirm('Are you sure you want to permanently remove this member?')) {
+                            try {
+                              await deleteDoc(doc(db, 'users', member.uid));
+                              toast.success('Member removed');
+                            } catch(e) {
+                              toast.error('Failed to remove member');
+                            }
+                          }
+                        }}
+                        className="p-2 bg-error/10 text-error/50 rounded"
+                      >
+                        <Trash2 size={18} />
                       </button>
                     </div>
                   </div>
@@ -2140,6 +2179,26 @@ export default function AdminPage({ profile }: { profile: UserProfile | null }) 
                         }}
                         className="w-full bg-background border border-white/5 rounded-xl py-3 px-4 text-sm font-bold focus:border-primary/50 outline-none"
                       />
+                    </div>
+                    <div>
+                      <label className="block text-[8px] font-bold text-outline-variant uppercase tracking-widest mb-2 ml-1">Gym Access Code (Optional)</label>
+                      <input 
+                        type="text" 
+                        defaultValue={gymInfo.inviteCode || ''}
+                        onBlur={async (e) => {
+                          if (e.target.value !== gymInfo.inviteCode) {
+                            try {
+                              await updateDoc(doc(db, 'gyms', gymInfo.id), { inviteCode: e.target.value });
+                              toast.success('Access code updated');
+                            } catch (error) {
+                              toast.error('Failed to update access code');
+                            }
+                          }
+                        }}
+                        className="w-full bg-background border border-white/5 rounded-xl py-3 px-4 text-sm font-bold focus:border-primary/50 outline-none"
+                        placeholder="e.g. JOINMEM2024"
+                      />
+                      <p className="text-[10px] text-on-surface-variant mt-1 ml-1">Members using this code get instant approval.</p>
                     </div>
                     <div>
                       <label className="block text-[8px] font-bold text-outline-variant uppercase tracking-widest mb-2 ml-1">Physical Address</label>
