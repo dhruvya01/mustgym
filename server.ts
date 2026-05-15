@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import express from 'express';
 import { createServer as createViteServer } from 'vite';
 import path from 'path';
@@ -74,7 +75,7 @@ async function startServer() {
       const plan = await generateWorkoutPlan(preferences || '', fitnessLevel || 'Beginner', goals || 'General fitness', availableEquipment || []);
       res.json(plan);
     } catch (err: any) {
-      res.status(500).json({ error: err.message });
+      res.status(400).json({ error: err.message });
     }
   });
 
@@ -92,7 +93,7 @@ async function startServer() {
       const plan = await generateDietPlan(preferences || '', fitnessLevel || 'Beginner', goals || 'General fitness');
       res.json(plan);
     } catch (err: any) {
-      res.status(500).json({ error: err.message });
+      res.status(400).json({ error: err.message });
     }
   });
 
@@ -102,7 +103,7 @@ async function startServer() {
       const insights = await generateAdminInsights(metrics || {});
       res.json(insights);
     } catch (err: any) {
-      res.status(500).json({ error: err.message });
+      res.status(400).json({ error: err.message });
     }
   });
 

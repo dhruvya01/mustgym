@@ -1,3 +1,16 @@
+function extractErrorMessage(errorString: string | undefined): string {
+  if (!errorString) return 'An unknown error occurred.';
+  try {
+    const parsed = JSON.parse(errorString);
+    if (parsed.error && parsed.error.message) {
+      return parsed.error.message;
+    }
+  } catch (e) {
+    // Not JSON
+  }
+  return errorString;
+}
+
 export async function generateWorkoutPlan(userId: string, preferences: string, fitnessLevel: string, goals: string, availableEquipment: string[]) {
   const response = await fetch('/api/ai/workout', {
     method: 'POST',
@@ -5,7 +18,7 @@ export async function generateWorkoutPlan(userId: string, preferences: string, f
     body: JSON.stringify({ userId, preferences, fitnessLevel, goals, availableEquipment })
   });
   const data = await response.json();
-  if (!response.ok) throw new Error(data.error || 'Failed to generate workout plan');
+  if (!response.ok) throw new Error(extractErrorMessage(data.error) || 'Failed to generate workout plan');
   return data;
 }
 
@@ -26,6 +39,6 @@ export async function generateDietPlan(userId: string, preferences: string, fitn
     body: JSON.stringify({ userId, preferences, fitnessLevel, goals })
   });
   const data = await response.json();
-  if (!response.ok) throw new Error(data.error || 'Failed to generate diet plan');
+  if (!response.ok) throw new Error(extractErrorMessage(data.error) || 'Failed to generate diet plan');
   return data;
 }
