@@ -14,11 +14,8 @@ interface OnboardingPageProps {
 }
 
 export default function OnboardingPage({ profile, onProfileUpdate }: OnboardingPageProps) {
-  const initialIntent = sessionStorage.getItem('portal_intent') === 'owner' ? 'create' : sessionStorage.getItem('portal_intent') === 'member' ? 'join' : 'choice';
-  const initialGymId = sessionStorage.getItem('pending_gym_id') || '';
-
-  const [step, setStep] = useState<'choice' | 'join' | 'create' | 'pricing'>(initialIntent);
-  const [gymId, setGymId] = useState(initialGymId);
+  const [step, setStep] = useState<'create' | 'pricing'>('create');
+  const [gymId, setGymId] = useState('');
   const [gymName, setGymName] = useState('');
   const [gymAddress, setGymAddress] = useState('');
   const [fullName, setFullName] = useState(profile?.displayName || '');
@@ -155,103 +152,10 @@ export default function OnboardingPage({ profile, onProfileUpdate }: OnboardingP
           animate={{ opacity: 1, y: 0 }}
           className="bg-surface-container rounded-[2rem] border border-white/5 p-8 md:p-12 shadow-2xl"
         >
-          {step === 'choice' && (
-            <div className="space-y-8">
-              <div className="text-center">
-                <h1 className="font-headline font-black text-3xl italic tracking-tighter text-white mb-2 uppercase">
-                  Complete Your <span className="text-primary">Profile</span>
-                </h1>
-                <p className="text-on-surface-variant font-medium uppercase tracking-widest text-[10px]">
-                  Select your role to continue to the dashboard
-                </p>
-              </div>
 
-              <div className="grid gap-4">
-                <button
-                  onClick={() => setStep('join')}
-                  className="group flex items-center gap-6 p-6 bg-white/5 hover:bg-primary/10 rounded-2xl border border-white/5 hover:border-primary/30 transition-all text-left"
-                >
-                  <div className="w-16 h-16 rounded-xl bg-white/10 group-hover:bg-primary/20 flex items-center justify-center transition-colors">
-                    <Users size={32} className="text-on-surface-variant group-hover:text-primary" />
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="font-headline font-bold text-lg text-white uppercase italic">I'm a Member</h3>
-                    <p className="text-xs text-on-surface-variant font-medium">Join an existing gym using a Gym ID provided by your owner.</p>
-                  </div>
-                  <ArrowRight size={20} className="text-on-surface-variant group-hover:text-primary transition-colors" />
-                </button>
-
-                <button
-                  onClick={() => setStep('create')}
-                  className="group flex items-center gap-6 p-6 bg-white/5 hover:bg-primary/10 rounded-2xl border border-white/5 hover:border-primary/30 transition-all text-left"
-                >
-                  <div className="w-16 h-16 rounded-xl bg-white/10 group-hover:bg-primary/20 flex items-center justify-center transition-colors">
-                    <Building2 size={32} className="text-on-surface-variant group-hover:text-primary" />
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="font-headline font-bold text-lg text-white uppercase italic">I'm a Gym Owner</h3>
-                    <p className="text-xs text-on-surface-variant font-medium">Create a new gym profile and manage your members & operations.</p>
-                  </div>
-                  <ArrowRight size={20} className="text-on-surface-variant group-hover:text-primary transition-colors" />
-                </button>
-              </div>
-            </div>
-          )}
-
-          {step === 'join' && (
-            <div className="space-y-8">
-              <button 
-                onClick={() => setStep('choice')}
-                className="text-[10px] font-bold text-primary uppercase tracking-widest hover:underline"
-              >
-                ← Back to Selection
-              </button>
-              
-              <div>
-                <h1 className="font-headline font-black text-3xl italic tracking-tighter text-white mb-2 uppercase">
-                  Join a <span className="text-primary">Gym</span>
-                </h1>
-                <p className="text-on-surface-variant font-medium uppercase tracking-widest text-[10px]">
-                  Enter the specific Gym ID provided by your establishment
-                </p>
-              </div>
-
-              <form onSubmit={handleJoinGym} className="space-y-6">
-                <div>
-                  <label className="block text-[10px] font-bold text-on-surface-variant uppercase tracking-[0.2em] mb-2 ml-1">Gym Identification ID</label>
-                  <div className="relative">
-                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-outline" size={18} />
-                    <input
-                      type="text"
-                      required
-                      value={gymId}
-                      onChange={(e) => setGymId(e.target.value.toUpperCase())}
-                      placeholder="e.g. GYM-X9Y2Z1"
-                      className="w-full bg-surface-container-highest border border-white/5 rounded-xl py-4 pl-12 pr-4 text-white font-headline font-bold focus:outline-none focus:border-primary/50 transition-colors uppercase tracking-widest"
-                    />
-                  </div>
-                </div>
-
-                <button
-                  type="submit"
-                  disabled={loading || !gymId}
-                  className="w-full py-4 bg-primary text-on-primary-fixed rounded-xl font-headline font-black uppercase italic tracking-tighter disabled:opacity-50 flex items-center justify-center gap-2"
-                >
-                  {loading ? 'Validating...' : 'Join Gym'}
-                  {!loading && <CheckCircle2 size={18} />}
-                </button>
-              </form>
-            </div>
-          )}
 
           {step === 'create' && (
             <div className="space-y-8">
-              <button 
-                onClick={() => setStep('choice')}
-                className="text-[10px] font-bold text-primary uppercase tracking-widest hover:underline"
-              >
-                ← Back to Selection
-              </button>
               
               <div>
                 <h1 className="font-headline font-black text-3xl italic tracking-tighter text-white mb-2 uppercase">

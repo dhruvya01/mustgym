@@ -47,7 +47,12 @@ async function testConnection() {
 
 const MemberProtectedRoute = ({ children, profile }: { children: React.ReactNode, profile: UserProfile | null }) => {
   if (profile?.role === 'member' && (profile.membershipStatus === 'pending' || profile.membershipStatus === 'halted')) {
-    return <Navigate to="/dashboard" />;
+    // If we're already trying to render children (like dashboard), just let it yield the halted/pending UI in Dashboard
+    // But for other routes like Workouts, redirect to Dashboard.
+    const isDashboard = window.location.pathname.includes('/member-dashboard');
+    if (!isDashboard) {
+      return <Navigate to={`/member-dashboard/${profile.gymId}`} />;
+    }
   }
   return <>{children}</>;
 };
@@ -235,11 +240,16 @@ export default function App() {
                     <Navigate to="/superadmin" />
                   ) : profile?.role === 'owner' ? (
                     profile.gymId ? <Navigate to="/admin" /> : <Navigate to="/onboarding" />
-                  ) : profile && !profile.gymId ? (
-                    <Navigate to="/onboarding" />
+                  ) : profile?.gymId ? (
+                    <Navigate to={`/member-dashboard/${profile.gymId}`} />
                   ) : (
-                    <Dashboard profile={profile} />
+                    <Navigate to="/login" />
                   )
+                } />
+                <Route path="/member-dashboard/:gymId" element={
+                  <MemberProtectedRoute profile={profile}>
+                    <Dashboard profile={profile} />
+                  </MemberProtectedRoute>
                 } />
                 <Route path="/onboarding" element={
                   profile && !profile.gymId
@@ -277,7 +287,7 @@ function Layout({ children, profile }: { children: React.ReactNode, profile: Use
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const baseNavItems: { path: string; icon: any; label: string; primary?: boolean }[] = [
-    { path: '/dashboard', icon: Home, label: 'Home' },
+    { path: `/member-dashboard/${profile?.gymId}`, icon: Home, label: 'Home' },
     { path: '/challenges', icon: Trophy, label: 'Challenges' },
     { path: '/workouts', icon: Dumbbell, label: 'Workouts' },
     { path: '/scan', icon: QrCode, label: 'Scan', primary: true },
@@ -286,7 +296,7 @@ function Layout({ children, profile }: { children: React.ReactNode, profile: Use
   ];
 
   const restrictedNavItems = [
-    { path: '/dashboard', icon: Home, label: 'Home', primary: false },
+    { path: `/member-dashboard/${profile?.gymId}`, icon: Home, label: 'Home', primary: false },
     { path: '/settings', icon: Settings, label: 'Settings', primary: false },
   ];
 

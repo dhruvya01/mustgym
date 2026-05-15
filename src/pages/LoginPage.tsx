@@ -59,28 +59,6 @@ export default function LoginPage() {
     }
   };
 
-  const handleGoogleLogin = async () => {
-    try {
-      if (activePortal === 'member' && gymId) {
-        sessionStorage.setItem('pending_gym_id', gymId);
-      } else {
-        sessionStorage.removeItem('pending_gym_id');
-      }
-      
-      // Also store intent for onboarding
-      sessionStorage.setItem('portal_intent', activePortal);
-
-      const provider = new GoogleAuthProvider();
-      await signInWithPopup(auth, provider);
-    } catch (err: any) {
-      if (err.code === 'auth/operation-not-allowed') {
-        setError('Google Sign-In is not enabled in your Firebase Console.');
-      } else {
-        setError(err.message);
-      }
-    }
-  };
-
   const handleOwnerLogin = async () => {
     try {
       setError('');

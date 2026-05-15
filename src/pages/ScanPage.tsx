@@ -294,7 +294,7 @@ export default function ScanPage({ profile }: { profile: UserProfile | null }) {
       await addDoc(collection(db, path), record);
       
       // Award points for check-in
-      await addPoints(profile.uid, 10);
+      await addPoints(profile.uid, profile.gymId!, 10);
       
       setTimeout(() => {
         navigate('/scanner');
