@@ -51,9 +51,7 @@ export default function LoginPage() {
         // Fallback to Firebase's default email if the backend isn't there (e.g., on Firebase Hosting)
         console.warn('Backend API not found. Falling back to default Firebase Auth.');
         const { sendPasswordResetEmail } = await import('firebase/auth');
-        await sendPasswordResetEmail(auth, ownerEmail, { 
-          url: `${window.location.origin}/reset-password` 
-        });
+        await sendPasswordResetEmail(auth, ownerEmail);
         setResetMessage('Password reset email sent. Please check your inbox.');
         return;
       }
