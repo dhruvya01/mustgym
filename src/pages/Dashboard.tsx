@@ -144,11 +144,17 @@ export default function Dashboard({ profile }: { profile: UserProfile | null }) 
             ) : (
               <img src="/logo.svg" alt="MustGym" className="w-8 h-8 rounded-lg object-cover" />
             )}
-            <span className="font-headline font-bold uppercase tracking-[0.3em] text-primary text-[10px] break-words">
-              {gymInfo?.name ? `${gymInfo.name.toUpperCase()} MEMBER` : 'ELITE MEMBER ACCESS'}
-            </span>
+            <div className="flex flex-col">
+               <span className="font-headline font-bold uppercase tracking-[0.3em] text-primary text-[10px] break-words">
+                 {gymInfo?.name ? `${gymInfo.name.toUpperCase()} MEMBER` : 'ELITE MEMBER ACCESS'}
+               </span>
+               <span className="text-[10px] text-on-surface-variant font-medium tracking-widest uppercase mt-0.5">
+                 {profile.membershipType ? `Plan: ${profile.membershipType}` : ''}
+                 {(profile as any).branch ? ` • Branch: ${(profile as any).branch}` : ''}
+               </span>
+            </div>
           </div>
-          <h2 className="font-headline font-black text-4xl sm:text-6xl md:text-7xl uppercase italic leading-none break-words">
+          <h2 className="font-headline font-black text-4xl sm:text-6xl md:text-7xl uppercase italic leading-none break-words mt-3">
             Welcome <br/><span className="text-primary-dim">{profile.displayName?.split(' ')[0] || 'Member'}</span>
           </h2>
         </div>

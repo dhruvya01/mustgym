@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
-import { doc, getDoc, setDoc, query, collection, where, getDocs } from 'firebase/firestore';
+import { doc, getDoc, setDoc, query, collection, where, getDocs, updateDoc } from 'firebase/firestore';
 import { auth, db } from '../lib/firebase';
-import { Dumbbell, ArrowRight, Loader2, Key } from 'lucide-react';
+import { Dumbbell, ArrowRight, Loader2, Key, Phone } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { toast } from 'sonner';
 
@@ -12,10 +12,11 @@ export default function MemberLogin() {
   const initialGymId = searchParams.get('gym') || '';
   
   const [gymId, setGymId] = useState(initialGymId);
-  const [accessCode, setAccessCode] = useState('');
-  const [gymInfo, setGymInfo] = useState<{ id: string; name: string; logoUrl?: string; inviteCode?: string } | null>(null);
+  const [phone, setPhone] = useState('');
+  const [gymInfo, setGymInfo] = useState<{ id: string; name: string; logoUrl?: string } | null>(null);
+  const [preRegisteredMember, setPreRegisteredMember] = useState<any | null>(null);
   
-  const [step, setStep] = useState<'enter_gym' | 'login'>(initialGymId ? 'login' : 'enter_gym');
+  const [step, setStep] = useState<'enter_gym' | 'verify_phone' | 'login'>(initialGymId ? 'verify_phone' : 'enter_gym');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
@@ -36,14 +37,59 @@ export default function MemberLogin() {
       const docSnap = await getDoc(docRef);
       if (docSnap.exists()) {
         const data = docSnap.data();
-        setGymInfo({ id: docSnap.id, name: data.name, logoUrl: data.logoUrl, inviteCode: data.inviteCode });
+        setGymInfo({ id: docSnap.id, name: data.name, logoUrl: data.logoUrl });
         setGymId(docSnap.id);
-        setStep('login');
+        setStep('verify_phone');
       } else {
         toast.error('Gym not found. Please check the ID and try again.');
       }
     } catch (error: any) {
       toast.error('Error finding gym: ' + error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const verifyPhone = async () => {
+    if (!phone.trim()) {
+       toast.error('Please enter your phone number.');
+       return;
+    }
+    if (!gymInfo) return;
+
+    setLoading(true);
+    try {
+      // Find member by phone and gymId
+      // First try to check `members` collection for pre-registered profile
+      const membersQuery = query(
+        collection(db, 'members'),
+        where('gymId', '==', gymInfo.id),
+        where('phone', '==', phone.trim())
+      );
+      
+      const snapshot = await getDocs(membersQuery);
+      if (!snapshot.empty) {
+        const memberData = snapshot.docs[0].data();
+        setPreRegisteredMember({ id: snapshot.docs[0].id, ...memberData });
+        setStep('login');
+        return;
+      }
+
+      // Check if they are already an active user from old system
+      const usersQuery = query(
+        collection(db, 'users'),
+        where('gymId', '==', gymInfo.id),
+        where('phoneNumber', '==', phone.trim())
+      );
+      const userSnap = await getDocs(usersQuery);
+      if (!userSnap.empty) {
+         setStep('login');
+         return;
+      }
+      
+      toast.error("No pre-registered profile found for this phone number. Ask your Gym Owner to invite you.");
+    } catch(err: any) {
+      toast.error("Error verifying phone: " + err.message);
     } finally {
       setLoading(false);
     }
@@ -57,58 +103,72 @@ export default function MemberLogin() {
       const provider = new GoogleAuthProvider();
       const result = await signInWithPopup(auth, provider);
       
-      // Check if user already exists
+      // Check if user already exists in users collection
       const userRef = doc(db, 'users', result.user.uid);
       const userSnap = await getDoc(userRef);
       
       if (!userSnap.exists()) {
-        let status = 'pending';
-        // Admin overrides for instant joining
-        if (accessCode && gymInfo.inviteCode && accessCode.trim().toUpperCase() === gymInfo.inviteCode.toUpperCase()) {
-          status = 'active';
+        if (!preRegisteredMember) {
+           toast.error("You cannot sign up without a pre-registered profile.");
+           await auth.signOut();
+           setLoading(false);
+           return;
         }
         
-        // Create new member
+        if (preRegisteredMember.authLinked) {
+           toast.error("This phone number is already linked to a different Google account.");
+           await auth.signOut();
+           setLoading(false);
+           return;
+        }
+
+        // Link the pre-registered profile
+        await updateDoc(doc(db, 'members', preRegisteredMember.id), {
+           authLinked: true,
+           uid: result.user.uid
+        });
+
+        // Create new active member
         await setDoc(userRef, {
           uid: result.user.uid,
           email: result.user.email,
-          displayName: result.user.displayName,
+          phoneNumber: phone,
+          displayName: preRegisteredMember.fullName || result.user.displayName || "Member",
           photoURL: result.user.photoURL,
           role: 'member',
           gymId: gymInfo.id,
-          membershipStatus: status,
+          membershipStatus: 'active',
+          membershipType: preRegisteredMember.membershipPlan || 'standard',
+          membershipExpiry: preRegisteredMember.expiryDate || null,
+          branch: preRegisteredMember.branch || '',
           createdAt: new Date().toISOString()
         });
-        if (status === 'active') {
-          toast.success(`Welcome to ${gymInfo.name}! You have been instantly approved.`);
-        } else {
-          toast.success(`Welcome! Your request to join ${gymInfo.name} is pending approval.`);
-        }
+        toast.success(`Welcome to ${gymInfo.name}! Your account is now active.`);
       } else {
         const data = userSnap.data();
         if (data.gymId !== gymInfo.id) {
-          // They belong to a different gym, this is multi-tenant isolation
-          toast.error(`You are already a member of a different gym. One account per gym is allowed.`);
+          toast.error(`You are already a member of a different gym.`);
           await auth.signOut();
           setLoading(false);
           return;
         }
         
-        // If they were pending but now entered the correct code
-        if (data.membershipStatus === 'pending' && accessCode && gymInfo.inviteCode && accessCode.trim().toUpperCase() === gymInfo.inviteCode.toUpperCase()) {
-           await setDoc(userRef, { membershipStatus: 'active' }, { merge: true });
-           toast.success('Your membership has been instantly approved with the access code!');
-        } else if (data.membershipStatus === 'pending') {
-          toast.info('Your membership is still pending approval.');
-        } else if (data.membershipStatus === 'halted') {
-          toast.error('Your membership has been suspended. Please contact the owner.');
+        if (preRegisteredMember && !preRegisteredMember.authLinked) {
+            await updateDoc(doc(db, 'members', preRegisteredMember.id), {
+               authLinked: true,
+               uid: result.user.uid
+            });
+        }
+
+        if (data.membershipStatus === 'halted') {
+          toast.error('Your membership is suspended.');
         } else {
           toast.success('Welcome back!');
         }
       }
       
-      // Navigate to dashboard
-      navigate('/dashboard');
+      // Navigate to gym-specific dashboard
+      navigate(`/member-dashboard/${gymInfo.id}`);
       
     } catch (error: any) {
       toast.error('Authentication failed: ' + error.message);
@@ -179,6 +239,46 @@ export default function MemberLogin() {
               </motion.div>
             )}
 
+            {step === 'verify_phone' && (
+              <motion.div
+                key="verify_phone"
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 20 }}
+                className="space-y-6"
+              >
+                <div>
+                  <label className="block text-[10px] uppercase font-bold tracking-widest text-on-surface-variant mb-2 ml-1">Your registered Phone Number</label>
+                  <div className="relative">
+                     <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                       <Phone size={18} className="text-on-surface-variant" />
+                     </div>
+                     <input
+                       type="tel"
+                       className="w-full bg-black/40 border border-white/10 rounded-xl py-4 pl-12 pr-4 text-white placeholder:text-white/20 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all font-mono"
+                       placeholder="e.g. 7006000000"
+                       value={phone}
+                       onChange={(e) => setPhone(e.target.value)}
+                     />
+                  </div>
+                </div>
+
+                <button
+                  onClick={verifyPhone}
+                  disabled={loading || !phone}
+                  className="w-full bg-primary text-on-primary-fixed hover:bg-primary-dim py-4 rounded-xl font-black uppercase tracking-widest text-sm transition-all shadow-[0_0_20px_rgba(0,240,255,0.2)] hover:shadow-[0_0_30px_rgba(0,240,255,0.4)] hover:-translate-y-0.5 mt-4 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                  {loading ? <Loader2 size={18} className="animate-spin" /> : <>Verify <ArrowRight size={18} /></>}
+                </button>
+                <button 
+                  onClick={() => setStep('enter_gym')}
+                  className="w-full text-center text-xs text-on-surface-variant hover:text-white mt-4 uppercase tracking-widest font-bold"
+                >
+                  Wrong Gym? Go Back
+                </button>
+              </motion.div>
+            )}
+
             {step === 'login' && gymInfo && (
               <motion.div
                 key="login"
@@ -187,16 +287,12 @@ export default function MemberLogin() {
                 exit={{ opacity: 0, x: 20 }}
                 className="space-y-6"
               >
-                <div>
-                  <label className="block text-[10px] uppercase font-bold tracking-widest text-on-surface-variant mb-2 ml-1">Optional Access Code</label>
-                  <input
-                    type="text"
-                    className="w-full bg-black/40 border border-white/10 rounded-xl py-3 px-4 text-white placeholder:text-white/20 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all text-center tracking-widest"
-                    placeholder="Enter code if provided"
-                    value={accessCode}
-                    onChange={(e) => setAccessCode(e.target.value)}
-                  />
-                </div>
+                {preRegisteredMember && (
+                  <div className="p-4 rounded-xl border border-white/10 bg-white/5 mb-6 text-center">
+                    <p className="text-sm font-bold">Profile Found!</p>
+                    <p className="text-xs text-on-surface-variant mt-1">Hello, {preRegisteredMember.fullName}.<br/>Link your Google account to activate.</p>
+                  </div>
+                )}
 
                 <div className="relative flex items-center justify-center my-8">
                   <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-white/10"></div></div>
@@ -222,10 +318,10 @@ export default function MemberLogin() {
                 </button>
                 
                 <button 
-                  onClick={() => setStep('enter_gym')}
+                  onClick={() => setStep('verify_phone')}
                   className="w-full text-center text-xs text-on-surface-variant hover:text-white mt-4 uppercase tracking-widest font-bold"
                 >
-                  Wrong Gym? Go Back
+                  Go Back
                 </button>
               </motion.div>
             )}

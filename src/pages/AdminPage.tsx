@@ -12,6 +12,7 @@ import { QRCodeSVG } from 'qrcode.react';
 import { SEO } from '../components/SEO';
 import { toast } from 'sonner';
 import { generateAdminInsights } from '../services/gemini';
+import { BulkMemberImport } from '../components/BulkMemberImport';
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
   LineChart, Line, PieChart, Pie, Cell, AreaChart, Area 
@@ -40,6 +41,7 @@ const TierLock = ({ requiredTier, currentTier, onUpgrade }: { requiredTier: 'pro
 export default function AdminPage({ profile }: { profile: UserProfile | null }) {
   const navigate = useNavigate();
   const [members, setMembers] = useState<UserProfile[]>([]);
+  const [preRegistered, setPreRegistered] = useState<any[]>([]);
   const [attendance, setAttendance] = useState<AttendanceRecord[]>([]);
   const [equipment, setEquipment] = useState<Equipment[]>([]);
   const [payments, setPayments] = useState<PaymentRecord[]>([]);
@@ -92,6 +94,7 @@ export default function AdminPage({ profile }: { profile: UserProfile | null }) 
 
   // Add Member State
   const [showAddMemberModal, setShowAddMemberModal] = useState(false);
+  const [showBulkImportModal, setShowBulkImportModal] = useState(false);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [addMemberForm, setAddMemberForm] = useState({
     name: '',
@@ -140,6 +143,16 @@ export default function AdminPage({ profile }: { profile: UserProfile | null }) 
     }, (error) => {
       setTimeout(() => {
         handleFirestoreError(error, OperationType.LIST, membersPath);
+      }, 0);
+    });
+
+    const preRegisteredQuery = query(collection(db, 'members'), where('gymId', '==', profile.gymId));
+    const unsubPreRegistered = onSnapshot(preRegisteredQuery, (snapshot) => {
+      const fetched = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      setPreRegistered(fetched);
+    }, (error) => {
+      setTimeout(() => {
+        handleFirestoreError(error, OperationType.LIST, 'members');
       }, 0);
     });
 
@@ -241,6 +254,7 @@ export default function AdminPage({ profile }: { profile: UserProfile | null }) 
     return () => {
       unsubGym();
       unsubMembers();
+      unsubPreRegistered();
       unsubAttendance();
       unsubEquipment();
       unsubPayments();
@@ -447,9 +461,24 @@ export default function AdminPage({ profile }: { profile: UserProfile | null }) 
     }
   };
 
-  const filteredMembers = members.filter(m => 
+  const combinedMembers = [
+    ...members.filter(m => m.role === 'member'),
+    ...preRegistered.filter(p => !p.authLinked).map(p => ({
+      uid: p.id,
+      displayName: p.fullName,
+      email: p.phone,
+      phoneNumber: p.phone,
+      role: 'member',
+      membershipStatus: 'pre-registered',
+      membershipType: p.membershipPlan,
+      createdAt: p.createdAt
+    }))
+  ] as any[];
+
+  const filteredMembers = combinedMembers.filter(m => 
     m.displayName?.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    m.email.toLowerCase().includes(searchTerm.toLowerCase())
+    m.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    m.phoneNumber?.includes(searchTerm)
   );
 
   // Analytics Calculations
@@ -1534,6 +1563,13 @@ export default function AdminPage({ profile }: { profile: UserProfile | null }) 
                 />
               </div>
               <button 
+                onClick={() => setShowBulkImportModal(true)}
+                className="bg-primary/20 text-primary border border-primary/20 px-4 py-2 rounded-lg text-[10px] font-bold uppercase tracking-widest hover:bg-primary/30 transition-colors flex items-center gap-2 whitespace-nowrap"
+              >
+                <Download size={16} />
+                Bulk Import
+              </button>
+              <button 
                 onClick={() => {
                   const tier = gymInfo?.subscriptionTier || 'starter';
                   const limits: Record<string, number> = { starter: 150, professional: 500, elite: Infinity };
@@ -1586,8 +1622,9 @@ export default function AdminPage({ profile }: { profile: UserProfile | null }) 
                       </td>
                       <td className="px-6 py-4">
                         <span className={cn(
-                          "text-[10px] font-black uppercase tracking-widest px-2 py-1 rounded",
+                          "text-[10px] font-black uppercase tracking-widest px-2 py-1 rounded whitespace-nowrap",
                           member.membershipStatus === 'active' ? "bg-green-500/10 text-green-500" : 
+                          member.membershipStatus === 'pre-registered' ? "bg-primary/20 text-primary border border-primary/20" :
                           member.membershipStatus === 'halted' ? "bg-amber-500/10 text-amber-500" :
                           member.membershipStatus === 'expired' ? "bg-error/10 text-error" : 
                           "bg-primary/10 text-primary"
@@ -1621,31 +1658,33 @@ export default function AdminPage({ profile }: { profile: UserProfile | null }) 
                           >
                             <Eye size={18} />
                           </button>
-                          <button 
-                            onClick={() => updateStatus(member.uid, 'active')}
-                            className="p-1.5 hover:bg-green-500/10 text-on-surface-variant hover:text-green-500 rounded transition-colors"
-                            title={member.membershipStatus === 'halted' ? "Reactivate Membership" : "Activate Membership"}
-                          >
-                            {member.membershipStatus === 'halted' ? <CheckCircle size={18} className="text-amber-500" /> : <CheckCircle size={18} />}
-                          </button>
-                          <button 
-                            onClick={() => updateStatus(member.uid, 'halted')}
-                            className="p-1.5 hover:bg-amber-500/10 text-on-surface-variant hover:text-amber-500 rounded transition-colors"
-                            title="Suspend Membership"
-                          >
-                            <Lock size={18} />
-                          </button>
-                          <button 
-                            onClick={() => updateStatus(member.uid, 'expired')}
-                            className="p-1.5 hover:bg-error/10 text-on-surface-variant hover:text-error rounded transition-colors"
-                            title="Expire Membership"
-                          >
-                            <XCircle size={18} />
-                          </button>
-                          <button 
-                            onClick={async () => {
-                              if (window.confirm('Are you sure you want to permanently remove this member?')) {
-                                try {
+                          {member.membershipStatus !== 'pre-registered' && (
+                            <>
+                              <button 
+                                onClick={() => updateStatus(member.uid, 'active')}
+                                className="p-1.5 hover:bg-green-500/10 text-on-surface-variant hover:text-green-500 rounded transition-colors"
+                                title={member.membershipStatus === 'halted' ? "Reactivate Membership" : "Activate Membership"}
+                              >
+                                {member.membershipStatus === 'halted' ? <CheckCircle size={18} className="text-amber-500" /> : <CheckCircle size={18} />}
+                              </button>
+                              <button 
+                                onClick={() => updateStatus(member.uid, 'halted')}
+                                className="p-1.5 hover:bg-amber-500/10 text-on-surface-variant hover:text-amber-500 rounded transition-colors"
+                                title="Suspend Membership"
+                              >
+                                <Lock size={18} />
+                              </button>
+                              <button 
+                                onClick={() => updateStatus(member.uid, 'expired')}
+                                className="p-1.5 hover:bg-error/10 text-on-surface-variant hover:text-error rounded transition-colors"
+                                title="Expire Membership"
+                              >
+                                <XCircle size={18} />
+                              </button>
+                              <button 
+                                onClick={async () => {
+                                  if (window.confirm('Are you sure you want to permanently remove this member?')) {
+                                    try {
                                   await deleteDoc(doc(db, 'users', member.uid));
                                   toast.success('Member removed');
                                 } catch(e) {
@@ -1658,8 +1697,10 @@ export default function AdminPage({ profile }: { profile: UserProfile | null }) 
                           >
                             <Trash2 size={18} />
                           </button>
-                        </div>
-                      </td>
+                        </>
+                      )}
+                    </div>
+                  </td>
                     </tr>
                   ))}
                 </tbody>
@@ -1686,8 +1727,9 @@ export default function AdminPage({ profile }: { profile: UserProfile | null }) 
                       </div>
                     </div>
                     <span className={cn(
-                      "text-[10px] font-black uppercase tracking-widest px-2 py-1 rounded",
+                      "text-[10px] font-black uppercase tracking-widest px-2 py-1 rounded whitespace-nowrap",
                       member.membershipStatus === 'active' ? "bg-green-500/10 text-green-500" : 
+                      member.membershipStatus === 'pre-registered' ? "bg-primary/20 text-primary border border-primary/20" :
                       member.membershipStatus === 'halted' ? "bg-amber-500/10 text-amber-500" :
                       member.membershipStatus === 'expired' ? "bg-error/10 text-error" : 
                       "bg-primary/10 text-primary"
@@ -1716,39 +1758,43 @@ export default function AdminPage({ profile }: { profile: UserProfile | null }) 
                       >
                         <Eye size={18} />
                       </button>
-                      <button 
-                        onClick={() => updateStatus(member.uid, 'active')}
-                        className="p-2 bg-green-500/10 text-green-500 rounded"
-                      >
-                        <CheckCircle size={18} />
-                      </button>
-                      <button 
-                        onClick={() => updateStatus(member.uid, 'halted')}
-                        className="p-2 bg-amber-500/10 text-amber-500 rounded"
-                      >
-                        <Lock size={18} />
-                      </button>
-                      <button 
-                        onClick={() => updateStatus(member.uid, 'expired')}
-                        className="p-2 bg-error/10 text-error rounded"
-                      >
-                        <XCircle size={18} />
-                      </button>
-                      <button 
-                        onClick={async () => {
-                          if (window.confirm('Are you sure you want to permanently remove this member?')) {
-                            try {
-                              await deleteDoc(doc(db, 'users', member.uid));
-                              toast.success('Member removed');
-                            } catch(e) {
-                              toast.error('Failed to remove member');
-                            }
-                          }
-                        }}
-                        className="p-2 bg-error/10 text-error/50 rounded"
-                      >
-                        <Trash2 size={18} />
-                      </button>
+                      {member.membershipStatus !== 'pre-registered' && (
+                        <>
+                          <button 
+                            onClick={() => updateStatus(member.uid, 'active')}
+                            className="p-2 bg-green-500/10 text-green-500 rounded"
+                          >
+                            <CheckCircle size={18} />
+                          </button>
+                          <button 
+                            onClick={() => updateStatus(member.uid, 'halted')}
+                            className="p-2 bg-amber-500/10 text-amber-500 rounded"
+                          >
+                            <Lock size={18} />
+                          </button>
+                          <button 
+                            onClick={() => updateStatus(member.uid, 'expired')}
+                            className="p-2 bg-error/10 text-error rounded"
+                          >
+                            <XCircle size={18} />
+                          </button>
+                          <button 
+                            onClick={async () => {
+                              if (window.confirm('Are you sure you want to permanently remove this member?')) {
+                                try {
+                                  await deleteDoc(doc(db, 'users', member.uid));
+                                  toast.success('Member removed');
+                                } catch(e) {
+                                  toast.error('Failed to remove member');
+                                }
+                              }
+                            }}
+                            className="p-2 bg-error/10 text-error/50 rounded"
+                          >
+                            <Trash2 size={18} />
+                          </button>
+                        </>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -2657,6 +2703,25 @@ export default function AdminPage({ profile }: { profile: UserProfile | null }) 
               </div>
             </motion.div>
           </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Bulk Import Modal */}
+      <AnimatePresence>
+        {showBulkImportModal && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-background/90 backdrop-blur-md">
+            <div className="relative w-full max-w-4xl bg-surface-container border border-white/5 shadow-2xl rounded-2xl max-h-[90vh] overflow-y-auto">
+              <button 
+                onClick={() => setShowBulkImportModal(false)}
+                className="absolute top-4 right-4 p-2 bg-surface-container-high hover:bg-surface-container-highest rounded-full transition-colors text-on-surface z-10"
+              >
+                <X size={20} />
+              </button>
+              <div className="p-6">
+                <BulkMemberImport gymId={profile?.gymId} onSuccess={() => setShowBulkImportModal(false)} />
+              </div>
+            </div>
+          </div>
         )}
       </AnimatePresence>
 

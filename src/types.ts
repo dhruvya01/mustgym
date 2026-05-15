@@ -1,3 +1,16 @@
+export interface Member {
+  id?: string;
+  gymId: string;
+  fullName: string;
+  phone: string;
+  membershipPlan: string;
+  expiryDate: string; // ISO date string
+  branch: string;
+  authLinked: boolean;
+  uid?: string; // Firebase Auth UID if authLinked is true
+  createdAt: string;
+}
+
 export type UserRole = 'admin' | 'owner' | 'member';
 export type MembershipType = 'elite' | 'standard' | 'basic';
 export type MembershipStatus = 'active' | 'expired' | 'pending' | 'halted';

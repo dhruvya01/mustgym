@@ -8,13 +8,15 @@ import { toast } from 'sonner';
 import { UserProfile } from '../types';
 import { initializeApp } from 'firebase/app';
 import { getAuth, createUserWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth';
+import { BulkMemberImport } from '../components/BulkMemberImport';
+import { Download } from 'lucide-react';
 
 export default function SuperAdminPage({ profile }: { profile: UserProfile | null }) {
   const [gyms, setGyms] = useState<any[]>([]);
   const [owners, setOwners] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-  const [activeTab, setActiveTab] = useState<'gyms' | 'system' | 'add_gym'>('gyms');
+  const [activeTab, setActiveTab] = useState<'gyms' | 'system' | 'add_gym' | 'bulk_import'>('gyms');
   const [searchQuery, setSearchQuery] = useState('');
 
   const [newOwner, setNewOwner] = useState({
@@ -229,15 +231,16 @@ export default function SuperAdminPage({ profile }: { profile: UserProfile | nul
       </section>
 
       {/* Tabs */}
-      <div className="flex gap-2 p-1 bg-white/5 rounded-xl border border-white/10 w-max mb-8">
+      <div className="flex gap-2 p-1 bg-white/5 rounded-xl border border-white/10 w-max mb-8 flex-wrap">
         {[
           { id: 'gyms', label: 'Gym Directory', icon: LayoutDashboard },
           { id: 'add_gym', label: 'Add Gym Owner', icon: PlusCircle },
+          { id: 'bulk_import', label: 'Bulk Members', icon: Download },
           { id: 'system', label: 'System Health', icon: Activity },
         ].map((tab) => (
           <button
             key={tab.id}
-            onClick={() => setActiveTab(tab.id as 'gyms' | 'system' | 'add_gym')}
+            onClick={() => setActiveTab(tab.id as any)}
             className={`flex items-center gap-2 px-6 py-3 rounded-lg text-[10px] sm:text-xs font-bold uppercase tracking-widest transition-all ${
               activeTab === tab.id
                 ? 'bg-error text-white shadow-lg'
@@ -249,6 +252,12 @@ export default function SuperAdminPage({ profile }: { profile: UserProfile | nul
           </button>
         ))}
       </div>
+
+      {activeTab === 'bulk_import' && (
+        <div className="max-w-4xl max-w-full">
+           <BulkMemberImport onSuccess={() => setActiveTab('gyms')} />
+        </div>
+      )}
 
       {activeTab === 'gyms' && (
         <div className="space-y-6">
