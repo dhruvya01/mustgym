@@ -2140,6 +2140,15 @@ export default function AdminPage({ profile }: { profile: UserProfile | null }) 
                           >
                             <Copy size={20} />
                           </button>
+                        </div>
+                      </div>
+
+                      <div className="flex justify-between items-center bg-background/40 p-4 rounded-xl border border-white/5">
+                        <div>
+                          <p className="text-[8px] font-black text-outline uppercase tracking-widest mb-1">Member Login Link</p>
+                          <p className="font-mono text-[10px] sm:text-xs text-on-surface-variant truncate max-w-[200px] sm:max-w-xs">{`${window.location.origin}/login?gym=${gymInfo.id}`}</p>
+                        </div>
+                        <div className="flex gap-2">
                           <button 
                             onClick={() => {
                               const link = `${window.location.origin}/login?gym=${gymInfo.id}`;
@@ -2149,7 +2158,17 @@ export default function AdminPage({ profile }: { profile: UserProfile | null }) 
                             className="p-2 hover:bg-primary/10 rounded-lg text-primary transition-colors hover-scale"
                             title="Copy Member Login Link"
                           >
-                            <Share2 size={20} />
+                            <Copy size={20} />
+                          </button>
+                          <button 
+                            onClick={() => {
+                              const link = `${window.location.origin}/login?gym=${gymInfo.id}`;
+                              window.open(link, '_blank');
+                            }}
+                            className="p-2 hover:bg-primary/10 rounded-lg text-primary transition-colors hover-scale"
+                            title="Open Member Login Link"
+                          >
+                            <ArrowUpRight size={20} />
                           </button>
                         </div>
                       </div>
