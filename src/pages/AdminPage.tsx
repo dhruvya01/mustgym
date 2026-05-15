@@ -2146,12 +2146,12 @@ export default function AdminPage({ profile }: { profile: UserProfile | null }) 
                       <div className="flex justify-between items-center bg-background/40 p-4 rounded-xl border border-white/5">
                         <div>
                           <p className="text-[8px] font-black text-outline uppercase tracking-widest mb-1">Member Login Link</p>
-                          <p className="font-mono text-[10px] sm:text-xs text-on-surface-variant truncate max-w-[200px] sm:max-w-xs">{`${window.location.origin}/login?gym=${gymInfo.id}`}</p>
+                          <p className="font-mono text-[10px] sm:text-xs text-on-surface-variant truncate max-w-[200px] sm:max-w-xs">{`${window.location.origin}/memberlogin?gym=${gymInfo.id}`}</p>
                         </div>
                         <div className="flex gap-2">
                           <button 
                             onClick={() => {
-                              const link = `${window.location.origin}/login?gym=${gymInfo.id}`;
+                              const link = `${window.location.origin}/memberlogin?gym=${gymInfo.id}`;
                               navigator.clipboard.writeText(link);
                               toast.success('Member Login Link copied to clipboard');
                             }}
@@ -2162,7 +2162,7 @@ export default function AdminPage({ profile }: { profile: UserProfile | null }) 
                           </button>
                           <button 
                             onClick={() => {
-                              const link = `${window.location.origin}/login?gym=${gymInfo.id}`;
+                              const link = `${window.location.origin}/memberlogin?gym=${gymInfo.id}`;
                               window.open(link, '_blank');
                             }}
                             className="p-2 hover:bg-primary/10 rounded-lg text-primary transition-colors hover-scale"
