@@ -114,8 +114,10 @@ export default function App() {
             setLoading(false);
           }
         }, (error) => {
-          handleFirestoreError(error, OperationType.GET, path);
           setLoading(false);
+          setTimeout(() => {
+            handleFirestoreError(error, OperationType.GET, path);
+          }, 0);
         });
 
         // Add unsubProfile to window or ignore since App mostly stays mounted

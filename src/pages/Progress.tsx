@@ -28,7 +28,10 @@ export default function Progress({ profile }: { profile: UserProfile | null }) {
   });
 
   useEffect(() => {
-    if (!profile?.uid || !profile?.gymId) return;
+    if (!profile?.uid || !profile?.gymId) {
+      setLoading(false);
+      return;
+    }
 
     setLoading(true);
 
@@ -45,7 +48,6 @@ export default function Progress({ profile }: { profile: UserProfile | null }) {
       fetched.sort((a,b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
       setAttendance(fetched);
       calculateStreak(fetched);
-      setLoading(false);
     }, (error) => {
       setTimeout(() => {
         handleFirestoreError(error, OperationType.LIST, attendancePath);
@@ -64,7 +66,9 @@ export default function Progress({ profile }: { profile: UserProfile | null }) {
       const fetched = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as PersonalRecord));
       fetched.sort((a,b) => new Date(a.date).getTime() - new Date(b.date).getTime());
       setPersonalRecords(fetched);
+      setLoading(false);
     }, (error) => {
+      setLoading(false);
       setTimeout(() => {
         handleFirestoreError(error, OperationType.LIST, prPath);
       }, 0);

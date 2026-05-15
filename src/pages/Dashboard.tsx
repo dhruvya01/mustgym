@@ -46,7 +46,10 @@ export default function Dashboard({ profile }: { profile: UserProfile | null }) 
   ];
 
   useEffect(() => {
-    if (!profile?.uid || !profile?.gymId) return;
+    if (!profile?.uid || !profile?.gymId) {
+      setLoading(false);
+      return;
+    }
 
     const attendancePath = 'attendance';
     const qAttendance = query(
@@ -80,6 +83,7 @@ export default function Dashboard({ profile }: { profile: UserProfile | null }) 
       }
       setLoading(false);
     }, (error) => {
+      setLoading(false);
       setTimeout(() => {
         handleFirestoreError(error, OperationType.LIST, plansPath);
       }, 0);

@@ -174,6 +174,7 @@ export default function AdminPage({ profile }: { profile: UserProfile | null }) 
       setPayments(fetchedPayments);
       setLoading(false);
     }, (error) => {
+      setLoading(false);
       setTimeout(() => {
         handleFirestoreError(error, OperationType.LIST, paymentsPath);
       }, 0);

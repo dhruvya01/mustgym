@@ -53,8 +53,9 @@ export default function Workouts({ profile }: { profile: UserProfile | null }) {
       const fetchedPlans = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as WorkoutPlan));
       fetchedPlans.sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
       setPlans(fetchedPlans);
-      if (activeTab === 'workouts') setLoading(false);
+      setLoading(false);
     }, (error) => {
+      setLoading(false);
       setTimeout(() => {
         handleFirestoreError(error, OperationType.LIST, workoutPath);
       }, 0);
@@ -72,8 +73,9 @@ export default function Workouts({ profile }: { profile: UserProfile | null }) {
       const fetchedDietPlans = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as DietPlan));
       fetchedDietPlans.sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
       setDietPlans(fetchedDietPlans);
-      if (activeTab === 'diet') setLoading(false);
+      setLoading(false);
     }, (error) => {
+      setLoading(false);
       setTimeout(() => {
         handleFirestoreError(error, OperationType.LIST, dietPath);
       }, 0);
@@ -214,7 +216,7 @@ export default function Workouts({ profile }: { profile: UserProfile | null }) {
       {/* Tab Switcher */}
       <div className="flex gap-4 border-b border-white/5">
         <button 
-          onClick={() => { setActiveTab('workouts'); setLoading(true); }}
+          onClick={() => { setActiveTab('workouts'); }}
           className={cn(
             "pb-4 px-2 font-headline font-bold uppercase tracking-widest text-xs transition-all border-b-2",
             activeTab === 'workouts' ? "border-primary text-primary" : "border-transparent text-on-surface-variant hover:text-on-surface"
@@ -223,7 +225,7 @@ export default function Workouts({ profile }: { profile: UserProfile | null }) {
           Workout Splits
         </button>
         <button 
-          onClick={() => { setActiveTab('diet'); setLoading(true); }}
+          onClick={() => { setActiveTab('diet'); }}
           className={cn(
             "pb-4 px-2 font-headline font-bold uppercase tracking-widest text-xs transition-all border-b-2",
             activeTab === 'diet' ? "border-primary text-primary" : "border-transparent text-on-surface-variant hover:text-on-surface"
