@@ -858,7 +858,7 @@ export default function Workouts({ profile }: { profile: UserProfile | null }) {
                   </div>
                   <div className="flex items-center gap-1 text-[10px] font-bold uppercase text-on-surface-variant">
                     <Flame size={12} className="text-primary" />
-                    {plan.meals.reduce((sum, m) => sum + (m.calories || 0), 0)} Total kcal
+                    {plan.meals.reduce((sum, mealItem) => sum + (mealItem.calories || 0), 0)} Total kcal
                   </div>
                 </div>
               </motion.div>

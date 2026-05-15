@@ -6,6 +6,7 @@ export async function generateWorkoutPlan(userId: string, preferences: string, f
 
   console.log("Generating local workout plan for:", { preferences, fitnessLevel, goals, availableEquipment, workoutDays, splitType });
 
+  const insights: string[] = [];
   const exercisesDB = [
     { name: "Push-ups", sets: 3, reps: "10-15", notes: "Keep core tight", equipment: "None", level: ["Beginner", "Intermediate", "Advanced"], levelReps: { Beginner: "5-10", Intermediate: "10-20", Advanced: "20-30" }, category: "Chest" },
     { name: "Dumbbell Bench Press", sets: 4, reps: "8-12", notes: "Press up and squeeze chest", equipment: "Dumbbells", level: ["Beginner", "Intermediate", "Advanced"], levelReps: { Beginner: "8-10", Intermediate: "10-12", Advanced: "12-15" }, category: "Chest" },
@@ -79,9 +80,7 @@ export async function generateWorkoutPlan(userId: string, preferences: string, f
       // If no equipment is provided by gym, default to full gym rather than just bodyweight to prevent boring routines
       insights.push("No specific gym equipment was detected. I assumed access to a standard gym setup (Dumbbells, Barbells, Cables).");
   }
-
-  const insights: string[] = [];
-
+  
   const prefLower = preferences.toLowerCase();
   if (prefLower.includes('knee') || prefLower.includes('leg injury')) {
     filteredDB = filteredDB.filter(ex => ex.name !== 'Barbell Back Squat' && ex.name !== 'Romanian Deadlift');
