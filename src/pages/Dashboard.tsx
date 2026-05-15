@@ -357,9 +357,7 @@ export default function Dashboard({ profile }: { profile: UserProfile | null }) 
                 {gymInfo?.logoUrl ? (
                   <img src={gymInfo.logoUrl} alt={gymInfo?.name} className="w-8 h-8 rounded-lg object-cover border border-white/10" />
                 ) : (
-                  <div className="w-8 h-8 bg-primary/20 flex items-center justify-center rounded-lg border border-primary/30">
-                    <Dumbbell className="text-primary w-4 h-4" />
-                  </div>
+                  <img src="/logo.svg" alt="MustGym" className="w-8 h-8 rounded-lg object-cover" />
                 )}
                 <span className="font-headline font-bold uppercase tracking-[0.3em] text-primary text-[10px] break-words">
                   {gymInfo?.name ? `${gymInfo.name.toUpperCase()} MEMBER` : 'ELITE MEMBER ACCESS'}

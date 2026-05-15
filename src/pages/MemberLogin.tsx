@@ -133,9 +133,7 @@ export default function MemberLogin() {
             {gymInfo?.logoUrl ? (
               <img src={gymInfo.logoUrl} alt={gymInfo.name} className="h-16 w-16 rounded-2xl object-cover border border-white/10" />
             ) : (
-              <div className="w-16 h-16 bg-gradient-to-tr from-primary to-primary-dim rounded-2xl flex items-center justify-center transform rotate-12 shadow-[0_0_20px_rgba(var(--color-primary),0.3)]">
-                <Dumbbell className="text-on-primary font-black" size={32} />
-              </div>
+              <img src="/logo.svg" alt="MustGym" className="h-16 w-16 rounded-2xl object-cover" />
             )}
           </div>
 

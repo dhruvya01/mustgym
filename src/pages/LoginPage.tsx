@@ -118,6 +118,9 @@ export default function LoginPage() {
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
           >
+            <div className="flex items-center gap-4 mb-4">
+              <img src="/logo.svg" alt="MustGym Logo" className="w-16 h-16 sm:w-20 sm:h-20" />
+            </div>
             <h1 className="font-headline font-black text-6xl lg:text-8xl italic tracking-tighter text-white leading-none mb-6">
               MUST<br/><span className="text-[#00f0ff]">GYM</span>
             </h1>
@@ -144,7 +147,8 @@ export default function LoginPage() {
             Back to Home
           </Link>
           
-          <div className="md:hidden mt-12 mb-12 flex justify-center">
+          <div className="md:hidden mt-12 mb-12 flex justify-center items-center gap-3">
+            <img src="/logo.svg" alt="MustGym" className="w-10 h-10" />
             <h1 className="font-headline font-black text-4xl italic tracking-tighter text-white">MUST<span className="text-[#00f0ff]">GYM</span></h1>
           </div>
           

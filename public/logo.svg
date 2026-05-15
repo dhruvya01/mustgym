@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <defs>
+    <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00f2fe" />
+      <stop offset="100%" stop-color="#4facfe" /> <!-- Assuming cyan-blue gradient -->
+    </linearGradient>
+    <linearGradient id="grad2" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#00f2fe" />
+      <stop offset="100%" stop-color="#667eea" />
+    </linearGradient>
+  </defs>
+  <!-- Path of the bracket: Left side mid to top-left, to top-right, to bottom-right, to bottom-mid -->
+  <path d="M 20 25 L 20 10 L 80 10 L 80 80 L 50 80" fill="none" stroke="url(#grad2)" stroke-width="2.5" />
+  <!-- The M inside -->
+  <text x="50" y="58" font-family="'Inter', sans-serif" font-size="32" font-weight="400" fill="url(#grad1)" text-anchor="middle" letter-spacing="2">M</text>
+</svg>

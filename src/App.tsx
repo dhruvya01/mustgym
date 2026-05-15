@@ -406,8 +406,9 @@ function Layout({ children, profile }: { children: React.ReactNode, profile: Use
             >
               <Menu size={20} />
             </button>
-            <h1 className="font-headline font-black text-base sm:text-xl italic tracking-tighter text-white whitespace-nowrap">
-              MUST<span className="text-primary">GYM</span>
+            <h1 className="font-headline font-black text-base sm:text-xl italic tracking-tighter text-white whitespace-nowrap flex items-center gap-2">
+              <img src="/logo.svg" alt="MustGym" className="w-7 h-7 sm:w-8 sm:h-8" />
+              <span>MUST<span className="text-primary">GYM</span></span>
             </h1>
           </div>
           <div className="flex items-center gap-3 sm:gap-4">
