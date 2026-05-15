@@ -129,6 +129,7 @@ export default function Workouts({ profile }: { profile: UserProfile | null }) {
           description: newPlanData.description,
           exercises: newPlanData.exercises,
           days: newPlanData.days,
+          aiInsights: newPlanData.aiInsights || [],
           createdAt: new Date().toISOString(),
           gymId: profile.gymId
         };
@@ -141,6 +142,7 @@ export default function Workouts({ profile }: { profile: UserProfile | null }) {
           title: newPlanData.title,
           description: newPlanData.description,
           meals: newPlanData.meals,
+          aiInsights: newPlanData.aiInsights || [],
           createdAt: new Date().toISOString(),
           gymId: profile.gymId
         };
@@ -557,7 +559,24 @@ export default function Workouts({ profile }: { profile: UserProfile | null }) {
                   <X size={24} className="text-on-surface-variant" />
                 </button>
               </div>
-              <p className="text-on-surface-variant mb-8">{selectedPlan.description}</p>
+              <p className="text-on-surface-variant mb-6">{selectedPlan.description}</p>
+              
+              {selectedPlan.aiInsights && selectedPlan.aiInsights.length > 0 && (
+                <div className="mb-8 p-4 rounded-xl border border-primary/20 bg-primary/5 space-y-3">
+                  <h4 className="flex items-center gap-2 font-headline font-bold uppercase tracking-widest text-primary text-sm">
+                    <Sparkles size={16} /> AI Insights & Reasoning
+                  </h4>
+                  <ul className="space-y-2">
+                    {selectedPlan.aiInsights.map((insight, idx) => (
+                      <li key={idx} className="text-sm text-on-surface flex gap-2 items-start">
+                        <div className="mt-1 w-1.5 h-1.5 rounded-full bg-primary flex-shrink-0" />
+                        <p>{insight}</p>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
               <div className="space-y-6">
                 {selectedPlan.days ? (
                   selectedPlan.days.map((day, dIdx) => (
@@ -637,7 +656,24 @@ export default function Workouts({ profile }: { profile: UserProfile | null }) {
                   <X size={24} className="text-on-surface-variant" />
                 </button>
               </div>
-              <p className="text-on-surface-variant mb-8">{selectedDietPlan.description}</p>
+              <p className="text-on-surface-variant mb-6">{selectedDietPlan.description}</p>
+              
+              {selectedDietPlan.aiInsights && selectedDietPlan.aiInsights.length > 0 && (
+                <div className="mb-8 p-4 rounded-xl border border-primary/20 bg-primary/5 space-y-3">
+                  <h4 className="flex items-center gap-2 font-headline font-bold uppercase tracking-widest text-primary text-sm">
+                    <Sparkles size={16} /> AI Insights & Reasoning
+                  </h4>
+                  <ul className="space-y-2">
+                    {selectedDietPlan.aiInsights.map((insight, idx) => (
+                      <li key={idx} className="text-sm text-on-surface flex gap-2 items-start">
+                        <div className="mt-1 w-1.5 h-1.5 rounded-full bg-primary flex-shrink-0" />
+                        <p>{insight}</p>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
               <div className="space-y-6">
                 {selectedDietPlan.meals.map((meal, i) => (
                   <div key={i} className="bg-surface-container-highest p-6 rounded-xl border border-white/5">

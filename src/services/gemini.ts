@@ -42,6 +42,34 @@ export async function generateWorkoutPlan(userId: string, preferences: string, f
       filteredDB = filteredDB.filter(ex => ex.equipment.toLowerCase() === 'none');
   }
 
+  const insights: string[] = [];
+
+  const prefLower = preferences.toLowerCase();
+  if (prefLower.includes('knee') || prefLower.includes('leg injury')) {
+    filteredDB = filteredDB.filter(ex => ex.name !== 'Barbell Back Squat' && ex.name !== 'Romanian Deadlift');
+    insights.push("I noticed you mentioned a knee/leg concern. I've swapped out heavy squats and deadlifts for lower-impact alternatives to protect your joints.");
+  }
+  if (prefLower.includes('shoulder')) {
+    filteredDB = filteredDB.filter(ex => ex.name !== 'Military Press' && ex.name !== 'Dumbbell Incline Bench Press');
+    insights.push("Since you mentioned shoulder issues, I avoided heavy overhead pressing movements to reduce strain on your rotator cuffs.");
+  }
+  if (prefLower.includes('back')) {
+    filteredDB = filteredDB.filter(ex => ex.name !== 'Romanian Deadlift' && ex.name !== 'Bent Over Barbell Row');
+    insights.push("I detected a mention of back concerns, so I've removed unsupported bent-over movements to minimize lower-spine shear forces.");
+  }
+  
+  if (fitnessLevel === 'Beginner') {
+    insights.push("As a beginner, this plan focuses on establishing a mind-muscle connection. Don't worry about lifting heavy; focus strictly on form.");
+  } else if (fitnessLevel === 'Advanced') {
+    insights.push("Since you're advanced, I've prioritized volume and exercises that allow for a deeper stretch and peak contraction.");
+  }
+
+  if (goals.toLowerCase().includes('fat loss') || goals.toLowerCase().includes('cut')) {
+    insights.push("To aid with fat loss, try keeping your rest periods between sets short (around 45-60 seconds) to maintain a higher heart rate.");
+  } else if (goals.toLowerCase().includes('muscle') || goals.toLowerCase().includes('bulk')) {
+    insights.push("For maximum hypertrophy, ensure you're resting adequately (90-120 seconds) between sets to allow full motor unit recovery.");
+  }
+
   // Construct weekly splits based on workoutDays
   const splits: { dayName: string; focus: string; categories: string[] }[] = [];
   
@@ -125,7 +153,8 @@ export async function generateWorkoutPlan(userId: string, preferences: string, f
     title: `${workoutDays}-Day ${fitnessLevel} ${goals} Workout`,
     description: `A custom ${workoutDays}-day weekly plan aimed at ${goals.toLowerCase()}, tailored for a ${fitnessLevel.toLowerCase()} level using selected equipment.`,
     exercises: flatExercises,
-    days: days
+    days: days,
+    aiInsights: insights
   };
 }
 
@@ -251,9 +280,28 @@ export async function generateDietPlan(userId: string, preferences: string, fitn
 
   const typeName = type === 'veg' ? 'Vegetarian' : (type === 'vegan' ? 'Vegan' : 'Non-Vegetarian');
 
+  const insights: string[] = [];
+  if (isCut) {
+    insights.push("To support your fat loss goal, I've created a slight caloric deficit while prioritizing protein to maintain lean muscle mass.");
+  } else if (isBulk) {
+    insights.push("Since you are bulking, I've increased your carbohydrate and healthy fat intake to provide the surplus energy needed for muscle synthesis.");
+  }
+
+  if (type === 'vegan') {
+    insights.push("As a vegan, I've carefully combined varied plant proteins (like soy, lentils, and nuts) to ensure you get a complete amino acid profile.");
+  } else if (type === 'veg') {
+    insights.push("For your vegetarian diet, I've relied on high-quality dairy and legume combinations to provide ample protein without excess saturated fats.");
+  }
+
+  const prefLower = preferences.toLowerCase();
+  if (prefLower.includes('allergy') || prefLower.includes('gluten') || prefLower.includes('dairy')) {
+    insights.push("I noticed you mentioned dietary restrictions/allergies. Please always double check the ingredients before consuming.");
+  }
+
   return {
       title: `${typeName} ${goals} Diet Plan`,
       description: `A custom ${goals.toLowerCase()} oriented meal plan focusing on ${typeName.toLowerCase()} ingredients to help you hit your macros correctly.`,
-      meals: meals
+      meals: meals,
+      aiInsights: insights
   };
 }

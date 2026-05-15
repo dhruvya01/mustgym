@@ -76,6 +76,7 @@ export interface WorkoutPlan {
   description?: string;
   exercises?: Exercise[]; // Legacy format
   days?: WorkoutDay[]; // Weekly plan format
+  aiInsights?: string[];
   createdAt: string;
 }
 
@@ -121,6 +122,7 @@ export interface DietPlan {
   title: string;
   description?: string;
   meals: Meal[];
+  aiInsights?: string[];
   createdAt: string;
 }
 
