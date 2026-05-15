@@ -28,6 +28,7 @@ export default function Workouts({ profile }: { profile: UserProfile | null }) {
   const [fitnessLevel, setFitnessLevel] = useState('Intermediate');
   const [goals, setGoals] = useState('Muscle Gain');
   const [workoutDays, setWorkoutDays] = useState('4');
+  const [splitType, setSplitType] = useState('Full Body');
   const [dietType, setDietType] = useState('nonveg');
   const [gymTier, setGymTier] = useState<string>('starter');
 
@@ -122,7 +123,7 @@ export default function Workouts({ profile }: { profile: UserProfile | null }) {
     setGenerating(true);
     try {
       if (activeTab === 'workouts') {
-        const newPlanData = await generateWorkoutPlan(profile.uid, preferences, fitnessLevel, goals, equipment, parseInt(workoutDays));
+        const newPlanData = await generateWorkoutPlan(profile.uid, preferences, fitnessLevel, goals, equipment, parseInt(workoutDays), splitType);
         const plan: any = {
           userId: profile.uid,
           title: newPlanData.title,
@@ -491,19 +492,34 @@ export default function Workouts({ profile }: { profile: UserProfile | null }) {
                   </div>
                 )}
                 {activeTab === 'workouts' && (
-                  <div>
-                    <label className="block text-[10px] font-bold uppercase tracking-widest text-primary mb-2">Days per Week</label>
-                    <select 
-                      value={workoutDays}
-                      onChange={(e) => setWorkoutDays(e.target.value)}
-                      className="w-full bg-surface-container-highest border-none text-on-surface py-3 px-4 rounded-lg focus:ring-2 focus:ring-primary/40"
-                    >
-                      <option value="2">2 Days</option>
-                      <option value="3">3 Days</option>
-                      <option value="4">4 Days</option>
-                      <option value="5">5 Days</option>
-                      <option value="6">6 Days</option>
-                    </select>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-[10px] font-bold uppercase tracking-widest text-primary mb-2">Days per Week</label>
+                      <select 
+                        value={workoutDays}
+                        onChange={(e) => setWorkoutDays(e.target.value)}
+                        className="w-full bg-surface-container-highest border-none text-on-surface py-3 px-4 rounded-lg focus:ring-2 focus:ring-primary/40"
+                      >
+                        <option value="2">2 Days</option>
+                        <option value="3">3 Days</option>
+                        <option value="4">4 Days</option>
+                        <option value="5">5 Days</option>
+                        <option value="6">6 Days</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold uppercase tracking-widest text-primary mb-2">Split Type</label>
+                      <select 
+                        value={splitType}
+                        onChange={(e) => setSplitType(e.target.value)}
+                        className="w-full bg-surface-container-highest border-none text-on-surface py-3 px-4 rounded-lg focus:ring-2 focus:ring-primary/40"
+                      >
+                        <option>Full Body</option>
+                        <option>Push/Pull/Legs</option>
+                        <option>Upper/Lower</option>
+                        <option>Bro Split</option>
+                      </select>
+                    </div>
                   </div>
                 )}
                 <div>

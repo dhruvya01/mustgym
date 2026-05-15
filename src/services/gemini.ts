@@ -1,31 +1,57 @@
 const API_BASE = import.meta.env.VITE_API_URL || '';
 
-export async function generateWorkoutPlan(userId: string, preferences: string, fitnessLevel: string, goals: string, availableEquipment: string[], workoutDays: number = 4) {
+export async function generateWorkoutPlan(userId: string, preferences: string, fitnessLevel: string, goals: string, availableEquipment: string[], workoutDays: number = 4, splitType: string = "Full Body") {
   // Simulate network delay
   await new Promise(resolve => setTimeout(resolve, 1500));
 
-  console.log("Generating local workout plan for:", { preferences, fitnessLevel, goals, availableEquipment, workoutDays });
+  console.log("Generating local workout plan for:", { preferences, fitnessLevel, goals, availableEquipment, workoutDays, splitType });
 
   const exercisesDB = [
     { name: "Push-ups", sets: 3, reps: "10-15", notes: "Keep core tight", equipment: "None", level: ["Beginner", "Intermediate", "Advanced"], levelReps: { Beginner: "5-10", Intermediate: "10-20", Advanced: "20-30" }, category: "Chest" },
+    { name: "Dumbbell Bench Press", sets: 4, reps: "8-12", notes: "Press up and squeeze chest", equipment: "Dumbbells", level: ["Beginner", "Intermediate", "Advanced"], levelReps: { Beginner: "8-10", Intermediate: "10-12", Advanced: "12-15" }, category: "Chest" },
+    { name: "Incline Dumbbell Flyes", sets: 3, reps: "10-15", notes: "Slight bend in elbows", equipment: "Dumbbells", level: ["Intermediate", "Advanced"], levelReps: { Beginner: "10-12", Intermediate: "12-15", Advanced: "15-20" }, category: "Chest" },
+    { name: "Chest Dips", sets: 3, reps: "8-12", notes: "Lean forward to target chest", equipment: "None", level: ["Intermediate", "Advanced"], levelReps: { Intermediate: "8-10", Advanced: "10-15" }, category: "Chest" },
+    { name: "Pec Deck Machine", sets: 3, reps: "12-15", notes: "Squeeze at the center", equipment: "Machine", level: ["Beginner", "Intermediate", "Advanced"], levelReps: { Beginner: "12-15", Intermediate: "15-20", Advanced: "15-20" }, category: "Chest" },
+    
     { name: "Pull-up", sets: 3, reps: "Failure", notes: "Pronated grip. Depress scapula", equipment: "Pull-up bar", level: ["Intermediate", "Advanced"], levelReps: { Beginner: "1-5", Intermediate: "6-10", Advanced: "10-20" }, category: "Back" },
+    { name: "Lat Pulldown", sets: 3, reps: "10-12", notes: "Pull to upper chest", equipment: "Machine", level: ["Beginner", "Intermediate", "Advanced"], levelReps: { Beginner: "10-12", Intermediate: "10-15", Advanced: "12-15" }, category: "Back" },
+    { name: "Seated Cable Row", sets: 3, reps: "10-12", notes: "Squeeze shoulder blades", equipment: "Cable", level: ["Beginner", "Intermediate", "Advanced"], levelReps: { Beginner: "10-12", Intermediate: "10-15", Advanced: "12-15" }, category: "Back" },
+    { name: "Single Arm Dumbbell Row", sets: 3, reps: "8-12", notes: "Keep back flat", equipment: "Dumbbells", level: ["Beginner", "Intermediate", "Advanced"], levelReps: { Beginner: "8-10", Intermediate: "10-12", Advanced: "12-15" }, category: "Back" },
+    { name: "Straight Arm Pulldown", sets: 3, reps: "12-15", notes: "Isolate the lats", equipment: "Cable", level: ["Intermediate", "Advanced"], levelReps: { Intermediate: "12-15", Advanced: "15-20" }, category: "Back" },
+
     { name: "Barbell Back Squat", sets: 3, reps: "8-10", notes: "Keep chest up, break parallel", equipment: "Barbell", level: ["Beginner", "Intermediate", "Advanced"], levelReps: { Beginner: "8-10", Intermediate: "10-12", Advanced: "12-15" }, category: "Legs" },
+    { name: "Leg Press", sets: 3, reps: "10-15", notes: "Don't lock out knees", equipment: "Machine", level: ["Beginner", "Intermediate", "Advanced"], levelReps: { Beginner: "10-12", Intermediate: "12-15", Advanced: "15-20" }, category: "Legs" },
+    { name: "Walking Lunges", sets: 3, reps: "12-15", notes: "Long steps for glutes, short for quads", equipment: "Dumbbells", level: ["Beginner", "Intermediate", "Advanced"], levelReps: { Beginner: "10-12", Intermediate: "12-15", Advanced: "15-20" }, category: "Legs" },
+    { name: "Bulgarian Split Squat", sets: 3, reps: "8-12", notes: "Keep torso upright", equipment: "Dumbbells", level: ["Intermediate", "Advanced"], levelReps: { Intermediate: "8-12", Advanced: "10-15" }, category: "Legs" },
     { name: "Romanian Deadlift", sets: 3, reps: "8-12", notes: "Slight bend in knees, hinge hips", equipment: "Barbell", level: ["Intermediate", "Advanced"], levelReps: { Beginner: "8-10", Intermediate: "10-12", Advanced: "12-15" }, category: "Legs" },
+    { name: "Calf Raises", sets: 4, reps: "15-20", notes: "Full stretch at bottom", equipment: "None", level: ["Beginner", "Intermediate", "Advanced"], levelReps: { Beginner: "15", Intermediate: "15-20", Advanced: "20-25" }, category: "Legs" },
+
     { name: "Barbell Bench Press", sets: 4, reps: "8-12", notes: "Control the eccentric phase", equipment: "Barbell", level: ["Intermediate", "Advanced"], levelReps: { Intermediate: "8-10", Advanced: "6-8" }, category: "Chest" },
     { name: "Dumbbell Incline Bench Press", sets: 3, reps: "8-12", notes: "Press over upper chest", equipment: "Dumbbells", level: ["Beginner", "Intermediate", "Advanced"], levelReps: { Beginner: "8-10", Intermediate: "10-12", Advanced: "12-15" }, category: "Chest" },
     { name: "Cable Crossover", sets: 3, reps: "10-15", notes: "Cross hands at the bottom", equipment: "Cable", level: ["Intermediate", "Advanced"], levelReps: { Beginner: "10-12", Intermediate: "12-15", Advanced: "15-20" }, category: "Chest" },
+
     { name: "Bent Over Barbell Row", sets: 3, reps: "8-12", notes: "Back parallel to floor", equipment: "Barbell", level: ["Intermediate", "Advanced"], levelReps: { Beginner: "8-10", Intermediate: "10-12", Advanced: "12-15" }, category: "Back" },
     { name: "T-Bar Row", sets: 3, reps: "8-12", notes: "Straddle bar, neutral spine", equipment: "Barbell", level: ["Intermediate", "Advanced"], levelReps: { Beginner: "8-10", Intermediate: "10-12", Advanced: "12-15" }, category: "Back" },
+
     { name: "Machine Leg Extension", sets: 3, reps: "12-15", notes: "Squeeze quadriceps at top", equipment: "Machine", level: ["Beginner", "Intermediate", "Advanced"], levelReps: { Beginner: "10-12", Intermediate: "12-15", Advanced: "15-20" }, category: "Legs" },
     { name: "Lying Leg Curl", sets: 3, reps: "10-15", notes: "Keep hips pressed into pad", equipment: "Machine", level: ["Beginner", "Intermediate", "Advanced"], levelReps: { Beginner: "10-12", Intermediate: "12-15", Advanced: "15-20" }, category: "Legs" },
+
     { name: "Military Press", sets: 3, reps: "8-10", notes: "Squeeze glutes to stabilize", equipment: "Barbell", level: ["Beginner", "Intermediate", "Advanced"], levelReps: { Beginner: "8-10", Intermediate: "10-12", Advanced: "12-15" }, category: "Shoulders" },
+    { name: "Dumbbell Shoulder Press", sets: 3, reps: "8-12", notes: "Keep elbows slightly forward", equipment: "Dumbbells", level: ["Beginner", "Intermediate", "Advanced"], levelReps: { Beginner: "10-12", Intermediate: "10-12", Advanced: "12-15" }, category: "Shoulders" },
     { name: "Dumbbell Lateral Raise", sets: 3, reps: "10-15", notes: "Lead with elbows", equipment: "Dumbbells", level: ["Beginner", "Intermediate", "Advanced"], levelReps: { Beginner: "10-12", Intermediate: "12-15", Advanced: "15-20" }, category: "Shoulders" },
+    { name: "Reverse Pec Deck", sets: 3, reps: "12-15", notes: "Isolate rear delts", equipment: "Machine", level: ["Intermediate", "Advanced"], levelReps: { Intermediate: "12-15", Advanced: "15-20" }, category: "Shoulders" },
     { name: "Cable Rope Face Pull", sets: 3, reps: "12-15", notes: "Target rear delts and rotator cuff", equipment: "Cable", level: ["Beginner", "Intermediate", "Advanced"], levelReps: { Beginner: "10-12", Intermediate: "12-15", Advanced: "15-20" }, category: "Shoulders" },
+    
     { name: "Barbell Bicep Curl", sets: 3, reps: "8-12", notes: "Keep elbows pinned", equipment: "Barbell", level: ["Beginner", "Intermediate", "Advanced"], levelReps: { Beginner: "8-10", Intermediate: "10-12", Advanced: "12-15" }, category: "Arms" },
+    { name: "Preacher Curl", sets: 3, reps: "10-12", notes: "Full stretch at bottom", equipment: "Machine", level: ["Beginner", "Intermediate", "Advanced"], levelReps: { Beginner: "10-12", Intermediate: "10-12", Advanced: "12-15" }, category: "Arms" },
     { name: "Hammer Curl", sets: 3, reps: "10-12", notes: "Neutral grip", equipment: "Dumbbells", level: ["Beginner", "Intermediate", "Advanced"], levelReps: { Beginner: "8-10", Intermediate: "10-12", Advanced: "12-15" }, category: "Arms" },
     { name: "Cable Tricep Pushdown", sets: 3, reps: "10-15", notes: "Keep elbows tucked in", equipment: "Cable", level: ["Beginner", "Intermediate", "Advanced"], levelReps: { Beginner: "10-12", Intermediate: "12-15", Advanced: "15-20" }, category: "Arms" },
+    { name: "Overhead Dumbbell Extension", sets: 3, reps: "10-12", notes: "Lock elbows in place", equipment: "Dumbbells", level: ["Beginner", "Intermediate", "Advanced"], levelReps: { Beginner: "10-12", Intermediate: "10-15", Advanced: "12-15" }, category: "Arms" },
     { name: "Skull Crusher", sets: 3, reps: "8-12", notes: "Keep elbows pointing up", equipment: "Barbell", level: ["Intermediate", "Advanced"], levelReps: { Beginner: "8-10", Intermediate: "10-12", Advanced: "12-15" }, category: "Arms" },
+
     { name: "Plank", sets: 3, reps: "Hold", notes: "Keep body straight", equipment: "None", level: ["Beginner", "Intermediate", "Advanced"], levelReps: { Beginner: "30s", Intermediate: "45s", Advanced: "60s+" }, category: "Core" },
+    { name: "Cable Crunches", sets: 3, reps: "15-20", notes: "Flex spine, don't just hinge hips", equipment: "Cable", level: ["Intermediate", "Advanced"], levelReps: { Intermediate: "15-20", Advanced: "20-25" }, category: "Core" },
+    { name: "Hanging Leg Raises", sets: 3, reps: "10-15", notes: "Don't swing", equipment: "Pull-up bar", level: ["Intermediate", "Advanced"], levelReps: { Intermediate: "10-15", Advanced: "15-20" }, category: "Core" },
     { name: "Russian Twist", sets: 3, reps: "15-20", notes: "Keep feet elevated if possible", equipment: "None", level: ["Beginner", "Intermediate", "Advanced"], levelReps: { Beginner: "10-12", Intermediate: "15-20", Advanced: "20-30" }, category: "Core" },
     { name: "Hollow Body Hold", sets: 3, reps: "Hold", notes: "Dish shape, press lower back", equipment: "None", level: ["Intermediate", "Advanced"], levelReps: { Beginner: "15s", Intermediate: "30s", Advanced: "45s+" }, category: "Core" }
   ];
@@ -33,13 +59,25 @@ export async function generateWorkoutPlan(userId: string, preferences: string, f
   // Filter exercises by equipment and fitness level
   let filteredDB = exercisesDB.filter(ex => ex.level.includes(fitnessLevel));
   
-  if (availableEquipment && availableEquipment.length > 0 && availableEquipment[0].toLowerCase() !== 'none') {
-      const equipSet = new Set(availableEquipment.map(e => e.toLowerCase()));
-      // Always include 'none' (bodyweight) exercises
-      filteredDB = filteredDB.filter(ex => ex.equipment.toLowerCase() === 'none' || equipSet.has(ex.equipment.toLowerCase()) || equipSet.has('full gym'));
+  if (availableEquipment && availableEquipment.length > 0) {
+      // Fuzzy match equipment
+      filteredDB = filteredDB.filter(ex => {
+          if (ex.equipment.toLowerCase() === 'none') return true;
+          // Check if any available equipment string is a substring of the exercise equipment or vice versa
+          return availableEquipment.some(ae => 
+              ae.toLowerCase().includes(ex.equipment.toLowerCase()) || 
+              ex.equipment.toLowerCase().includes(ae.toLowerCase()) ||
+              ae.toLowerCase() === 'full gym'
+          );
+      });
+      // Fallback: If filtering removed almost everything, allow all to at least show a plan
+      if (filteredDB.length < 10) {
+          filteredDB = exercisesDB.filter(ex => ex.level.includes(fitnessLevel));
+          insights.push("Your gym's equipment list didn't match perfectly with standard exercises, so I've included a broader range of general gym exercises.");
+      }
   } else {
-      // Only bodyweight
-      filteredDB = filteredDB.filter(ex => ex.equipment.toLowerCase() === 'none');
+      // If no equipment is provided by gym, default to full gym rather than just bodyweight to prevent boring routines
+      insights.push("No specific gym equipment was detected. I assumed access to a standard gym setup (Dumbbells, Barbells, Cables).");
   }
 
   const insights: string[] = [];
@@ -70,35 +108,40 @@ export async function generateWorkoutPlan(userId: string, preferences: string, f
     insights.push("For maximum hypertrophy, ensure you're resting adequately (90-120 seconds) between sets to allow full motor unit recovery.");
   }
 
-  // Construct weekly splits based on workoutDays
+  // Construct weekly splits based on workoutDays and splitType
   const splits: { dayName: string; focus: string; categories: string[] }[] = [];
   
-  if (workoutDays === 2) {
-    splits.push({ dayName: "Day 1", focus: "Full Body (Push Focus)", categories: ["Chest", "Shoulders", "Legs", "Core", "Arms"] });
-    splits.push({ dayName: "Day 2", focus: "Full Body (Pull Focus)", categories: ["Back", "Legs", "Arms", "Core"] });
-  } else if (workoutDays === 3) {
-    splits.push({ dayName: "Day 1", focus: "Push (Chest, Shoulders, Triceps)", categories: ["Chest", "Shoulders", "Arms", "Core"] });
-    splits.push({ dayName: "Day 2", focus: "Pull (Back, Biceps)", categories: ["Back", "Arms", "Core"] });
-    splits.push({ dayName: "Day 3", focus: "Legs & Core", categories: ["Legs", "Core"] });
-  } else if (workoutDays === 4) {
-    splits.push({ dayName: "Day 1", focus: "Upper Body", categories: ["Chest", "Back", "Shoulders", "Arms"] });
-    splits.push({ dayName: "Day 2", focus: "Lower Body", categories: ["Legs", "Core"] });
-    splits.push({ dayName: "Day 3", focus: "Upper Body", categories: ["Chest", "Back", "Shoulders", "Arms"] });
-    splits.push({ dayName: "Day 4", focus: "Lower Body", categories: ["Legs", "Core"] });
-  } else if (workoutDays === 5) {
-    splits.push({ dayName: "Day 1", focus: "Chest & Triceps", categories: ["Chest", "Arms", "Core"] });
-    splits.push({ dayName: "Day 2", focus: "Back & Biceps", categories: ["Back", "Arms"] });
-    splits.push({ dayName: "Day 3", focus: "Legs", categories: ["Legs", "Core"] });
-    splits.push({ dayName: "Day 4", focus: "Shoulders", categories: ["Shoulders", "Core"] });
-    splits.push({ dayName: "Day 5", focus: "Full Body/Weak points", categories: ["Chest", "Back", "Legs", "Arms"] });
+  if (splitType === 'Push/Pull/Legs' || (splitType === 'Full Body' && workoutDays === 6)) { // Override for 6 days naturally
+    for (let i=0; i<workoutDays; i++) {
+        if (i % 3 === 0) splits.push({ dayName: `Day ${i+1}`, focus: "Push (Chest, Shoulders, Triceps)", categories: ["Chest", "Shoulders", "Arms", "Core"] });
+        if (i % 3 === 1) splits.push({ dayName: `Day ${i+1}`, focus: "Pull (Back, Biceps)", categories: ["Back", "Arms", "Core"] });
+        if (i % 3 === 2) splits.push({ dayName: `Day ${i+1}`, focus: "Legs", categories: ["Legs", "Core"] });
+    }
+    insights.push("I aligned your routine with a Push/Pull/Legs (PPL) structure specifically tailored to cycle through your muscle groups efficiently.");
+  } else if (splitType === 'Upper/Lower' || (splitType !== 'Bro Split' && workoutDays === 4)) {
+    for (let i=0; i<workoutDays; i++) {
+        if (i % 2 === 0) splits.push({ dayName: `Day ${i+1}`, focus: "Upper Body", categories: ["Chest", "Back", "Shoulders", "Arms"] });
+        if (i % 2 === 1) splits.push({ dayName: `Day ${i+1}`, focus: "Lower Body & Core", categories: ["Legs", "Core"] });
+    }
+    insights.push("I set up an Upper/Lower split. This is excellent for hitting muscles twice a week, balancing frequency and recovery.");
+  } else if (splitType === 'Bro Split' || workoutDays === 5) {
+     const broDays = [
+        { focus: "Chest", categories: ["Chest", "Core"] },
+        { focus: "Back", categories: ["Back", "Core"] },
+        { focus: "Legs", categories: ["Legs"] },
+        { focus: "Shoulders", categories: ["Shoulders", "Core"] },
+        { focus: "Arms", categories: ["Arms", "Core"] }
+     ];
+     for (let i=0; i<workoutDays; i++) {
+        splits.push({ dayName: `Day ${i+1}`, focus: broDays[i%5].focus, categories: broDays[i%5].categories });
+     }
+     insights.push("I programmed a classic 'Bro Split' style routine, allowing you to dedicate specific days to entirely exhausting one or two muscle groups.");
   } else {
-    // 6 days
-    splits.push({ dayName: "Day 1", focus: "Push (Chest, Shoulders, Triceps)", categories: ["Chest", "Shoulders", "Arms"] });
-    splits.push({ dayName: "Day 2", focus: "Pull (Back, Biceps)", categories: ["Back", "Arms"] });
-    splits.push({ dayName: "Day 3", focus: "Legs", categories: ["Legs", "Core"] });
-    splits.push({ dayName: "Day 4", focus: "Push (Chest, Shoulders, Triceps)", categories: ["Chest", "Shoulders", "Arms"] });
-    splits.push({ dayName: "Day 5", focus: "Pull (Back, Biceps)", categories: ["Back", "Arms"] });
-    splits.push({ dayName: "Day 6", focus: "Legs & Core", categories: ["Legs", "Core"] });
+    // Default to Full body
+    for (let i=0; i<workoutDays; i++) {
+        splits.push({ dayName: `Day ${i+1}`, focus: "Full Body", categories: ["Chest", "Back", "Legs", "Shoulders", "Arms", "Core"] });
+    }
+    insights.push("I opted for a Full Body approach to ensure you engage all major muscle groups frequently throughout the week, maximizing systemic fat burn and overall conditioning.");
   }
 
   const days: any[] = [];
