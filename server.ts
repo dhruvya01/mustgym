@@ -5,7 +5,6 @@ import path from 'path';
 import cors from 'cors';
 import nodemailer from 'nodemailer';
 import admin from 'firebase-admin';
-import { generateWorkoutPlan, generateDietPlan, generateAdminInsights } from './src/server/gemini';
 
 // Initialize Firebase Admin (Only needed if we are generating links backend side)
 // Note: We need a Service Account JSON for this. If the user doesn't have it, we will load it from env later.
@@ -33,7 +32,7 @@ async function startServer() {
     res.json({ status: 'ok', env: process.env.NODE_ENV, timestamp: new Date().toISOString() });
   });
 
-  // Rate Limiting for AI Routes
+  // Rate Limiting for routes if needed in the future
   const userRateLimits = new Map<string, { count: number, resetTime: number }>();
   const RATE_LIMIT_DURATION = 3 * 60 * 60 * 1000; // 3 hours in milliseconds
   const MAX_REQUESTS = 2; // Twice every 3 hours
@@ -59,53 +58,6 @@ async function startServer() {
       return { allowed: true };
     }
   };
-
-  // AI Routes
-  app.post('/api/ai/workout', async (req, res) => {
-    try {
-      const { preferences, fitnessLevel, goals, availableEquipment, userId } = req.body;
-      
-      if (userId) {
-        const limit = checkRateLimit(userId);
-        if (!limit.allowed) {
-          return res.status(429).json({ error: limit.message });
-        }
-      }
-
-      const plan = await generateWorkoutPlan(preferences || '', fitnessLevel || 'Beginner', goals || 'General fitness', availableEquipment || []);
-      res.json(plan);
-    } catch (err: any) {
-      res.status(400).json({ error: err.message });
-    }
-  });
-
-  app.post('/api/ai/diet', async (req, res) => {
-    try {
-      const { preferences, fitnessLevel, goals, userId } = req.body;
-
-      if (userId) {
-        const limit = checkRateLimit(userId);
-        if (!limit.allowed) {
-          return res.status(429).json({ error: limit.message });
-        }
-      }
-
-      const plan = await generateDietPlan(preferences || '', fitnessLevel || 'Beginner', goals || 'General fitness');
-      res.json(plan);
-    } catch (err: any) {
-      res.status(400).json({ error: err.message });
-    }
-  });
-
-  app.post('/api/ai/insights', async (req, res) => {
-    try {
-      const { metrics } = req.body;
-      const insights = await generateAdminInsights(metrics || {});
-      res.json(insights);
-    } catch (err: any) {
-      res.status(400).json({ error: err.message });
-    }
-  });
 
   // Custom Password Reset Email Route
   app.post('/api/auth/reset-password', async (req, res) => {

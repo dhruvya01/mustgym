@@ -7,20 +7,27 @@ export async function generateWorkoutPlan(userId: string, preferences: string, f
   console.log("Generating local workout plan for:", { preferences, fitnessLevel, goals, availableEquipment });
 
   const exercisesDB = [
-    { name: "Push-ups", sets: 3, reps: "10-15", notes: "Keep core tight", equipment: "None", level: ["Beginner", "Intermediate", "Advanced"], levelReps: { Beginner: "5-10", Intermediate: "10-15", Advanced: "15-25" } },
-    { name: "Pull-ups", sets: 3, reps: "5-10", notes: "Full range of motion", equipment: "Pull-up bar", level: ["Intermediate", "Advanced"], levelReps: { Intermediate: "3-8", Advanced: "8-12" } },
-    { name: "Bodyweight Squats", sets: 3, reps: "15-20", notes: "Knees over toes", equipment: "None", level: ["Beginner", "Intermediate", "Advanced"], levelReps: { Beginner: "10", Intermediate: "15-20", Advanced: "20-30" } },
-    { name: "Dumbbell Shrugs", sets: 3, reps: "12-15", notes: "Squeeze traps at top", equipment: "Dumbbells", level: ["Beginner", "Intermediate", "Advanced"], levelReps: { Beginner: "10", Intermediate: "12-15", Advanced: "15-20" } },
+    { name: "Push-ups", sets: 3, reps: "10-15", notes: "Keep core tight", equipment: "None", level: ["Beginner", "Intermediate", "Advanced"], levelReps: { Beginner: "5-10", Intermediate: "10-20", Advanced: "20-30" } },
+    { name: "Pull-up", sets: 3, reps: "Failure", notes: "Pronated grip. Depress scapula", equipment: "Pull-up bar", level: ["Intermediate", "Advanced"], levelReps: { Beginner: "1-5", Intermediate: "6-10", Advanced: "10-20" } },
+    { name: "Barbell Back Squat", sets: 3, reps: "8-10", notes: "Keep chest up, break parallel", equipment: "Barbell", level: ["Beginner", "Intermediate", "Advanced"], levelReps: { Beginner: "8-10", Intermediate: "10-12", Advanced: "12-15" } },
+    { name: "Romanian Deadlift", sets: 3, reps: "8-12", notes: "Slight bend in knees, hinge hips", equipment: "Barbell", level: ["Intermediate", "Advanced"], levelReps: { Beginner: "8-10", Intermediate: "10-12", Advanced: "12-15" } },
     { name: "Barbell Bench Press", sets: 4, reps: "8-12", notes: "Control the eccentric phase", equipment: "Barbell", level: ["Intermediate", "Advanced"], levelReps: { Intermediate: "8-10", Advanced: "6-8" } },
-    { name: "Dumbbell Flyes", sets: 3, reps: "10-12", notes: "Slight bend in elbows", equipment: "Dumbbells", level: ["Beginner", "Intermediate", "Advanced"], levelReps: { Beginner: "10", Intermediate: "10-12", Advanced: "12-15" } },
-    { name: "Barbell Squats", sets: 4, reps: "6-10", notes: "Break parallel if possible", equipment: "Barbell", level: ["Intermediate", "Advanced"], levelReps: { Intermediate: "8-10", Advanced: "5-8" } },
-    { name: "Dumbbell Lunges", sets: 3, reps: "10 per leg", notes: "Keep chest up", equipment: "Dumbbells", level: ["Beginner", "Intermediate", "Advanced"], levelReps: { Beginner: "8 per leg", Intermediate: "10 per leg", Advanced: "12 per leg" } },
-    { name: "Deadlifts", sets: 3, reps: "5-8", notes: "Keep back straight, lift with legs", equipment: "Barbell", level: ["Intermediate", "Advanced"], levelReps: { Intermediate: "5-8", Advanced: "3-5" } },
-    { name: "Lat Pulldowns", sets: 3, reps: "10-12", notes: "Pull to upper chest", equipment: "Cable machine", level: ["Beginner", "Intermediate", "Advanced"], levelReps: { Beginner: "10-12", Intermediate: "8-12", Advanced: "8-10" } },
-    { name: "Plank", sets: 3, reps: "60s", notes: "Don't let hips sag", equipment: "None", level: ["Beginner", "Intermediate", "Advanced"], levelReps: { Beginner: "30s", Intermediate: "60s", Advanced: "90s" } },
-    { name: "Russian Twists", sets: 3, reps: "20 twists", notes: "Twist from torso, not just arms", equipment: "None", level: ["Beginner", "Intermediate", "Advanced"], levelReps: { Beginner: "10 twists", Intermediate: "20 twists", Advanced: "30 twists" } },
-    { name: "Bicep Curls", sets: 3, reps: "10-12", notes: "Keep elbows pinned", equipment: "Dumbbells", level: ["Beginner", "Intermediate", "Advanced"], levelReps: { Beginner: "10-12", Intermediate: "8-12", Advanced: "8-10" } },
-    { name: "Tricep Dips", sets: 3, reps: "10-15", notes: "Lower until arms are 90 degrees", equipment: "None", level: ["Intermediate", "Advanced"], levelReps: { Intermediate: "8-12", Advanced: "12-20" } }
+    { name: "Dumbbell Incline Bench Press", sets: 3, reps: "8-12", notes: "Press over upper chest", equipment: "Dumbbells", level: ["Beginner", "Intermediate", "Advanced"], levelReps: { Beginner: "8-10", Intermediate: "10-12", Advanced: "12-15" } },
+    { name: "Cable Crossover", sets: 3, reps: "10-15", notes: "Cross hands at the bottom", equipment: "Cable", level: ["Intermediate", "Advanced"], levelReps: { Beginner: "10-12", Intermediate: "12-15", Advanced: "15-20" } },
+    { name: "Bent Over Barbell Row", sets: 3, reps: "8-12", notes: "Back parallel to floor", equipment: "Barbell", level: ["Intermediate", "Advanced"], levelReps: { Beginner: "8-10", Intermediate: "10-12", Advanced: "12-15" } },
+    { name: "T-Bar Row", sets: 3, reps: "8-12", notes: "Straddle bar, neutral spine", equipment: "Barbell", level: ["Intermediate", "Advanced"], levelReps: { Beginner: "8-10", Intermediate: "10-12", Advanced: "12-15" } },
+    { name: "Machine Leg Extension", sets: 3, reps: "12-15", notes: "Squeeze quadriceps at top", equipment: "Machine", level: ["Beginner", "Intermediate", "Advanced"], levelReps: { Beginner: "10-12", Intermediate: "12-15", Advanced: "15-20" } },
+    { name: "Lying Leg Curl", sets: 3, reps: "10-15", notes: "Keep hips pressed into pad", equipment: "Machine", level: ["Beginner", "Intermediate", "Advanced"], levelReps: { Beginner: "10-12", Intermediate: "12-15", Advanced: "15-20" } },
+    { name: "Military Press", sets: 3, reps: "8-10", notes: "Squeeze glutes to stabilize", equipment: "Barbell", level: ["Beginner", "Intermediate", "Advanced"], levelReps: { Beginner: "8-10", Intermediate: "10-12", Advanced: "12-15" } },
+    { name: "Dumbbell Lateral Raise", sets: 3, reps: "10-15", notes: "Lead with elbows", equipment: "Dumbbells", level: ["Beginner", "Intermediate", "Advanced"], levelReps: { Beginner: "10-12", Intermediate: "12-15", Advanced: "15-20" } },
+    { name: "Cable Rope Face Pull", sets: 3, reps: "12-15", notes: "Target rear delts and rotator cuff", equipment: "Cable", level: ["Beginner", "Intermediate", "Advanced"], levelReps: { Beginner: "10-12", Intermediate: "12-15", Advanced: "15-20" } },
+    { name: "Barbell Bicep Curl", sets: 3, reps: "8-12", notes: "Keep elbows pinned", equipment: "Barbell", level: ["Beginner", "Intermediate", "Advanced"], levelReps: { Beginner: "8-10", Intermediate: "10-12", Advanced: "12-15" } },
+    { name: "Hammer Curl", sets: 3, reps: "10-12", notes: "Neutral grip", equipment: "Dumbbells", level: ["Beginner", "Intermediate", "Advanced"], levelReps: { Beginner: "8-10", Intermediate: "10-12", Advanced: "12-15" } },
+    { name: "Cable Tricep Pushdown", sets: 3, reps: "10-15", notes: "Keep elbows tucked in", equipment: "Cable", level: ["Beginner", "Intermediate", "Advanced"], levelReps: { Beginner: "10-12", Intermediate: "12-15", Advanced: "15-20" } },
+    { name: "Skull Crusher", sets: 3, reps: "8-12", notes: "Keep elbows pointing up", equipment: "Barbell", level: ["Intermediate", "Advanced"], levelReps: { Beginner: "8-10", Intermediate: "10-12", Advanced: "12-15" } },
+    { name: "Plank", sets: 3, reps: "Hold", notes: "Keep body straight", equipment: "None", level: ["Beginner", "Intermediate", "Advanced"], levelReps: { Beginner: "30s", Intermediate: "45s", Advanced: "60s+" } },
+    { name: "Russian Twist", sets: 3, reps: "15-20", notes: "Keep feet elevated if possible", equipment: "None", level: ["Beginner", "Intermediate", "Advanced"], levelReps: { Beginner: "10-12", Intermediate: "15-20", Advanced: "20-30" } },
+    { name: "Hollow Body Hold", sets: 3, reps: "Hold", notes: "Dish shape, press lower back", equipment: "None", level: ["Intermediate", "Advanced"], levelReps: { Beginner: "15s", Intermediate: "30s", Advanced: "45s+" } }
   ];
 
   // Filter exercises by equipment and fitness level
@@ -103,15 +110,15 @@ export async function generateDietPlan(userId: string, preferences: string, fitn
   const isVegan = preferences.toLowerCase().includes('vegan');
 
   const proteins = {
-      veg: ["Paneer (Cottage Cheese)", "Tofu", "Lentils (Dal)", "Chickpeas (Chana)", "Greek Yogurt (Dahi)", "Soya Chunks"],
-      nonveg: ["Chicken Breast", "Eggs", "Fish (Rohu/Salmon)", "Lean Mutton", "Chicken Kheema"],
-      vegan: ["Tofu", "Lentils (Dal)", "Chickpeas (Chana)", "Soya Chunks", "Moong Dal Sprouts"]
+      veg: ["Paneer Bhurji", "Chana Masala", "Masoor Dal & Jowar", "Toor Dal", "Greek Yogurt (Hung Curd)"],
+      nonveg: ["Chicken Tangdi", "Rohu Fish Curry", "Mackerel", "Goshtaba (Mutton)", "Chicken Tikka", "Keralan Grilled Fish"],
+      vegan: ["Soy Chunks (Nutri Nuggets)", "Tofu", "Tempeh", "Edamame", "Sprouted Moong Beans", "Palak Tofu", "Soya Keema"]
   };
 
-  const carbs = ["Brown Rice", "Roti (Whole Wheat)", "Oats", "Sweet Potato", "Quinoa", "Dalia (Broken Wheat)"];
-  const fats = ["Almonds & Walnuts", "Ghee (Clarified Butter)", "Peanut Butter", "Avocado", "Olive Oil", "Coconut chunks"];
+  const carbs = ["Brown Rice", "Jowar Roti", "Bajra Roti", "Ragi", "Dalia (Broken Wheat)", "Rolled Oats", "Quinoa"];
+  const fats = ["Ghee (Clarified Butter)", "Kashmiri Walnuts", "Mamra Almonds", "Flaxseeds", "Chia Seeds", "Mustard Oil"];
   
-  if (isVegan) fats[1] = "Flaxseeds"; // Replace Ghee with flaxseeds
+  if (isVegan) fats[0] = "Coconut Oil"; // Replace Ghee with Coconut oil
 
   const getRand = (arr: string[]) => arr[Math.floor(Math.random() * arr.length)];
   const getPro = () => getRand(isVegan ? proteins.vegan : (isVeg ? proteins.veg : proteins.nonveg));
@@ -122,51 +129,66 @@ export async function generateDietPlan(userId: string, preferences: string, fitn
   if(isCut) mealMultiplier = 0.8;
   if(isBulk) mealMultiplier = 1.25;
 
+  const breakfastOptions = [
+    { items: ["Moong Dal Chilla (Savory green lentil pancake)", "Mint Chutney", "Black Coffee / Green Tea"], protein: "15g" },
+    { items: ["Paneer Bhurji", "Whole Wheat Toast", "Greek Yogurt"], protein: "20g" },
+    { items: ["Masala Oats mixed with fibrous vegetables", "Handful of " + getFat()], protein: "12g" }
+  ];
+
+  const lunchOptions = [
+    { items: ["Chana Masala", "Brown Rice", "Cucumber & Tomato Salad", "Roasted Makhana"], protein: "18g" },
+    { items: ["Chicken Tikka", "Large Cucumber Salad", "1 Jowar Roti"], protein: "35g" },
+    { items: ["Palak Tofu", "Quinoa", "Mixed Vegetables"], protein: "20g" },
+    { items: ["Keralan-inspired Grilled Fish Curry", "Sautéed Vegetables", "1 Bajra Roti"], protein: "30g" }
+  ];
+
+  const snackOptions = [
+    { items: ["Dry-roasted Chana", "Green Tea"], protein: "19g" },
+    { items: ["Sprouted Moong Chaat", "Lemon juice & spices"], protein: "12g" },
+    { items: ["Roasted Makhana (Fox nuts)", "Handful of " + getFat()], protein: "8g" },
+    { items: ["Peanut Chikki (with jaggery)", "Pre-workout energy"], protein: "10g" }
+  ];
+
+  const dinnerOptions = [
+    { items: ["Tofu Stir-fry", "Minimal Portion of Quinoa", "Sautéed Broccoli"], protein: "18g" },
+    { items: ["Robust Soya Keema", "Single Bajra Roti", "Side Salad"], protein: "25g" },
+    { items: ["Dal Khichdi enriched with Ghee", "Small dollop of Curd (Dahi)"], protein: "15g" },
+    { items: ["Lean Mutton/Chicken portion", "Fibrous Vegetables", "Flaxseeds"], protein: "35g" }
+  ];
+
+  const bfast = getRand(breakfastOptions);
+  const lunch = getRand(lunchOptions);
+  const snack = getRand(snackOptions);
+  const dinner = getRand(dinnerOptions);
+
   const meals = [
     {
         time: "8:00 AM",
         name: "Morning Fuel (Breakfast)",
-        items: [
-            isVeg ? "Poha with peanuts or Upma" : "3 Whole Eggs Scrambled or Omelete",
-            isBulk ? getCarb() + " Porridge" : "1 Apple or Papaya bowl",
-            "1 cup Green Tea or Black Coffee"
-        ],
+        items: bfast.items,
         calories: Math.floor(350 * mealMultiplier),
-        protein: isVeg ? "10g" : "20g"
+        protein: bfast.protein
     },
     {
         time: "1:00 PM",
         name: "Power Lunch",
-        items: [
-            `${isBulk ? '2 cups' : '1 cup'} ${getCarb()}`,
-            `${isBulk ? '200g' : '150g'} ${getPro()}`,
-            "Mixed Vegetable Sabzi (low oil)",
-            "Cucumber & Tomato Salad"
-        ],
+        items: lunch.items,
         calories: Math.floor(500 * mealMultiplier),
-        protein: isVeg ? "20g" : "35g"
+        protein: lunch.protein
     },
     {
         time: "5:00 PM",
         name: "Pre-Workout Snack",
-        items: [
-            "Handful of " + getFat(),
-            isBulk ? "2 Bananas" : "1 Banana",
-            isVeg ? "1 scoop Whey/Plant Protein (optional)" : "2 Boiled Egg Whites"
-        ],
+        items: snack.items,
         calories: Math.floor(250 * mealMultiplier),
-        protein: "15g"
+        protein: snack.protein
     },
     {
         time: "8:30 PM",
         name: "Recovery Dinner",
-        items: [
-            `${isCut ? '0.5 cup' : '1.5 cups'} ${getCarb()}`,
-            `${isBulk ? '250g' : '150g'} ${getPro()}`,
-            isVegan ? "Stir-fried broccoli" : "Small bowl of Curd (Dahi)"
-        ],
+        items: dinner.items,
         calories: Math.floor(400 * mealMultiplier),
-        protein: isVeg ? "25g" : "40g"
+        protein: dinner.protein
     }
   ];
 
