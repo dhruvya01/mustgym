@@ -4,6 +4,7 @@ import path from 'path';
 import cors from 'cors';
 import nodemailer from 'nodemailer';
 import admin from 'firebase-admin';
+import { generateWorkoutPlan, generateDietPlan, generateAdminInsights } from './src/server/gemini';
 
 // Initialize Firebase Admin (Only needed if we are generating links backend side)
 // Note: We need a Service Account JSON for this. If the user doesn't have it, we will load it from env later.
@@ -70,7 +71,6 @@ async function startServer() {
         }
       }
 
-      const { generateWorkoutPlan } = await import('./src/server/gemini.ts');
       const plan = await generateWorkoutPlan(preferences || '', fitnessLevel || 'Beginner', goals || 'General fitness', availableEquipment || []);
       res.json(plan);
     } catch (err: any) {
@@ -89,7 +89,6 @@ async function startServer() {
         }
       }
 
-      const { generateDietPlan } = await import('./src/server/gemini.ts');
       const plan = await generateDietPlan(preferences || '', fitnessLevel || 'Beginner', goals || 'General fitness');
       res.json(plan);
     } catch (err: any) {
@@ -100,7 +99,6 @@ async function startServer() {
   app.post('/api/ai/insights', async (req, res) => {
     try {
       const { metrics } = req.body;
-      const { generateAdminInsights } = await import('./src/server/gemini.ts');
       const insights = await generateAdminInsights(metrics || {});
       res.json(insights);
     } catch (err: any) {

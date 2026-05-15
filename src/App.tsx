@@ -289,7 +289,7 @@ function Layout({ children, profile }: { children: React.ReactNode, profile: Use
   const baseNavItems: { path: string; icon: any; label: string; primary?: boolean }[] = [
     { path: `/member-dashboard/${profile?.gymId}`, icon: Home, label: 'Home' },
     { path: '/challenges', icon: Trophy, label: 'Challenges' },
-    { path: '/workouts', icon: Dumbbell, label: 'Workouts' },
+    { path: '/workouts', icon: Dumbbell, label: 'Workouts & Diet' },
     { path: '/scan', icon: QrCode, label: 'Scan', primary: true },
     { path: '/progress', icon: Activity, label: 'Progress' },
     { path: '/settings', icon: Settings, label: 'Settings' },
