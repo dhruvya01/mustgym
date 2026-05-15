@@ -43,7 +43,20 @@ export default function LoginPage() {
         body: JSON.stringify({ email: ownerEmail })
       });
       
-      const data = await response.json();
+      const responseText = await response.text();
+      let data;
+      try {
+        data = JSON.parse(responseText);
+      } catch (parseError) {
+        // Fallback to Firebase's default email if the backend isn't there (e.g., on Firebase Hosting)
+        console.warn('Backend API not found. Falling back to default Firebase Auth.');
+        const { sendPasswordResetEmail } = await import('firebase/auth');
+        await sendPasswordResetEmail(auth, ownerEmail, { 
+          url: `${window.location.origin}/reset-password` 
+        });
+        setResetMessage('Password reset email sent. Please check your inbox.');
+        return;
+      }
       
       if (!response.ok) {
         throw new Error(data.error || 'Failed to send password reset email.');
