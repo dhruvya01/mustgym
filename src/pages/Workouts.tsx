@@ -120,7 +120,7 @@ export default function Workouts({ profile }: { profile: UserProfile | null }) {
     setGenerating(true);
     try {
       if (activeTab === 'workouts') {
-        const newPlanData = await generateWorkoutPlan(preferences, fitnessLevel, goals, equipment);
+        const newPlanData = await generateWorkoutPlan(profile.uid, preferences, fitnessLevel, goals, equipment);
         const plan: any = {
           userId: profile.uid,
           title: newPlanData.title,
@@ -132,7 +132,7 @@ export default function Workouts({ profile }: { profile: UserProfile | null }) {
         await addDoc(collection(db, 'workoutPlans'), plan);
         toast.success('AI Workout Plan generated!');
       } else {
-        const newPlanData = await generateDietPlan(preferences, fitnessLevel, goals);
+        const newPlanData = await generateDietPlan(profile.uid, preferences, fitnessLevel, goals);
         const plan: any = {
           userId: profile.uid,
           title: newPlanData.title,
@@ -145,8 +145,8 @@ export default function Workouts({ profile }: { profile: UserProfile | null }) {
         toast.success('AI Indian Diet Plan generated!');
       }
       setShowGenerator(false);
-    } catch (error) {
-      handleFirestoreError(error, OperationType.CREATE, activeTab === 'workouts' ? 'workoutPlans' : 'dietPlans');
+    } catch (error: any) {
+      toast.error(error.message || 'An error occurred during generation.');
     } finally {
       setGenerating(false);
     }

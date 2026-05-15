@@ -31,6 +31,83 @@ async function startServer() {
     res.json({ status: 'ok', env: process.env.NODE_ENV, timestamp: new Date().toISOString() });
   });
 
+  // Rate Limiting for AI Routes
+  const userRateLimits = new Map<string, { count: number, resetTime: number }>();
+  const RATE_LIMIT_DURATION = 3 * 60 * 60 * 1000; // 3 hours in milliseconds
+  const MAX_REQUESTS = 2; // Twice every 3 hours
+
+  const checkRateLimit = (userId: string) => {
+    const now = Date.now();
+    const userLimit = userRateLimits.get(userId);
+
+    if (userLimit) {
+      if (now > userLimit.resetTime) {
+        // Reset limit if time has passed
+        userRateLimits.set(userId, { count: 1, resetTime: now + RATE_LIMIT_DURATION });
+        return { allowed: true };
+      } else if (userLimit.count < MAX_REQUESTS) {
+        userLimit.count += 1;
+        return { allowed: true };
+      } else {
+        const hoursLeft = Math.ceil((userLimit.resetTime - now) / (1000 * 60 * 60));
+        return { allowed: false, message: `You have reached the limit of ${MAX_REQUESTS} AI generations. Please try again in ${hoursLeft} hour(s).` };
+      }
+    } else {
+      userRateLimits.set(userId, { count: 1, resetTime: now + RATE_LIMIT_DURATION });
+      return { allowed: true };
+    }
+  };
+
+  // AI Routes
+  app.post('/api/ai/workout', async (req, res) => {
+    try {
+      const { preferences, fitnessLevel, goals, availableEquipment, userId } = req.body;
+      
+      if (userId) {
+        const limit = checkRateLimit(userId);
+        if (!limit.allowed) {
+          return res.status(429).json({ error: limit.message });
+        }
+      }
+
+      const { generateWorkoutPlan } = await import('./src/server/gemini.ts');
+      const plan = await generateWorkoutPlan(preferences || '', fitnessLevel || 'Beginner', goals || 'General fitness', availableEquipment || []);
+      res.json(plan);
+    } catch (err: any) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  app.post('/api/ai/diet', async (req, res) => {
+    try {
+      const { preferences, fitnessLevel, goals, userId } = req.body;
+
+      if (userId) {
+        const limit = checkRateLimit(userId);
+        if (!limit.allowed) {
+          return res.status(429).json({ error: limit.message });
+        }
+      }
+
+      const { generateDietPlan } = await import('./src/server/gemini.ts');
+      const plan = await generateDietPlan(preferences || '', fitnessLevel || 'Beginner', goals || 'General fitness');
+      res.json(plan);
+    } catch (err: any) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  app.post('/api/ai/insights', async (req, res) => {
+    try {
+      const { metrics } = req.body;
+      const { generateAdminInsights } = await import('./src/server/gemini.ts');
+      const insights = await generateAdminInsights(metrics || {});
+      res.json(insights);
+    } catch (err: any) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
   // Custom Password Reset Email Route
   app.post('/api/auth/reset-password', async (req, res) => {
     try {
