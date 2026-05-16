@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { motion } from 'motion/react';
 import { UserProfile, AttendanceRecord, WorkoutPlan, Announcement, PersonalRecord } from '../types';
-import { Play, QrCode, Activity, Dumbbell, Droplets, Target, Shield, Clock, Plus, Minus, Trophy } from 'lucide-react';
+import { Play, QrCode, Activity, Dumbbell, Droplets, Target, Shield, Clock, Plus, Minus, Trophy, X, User as UserIcon } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { collection, query, where, getDocs, orderBy, limit, onSnapshot, doc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { SEO } from '../components/SEO';
+import { motion, AnimatePresence } from 'motion/react';
+import { QRCodeSVG } from 'qrcode.react';
 import { handleFirestoreError, OperationType } from '../lib/firestore-errors';
 import { format, subDays, isSameDay, parseISO } from 'date-fns';
 import { cn } from '../lib/utils';
@@ -24,6 +25,7 @@ export default function Dashboard({ profile }: { profile: UserProfile | null }) 
   const [points, setPoints] = useState(0);
   const [level, setLevel] = useState(1);
   const [loading, setLoading] = useState(true);
+  const [showQR, setShowQR] = useState(false);
 
   useEffect(() => {
     if (!profile?.uid || !profile?.gymId) return;
@@ -165,8 +167,67 @@ export default function Dashboard({ profile }: { profile: UserProfile | null }) 
           >
             <QrCode size={24} /> Scan Entry
           </Link>
+          <button 
+            onClick={() => setShowQR(true)}
+            className="bg-surface-container-highest border border-white/10 px-6 py-4 rounded-xl font-headline font-black uppercase tracking-widest text-on-surface flex items-center justify-center gap-3 hover:bg-white/10 transition-all active:scale-95 text-sm sm:text-base"
+          >
+            <UserIcon size={24} /> My Pass
+          </button>
         </div>
       </section>
+
+      {/* User QR Modal */}
+      <AnimatePresence>
+        {showQR && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-6">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowQR(false)}
+              className="absolute inset-0 bg-background/90 backdrop-blur-md"
+            />
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="relative bg-white p-10 rounded-2xl max-w-sm w-full shadow-2xl flex flex-col items-center text-center"
+            >
+              <button 
+                onClick={() => setShowQR(false)}
+                className="absolute top-4 right-4 text-neutral-400 hover:text-neutral-900"
+              >
+                <X size={24} />
+              </button>
+              
+              <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-primary mb-6 shadow-xl">
+                 <img 
+                    src={profile.photoURL || `https://api.dicebear.com/7.x/avataaars/svg?seed=${profile.uid}`} 
+                    alt="" 
+                    className="w-full h-full object-cover"
+                    referrerPolicy="no-referrer"
+                 />
+              </div>
+              
+              <h3 className="font-headline font-black text-2xl uppercase italic mb-1 text-neutral-900">{profile.displayName || 'MEMBER PASS'}</h3>
+              <p className="text-neutral-500 text-[10px] mb-8 uppercase tracking-[0.2em] font-black">{gymInfo?.name ? `${gymInfo.name} • ` : ''}MUSTGYM ACCESS</p>
+              
+              <div className="p-4 bg-white rounded-2xl shadow-inner border-2 border-neutral-100 mb-8">
+                <QRCodeSVG value={`USER_ID:${profile.uid}`} size={200} includeMargin={true} />
+              </div>
+              
+              <div className="flex items-center gap-2 px-6 py-3 bg-neutral-100 rounded-full mb-4">
+                <Shield size={14} className="text-primary" />
+                <span className="text-neutral-600 text-[10px] font-black uppercase tracking-widest">Secure Digital Identity</span>
+              </div>
+              
+              <p className="text-neutral-400 text-[10px] font-medium uppercase tracking-tight max-w-[200px]">
+                Show this code to your trainer or scan it at the gym entry terminal.
+              </p>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
       <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
         {/* Left Column (Main Content) */}

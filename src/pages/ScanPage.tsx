@@ -28,8 +28,18 @@ export default function ScanPage({ profile }: { profile: UserProfile | null }) {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const terminalId = params.get('terminal');
-    if (terminalId && profile && !isProcessingRef.current && !checkingStatus && !isHalted) {
-      onScanSuccess(terminalId);
+    const gymId = params.get('gymId');
+    
+    if (!profile || isProcessingRef.current || checkingStatus || isHalted) return;
+
+    if (terminalId || gymId) {
+      const targetTerminal = terminalId || 'MAIN_GATE';
+      // If we have a gymId from URL, verify it matches user's gym
+      if (gymId && profile.gymId !== gymId) {
+        setError(`This QR code belongs to another studio. Your current studio is ${profile.gymId}.`);
+        return;
+      }
+      onScanSuccess(targetTerminal);
     }
   }, [profile, checkingStatus, isHalted]);
 

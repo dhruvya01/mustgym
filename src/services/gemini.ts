@@ -1,4 +1,4 @@
-const API_BASE = import.meta.env.VITE_API_URL || '';
+const API_BASE = (import.meta as any).env.VITE_API_URL || '';
 
 export async function generateWorkoutPlan(userId: string, preferences: string, fitnessLevel: string, goals: string, availableEquipment: string[], workoutDays: number = 4, splitType: string = "Full Body") {
   // Simulate network delay
@@ -249,7 +249,7 @@ export async function generateDietPlan(userId: string, preferences: string, fitn
       if (gIndex > -1) fats.splice(gIndex, 1);
   }
 
-  const getRand = (arr: string[]) => arr[Math.floor(Math.random() * arr.length)];
+  const getRand = <T>(arr: T[]): T => arr[Math.floor(Math.random() * arr.length)];
   const getPro = () => getRand(type === 'vegan' ? proteins.vegan : (type === 'veg' ? proteins.veg : proteins.nonveg));
   const getCarb = () => getRand(carbs);
   const getFat = () => getRand(fats);

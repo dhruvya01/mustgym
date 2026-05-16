@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { collection, query, getDocs, doc, updateDoc, orderBy, onSnapshot, setDoc, deleteDoc, where, limit } from 'firebase/firestore';
+import { Html5Qrcode } from 'html5-qrcode';
+import { collection, query, getDocs, doc, updateDoc, orderBy, onSnapshot, setDoc, deleteDoc, where, limit, addDoc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { UserProfile, AttendanceRecord, Equipment, PaymentRecord, Announcement, MembershipTier } from '../types';
 import { motion, AnimatePresence } from 'motion/react';
-import { Users, Activity, Search, CheckCircle, XCircle, Clock, QrCode, X, Dumbbell, Plus, IndianRupee, Calendar, TrendingUp, AlertTriangle, PieChart as PieChartIcon, BarChart3, Megaphone, Download, Eye, Trash2, Loader2, Lock, Sparkles, BrainCircuit, LogOut, Globe, Building2, Copy, ArrowUpRight, Share2, MessageCircle, Star, Target } from 'lucide-react';
-import { format, isSameDay, subDays, startOfMonth, endOfMonth, isWithinInterval, subMonths, eachDayOfInterval, isSameMonth, subHours, isAfter } from 'date-fns';
+import { Users, Activity, Search, CheckCircle, XCircle, Clock, QrCode, X, Dumbbell, Plus, IndianRupee, Calendar, TrendingUp, AlertTriangle, PieChart as PieChartIcon, BarChart3, Megaphone, Download, Eye, Trash2, Loader2, Lock, Sparkles, BrainCircuit, LogOut, Globe, Building2, Copy, ArrowUpRight, Share2, MessageCircle, Star, Target, Camera, Scan, Shield } from 'lucide-react';
+import { format, isSameDay, subDays, startOfMonth, endOfMonth, isWithinInterval, subMonths, eachDayOfInterval, isSameMonth, subHours, isAfter, startOfDay, endOfDay } from 'date-fns';
+import { addPoints } from '../services/gamificationService';
 import { cn } from '../lib/utils';
 import { handleFirestoreError, OperationType } from '../lib/firestore-errors';
 import { QRCodeSVG } from 'qrcode.react';
@@ -53,6 +55,55 @@ export default function AdminPage({ profile }: { profile: UserProfile | null }) 
   const [attendanceSearchTerm, setAttendanceSearchTerm] = useState('');
   const [attendanceDateFilter, setAttendanceDateFilter] = useState('');
   const [showQR, setShowQR] = useState(false);
+  const [showScanner, setShowScanner] = useState(false);
+  const [isScanning, setIsScanning] = useState(false);
+  const html5QrCodeRef = React.useRef<Html5Qrcode | null>(null);
+
+  const handleMemberCheckIn = async (userId: string) => {
+    const member = members.find(m => m.uid === userId);
+    if (!member || member.gymId !== profile?.gymId) {
+        toast.error("Verified identity does not belong to this gym.");
+        return;
+    }
+
+    if (member.membershipStatus !== 'active') {
+        toast.error(`Member status is ${member.membershipStatus.toUpperCase()}. Access restricted.`);
+        return;
+    }
+
+    try {
+        const now = new Date();
+        const todayStart = startOfDay(now).toISOString();
+        const todayEnd = endOfDay(now).toISOString();
+        
+        const q = query(
+            collection(db, 'attendance'),
+            where('userId', '==', userId),
+            where('gymId', '==', profile.gymId),
+            where('timestamp', '>=', todayStart),
+            where('timestamp', '<=', todayEnd)
+        );
+        
+        const snap = await getDocs(q);
+        const isDuplicate = !snap.empty;
+
+        await addDoc(collection(db, 'attendance'), {
+            userId,
+            userName: member.displayName,
+            timestamp: now.toISOString(),
+            terminalId: 'ADMIN_SCANNER',
+            isDuplicate,
+            entryCount: snap.size + 1,
+            gymId: profile.gymId
+        });
+
+        await addPoints(userId, profile.gymId!, 10);
+        toast.success(`Access Granted: Welcome back, ${member.displayName}!`);
+    } catch (err) {
+        console.error(err);
+        toast.error("Failed to record attendance.");
+    }
+  };
   const [activeTab, setActiveTab] = useState<'members' | 'equipment' | 'payments' | 'attendance' | 'analytics' | 'announcements' | 'ai' | 'settings' | 'tiers'>('analytics');
   const [newEquipName, setNewEquipName] = useState('');
 
@@ -601,14 +652,129 @@ export default function AdminPage({ profile }: { profile: UserProfile | null }) 
             </p>
           )}
         </div>
-        <button 
-          onClick={() => setShowQR(true)}
-          className="kinetic-gradient text-on-primary-fixed font-headline font-bold uppercase px-6 sm:px-8 py-3 sm:py-4 rounded-lg flex items-center justify-center gap-3 hover:opacity-90 active:scale-95 transition-all shadow-xl text-xs sm:text-sm"
-        >
-          <QrCode size={18} />
-          Terminal QR
-        </button>
+        <div className="flex flex-col sm:flex-row gap-3">
+          <button 
+            onClick={() => setShowScanner(true)}
+            className="bg-primary text-on-primary-fixed font-headline font-bold uppercase px-6 sm:px-8 py-3 sm:py-4 rounded-lg flex items-center justify-center gap-3 hover:opacity-90 active:scale-95 transition-all shadow-xl text-xs sm:text-sm"
+          >
+            <Scan size={18} />
+            Scan Member
+          </button>
+          <button 
+            onClick={() => setShowQR(true)}
+            className="bg-surface-container-highest border border-white/10 text-white font-headline font-bold uppercase px-6 sm:px-8 py-3 sm:py-4 rounded-lg flex items-center justify-center gap-3 hover:bg-white/10 active:scale-95 transition-all shadow-xl text-xs sm:text-sm"
+          >
+            <QrCode size={18} />
+            Terminal QR
+          </button>
+        </div>
       </section>
+
+      {/* Admin QR Scanner Modal */}
+      <AnimatePresence>
+        {showScanner && (
+          <div className="fixed inset-0 z-[110] flex flex-col pt-16 sm:pt-0 items-center justify-center p-0 sm:p-6">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 bg-black/95 backdrop-blur-md"
+            />
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="relative w-full h-full sm:h-auto sm:max-w-md bg-surface-container overflow-hidden sm:rounded-3xl shadow-2xl border-x border-y border-white/5"
+            >
+              <div className="absolute top-0 inset-x-0 z-50 p-6 flex justify-between items-center bg-gradient-to-b from-black/60 to-transparent">
+                  <h3 className="font-headline font-black text-xl uppercase italic text-white leading-none">MEMBER SCANNER</h3>
+                  <button 
+                    onClick={() => {
+                        if (html5QrCodeRef.current && html5QrCodeRef.current.isScanning) {
+                            html5QrCodeRef.current.stop();
+                        }
+                        setShowScanner(false);
+                        setIsScanning(false);
+                    }}
+                    className="p-2 bg-white/10 hover:bg-white/20 rounded-full text-white transition-colors"
+                  >
+                    <X size={24} />
+                  </button>
+              </div>
+
+              <div className="relative aspect-square sm:aspect-auto sm:h-[400px] bg-black group">
+                  <div id="admin-reader" className="w-full h-full" />
+                  
+                  {/* Scanner overlay */}
+                  <div className="absolute inset-0 pointer-events-none flex flex-col items-center justify-center">
+                      <div className="w-[200px] h-[200px] relative">
+                          <div className="absolute top-0 left-0 w-8 h-8 border-t-2 border-l-2 border-primary rounded-tl-lg" />
+                          <div className="absolute top-0 right-0 w-8 h-8 border-t-2 border-r-2 border-primary rounded-tr-lg" />
+                          <div className="absolute bottom-0 left-0 w-8 h-8 border-b-2 border-l-2 border-primary rounded-bl-lg" />
+                          <div className="absolute bottom-0 right-0 w-8 h-8 border-b-2 border-r-2 border-primary rounded-br-lg" />
+                          
+                          <motion.div 
+                            animate={{ top: ['0%', '100%'] }}
+                            transition={{ repeat: Infinity, duration: 2, ease: "linear" }}
+                            className="absolute inset-x-0 h-0.5 bg-primary/60 shadow-[0_0_15px_rgba(255,143,111,0.8)]"
+                          />
+                      </div>
+                      <p className="mt-8 text-white/60 text-[10px] font-black uppercase tracking-[0.3em]">Align Member Pass</p>
+                  </div>
+
+                  {!isScanning && (
+                      <div className="absolute inset-0 flex flex-col items-center justify-center p-8 text-center bg-black/60 backdrop-blur-sm">
+                          <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center text-primary mb-6 animate-pulse">
+                              <Camera size={32} />
+                          </div>
+                          <h4 className="font-headline font-black text-xl text-white uppercase italic mb-2 tracking-tighter">Ready to Verify</h4>
+                          <p className="text-on-surface-variant text-xs mb-8">Click start to initialize your device's camera for verifying member digital passes.</p>
+                          <button 
+                            onClick={async () => {
+                                setIsScanning(true);
+                                try {
+                                    const scanner = new Html5Qrcode("admin-reader");
+                                    html5QrCodeRef.current = scanner;
+                                    await scanner.start(
+                                        { facingMode: { ideal: "environment" } },
+                                        { fps: 15, qrbox: { width: 250, height: 250 } },
+                                        async (decodedText) => {
+                                            if (decodedText.startsWith('USER_ID:')) {
+                                                const userId = decodedText.split('USER_ID:')[1];
+                                                await handleMemberCheckIn(userId);
+                                                scanner.stop();
+                                                setShowScanner(false);
+                                                setIsScanning(false);
+                                            } else {
+                                                toast.error("Invalid QR code format detected.");
+                                            }
+                                        },
+                                        () => {}
+                                    );
+                                } catch (err) {
+                                    console.error(err);
+                                    toast.error("Could not access camera.");
+                                    setIsScanning(false);
+                                }
+                            }}
+                            className="kinetic-gradient px-12 py-4 rounded-xl font-headline font-black uppercase tracking-widest text-on-primary-fixed shadow-xl shadow-primary/20"
+                          >
+                            Start Scanner
+                          </button>
+                      </div>
+                  )}
+              </div>
+
+              <div className="p-8 bg-surface-container flex flex-col items-center">
+                  <div className="flex items-center gap-4 text-on-surface-variant">
+                      <Shield size={16} />
+                      <span className="text-[10px] font-bold uppercase tracking-widest leading-none">Security Protocol Enforced</span>
+                  </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
       {/* QR Modal */}
       <AnimatePresence>
@@ -625,26 +791,52 @@ export default function AdminPage({ profile }: { profile: UserProfile | null }) 
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="relative bg-white p-12 rounded-xl max-w-sm w-full shadow-2xl flex flex-col items-center text-center"
+              className="relative bg-white p-12 rounded-3xl max-w-sm w-full shadow-2xl flex flex-col items-center text-center overflow-hidden"
             >
+              <div className="absolute top-0 left-0 w-full h-2 bg-primary" />
               <button 
                 onClick={() => setShowQR(false)}
-                className="absolute top-4 right-4 text-neutral-400 hover:text-neutral-900"
+                className="absolute top-4 right-4 text-neutral-400 hover:text-neutral-900 bg-neutral-100 p-2 rounded-full transition-colors"
               >
-                <X size={24} />
+                <X size={20} />
               </button>
-              <h3 className="font-headline font-black text-2xl uppercase italic mb-2 text-neutral-900">Access Terminal 04</h3>
-              <p className="text-neutral-500 text-xs mb-8 uppercase tracking-widest font-bold">Main Entrance • MustGym</p>
               
-              <div className="p-4 bg-white rounded-xl shadow-inner border-2 border-neutral-100 mb-8">
-                <QRCodeSVG value={`${publicUrl}/scan?terminal=MUSTGYM_MAIN_ENTRANCE_01`} size={200} />
+              <div className="mb-6">
+                <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-primary/20">
+                   <Building2 className="text-primary" size={32} />
+                </div>
+                <h3 className="font-headline font-black text-2xl uppercase italic mb-1 text-neutral-900 leading-none">{gymInfo?.name?.toUpperCase() || 'ACCESS TERMINAL'}</h3>
+                <p className="text-neutral-500 text-[10px] uppercase tracking-widest font-black opacity-80">Official Gatekeeper Entry</p>
               </div>
               
-              <p className="text-neutral-900 text-[10px] font-mono font-bold mb-4 break-all px-4">
-                {publicUrl}/scan?terminal=MUSTGYM_MAIN_ENTRANCE_01
-              </p>
+              <div className="p-5 bg-white rounded-2xl shadow-[inset_0_2px_10px_rgba(0,0,0,0.05)] border-2 border-neutral-50 mb-8 transform hover:scale-[1.02] transition-transform duration-500">
+                <QRCodeSVG 
+                    value={`${window.location.origin}/scan?gymId=${profile?.gymId}&terminal=MAIN_GATE`} 
+                    size={220} 
+                    includeMargin={true}
+                    level="H"
+                />
+              </div>
               
-              <p className="text-neutral-400 text-[10px] font-medium uppercase tracking-tighter">Scan this code with the member app to log attendance</p>
+              <div className="w-full space-y-4">
+                  <div className="flex items-center gap-2 justify-center py-2 px-4 bg-neutral-50 rounded-lg text-neutral-400 font-mono text-[9px] truncate">
+                      {window.location.origin}/scan?gymId={profile?.gymId}
+                  </div>
+                  <p className="text-neutral-500 text-[10px] font-medium leading-relaxed uppercase tracking-tighter">
+                      Members can scan this with their phone camera or the MustGym app to mark attendance.
+                  </p>
+                  <button 
+                    onClick={() => {
+                        const url = `${window.location.origin}/scan?gymId=${profile?.gymId}`;
+                        navigator.clipboard.writeText(url);
+                        toast.success("Terminal URL copied!");
+                    }}
+                    className="w-full py-3 bg-neutral-900 text-white rounded-xl font-headline font-bold uppercase tracking-widest text-[10px] flex items-center justify-center gap-2 hover:bg-neutral-800 transition-all active:scale-95"
+                  >
+                    <Copy size={12} />
+                    Copy Access Link
+                  </button>
+              </div>
             </motion.div>
           </div>
         )}
