@@ -207,15 +207,6 @@ export default function ScanPage({ profile }: { profile: UserProfile | null }) {
   async function onScanSuccess(decodedText: string) {
     if (!profile || !profile.gymId || isProcessingRef.current) return;
     
-    // Check if we already have an active session
-    if (activeSession) {
-      toast.info('You are already checked in. Redirecting to dashboard...');
-      setTimeout(() => {
-        navigate(`/member-dashboard/${profile.gymId}`);
-      }, 1000);
-      return;
-    }
-
     isProcessingRef.current = true;
 
     // Stop the scanner immediately for speed and to prevent loops
@@ -311,6 +302,24 @@ export default function ScanPage({ profile }: { profile: UserProfile | null }) {
           gymId: profile.gymId
         });
         setScanResult(`used_${equipData.name}`);
+        setTimeout(() => {
+          navigate(`/member-dashboard/${profile.gymId}`);
+        }, 1500);
+        return;
+      }
+
+      // If it's NOT an equipment, it's an entrance/exit terminal
+      // If we already have an active session, scanning an entrance terminal means we check out
+      if (activeSession) {
+        await updateDoc(doc(db, 'attendance', activeSession.id!), {
+          checkOutTime: now.toISOString()
+        });
+        
+        // Award points for check-out
+        await addPoints(profile.uid, profile.gymId!, 5);
+        
+        setActiveSession(null);
+        setScanResult('session_ended');
         setTimeout(() => {
           navigate(`/member-dashboard/${profile.gymId}`);
         }, 1500);
@@ -424,46 +433,6 @@ export default function ScanPage({ profile }: { profile: UserProfile | null }) {
                 GO BACK
               </button>
             </motion.div>
-          ) : activeSession ? (
-            <motion.div 
-              key="active-session"
-              initial={{ opacity: 0, scale: 0.9, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              className="z-40 flex flex-col items-center text-center p-8 bg-surface-container rounded-3xl shadow-2xl border border-primary/20 mx-6 w-full max-w-sm"
-            >
-              <div className="relative mb-8">
-                <div className="w-24 h-24 bg-primary/10 rounded-full flex items-center justify-center">
-                  <Activity size={48} className="text-primary animate-pulse" />
-                </div>
-                <div className="absolute -top-2 -right-2 bg-primary text-on-primary-fixed text-[10px] font-black px-2 py-1 rounded-full flex items-center gap-1">
-                  <Zap size={10} fill="currentColor" />
-                  LIVE
-                </div>
-              </div>
-
-              <h2 className="font-headline text-3xl font-black text-white uppercase italic mb-2 tracking-tighter">SESSION ACTIVE</h2>
-              <div className="flex items-center gap-2 text-on-surface-variant mb-8">
-                <Clock size={14} />
-                <span className="text-sm font-bold uppercase tracking-widest">{elapsedTime || 'Just started'}</span>
-              </div>
-
-              <div className="w-full space-y-4">
-                <button 
-                  onClick={handleStopSession}
-                  disabled={stoppingSession}
-                  className="w-full py-5 bg-error text-on-error-fixed font-headline font-black uppercase tracking-widest text-sm rounded-2xl flex items-center justify-center gap-3 shadow-xl shadow-error/20 active:scale-95 transition-all disabled:opacity-50"
-                >
-                  {stoppingSession ? (
-                    <Loader2 className="animate-spin" size={20} />
-                  ) : (
-                    <>
-                      <StopCircle size={20} />
-                      Stop Session
-                    </>
-                  )}
-                </button>
-              </div>
-            </motion.div>
           ) : scanResult ? (
             <motion.div 
               key="success"
@@ -510,6 +479,21 @@ export default function ScanPage({ profile }: { profile: UserProfile | null }) {
                 
                 {/* Scanner Overlay */}
                 <div className="absolute inset-0 z-20 flex flex-col items-center justify-center pointer-events-none">
+                  {/* Floating Active Session Banner */}
+                  <AnimatePresence>
+                    {activeSession && (
+                      <motion.div 
+                        initial={{ opacity: 0, y: -20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -20 }}
+                        className="absolute top-10 flex items-center gap-3 bg-black/60 backdrop-blur-md px-6 py-3 rounded-full border border-primary/40 shadow-[0_0_20px_rgba(255,143,111,0.2)] pointer-events-auto"
+                      >
+                        <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+                        <span className="text-white text-xs font-black uppercase tracking-widest">Active Session: {elapsedTime || 'Just started'}</span>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+
                   {/* Darkened area around the box */}
                   <div className="absolute inset-0 bg-black/40" style={{
                     clipPath: 'polygon(0% 0%, 0% 100%, 50% 100%, 50% calc(50% - 125px), calc(50% - 125px) calc(50% - 125px), calc(50% - 125px) calc(50% + 125px), calc(50% + 125px) calc(50% + 125px), calc(50% + 125px) calc(50% - 125px), 50% calc(50% - 125px), 50% 100%, 100% 100%, 100% 0%)'

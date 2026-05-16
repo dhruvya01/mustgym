@@ -205,23 +205,32 @@ export default function Dashboard({ profile }: { profile: UserProfile | null }) 
               <span className="text-xs font-black uppercase tracking-[0.2em] italic">Your session starts now, go hard!</span>
             </motion.div>
           )}
+          {gymInfo?.openTimings && !activeSession && (
+            <motion.div 
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              className="mt-4 flex items-center gap-2 text-on-surface-variant bg-surface-container-low px-4 py-2 rounded-full border border-white/5 inline-flex"
+            >
+              <Clock size={16} className="text-primary" />
+              <span className="text-[10px] font-bold uppercase tracking-[0.1em]">Open Hours: {gymInfo.openTimings}</span>
+            </motion.div>
+          )}
         </div>
         <div className="flex flex-col sm:flex-row gap-3">
-          {activeSession ? (
+          <Link 
+            to="/scan"
+            className="kinetic-gradient px-6 py-4 rounded-xl font-headline font-black uppercase tracking-widest text-on-primary-fixed flex items-center justify-center gap-3 shadow-[0_0_30px_rgba(255,143,111,0.3)] hover:shadow-[0_0_40px_rgba(255,143,111,0.5)] transition-all active:scale-95 text-sm sm:text-base cursor-pointer"
+          >
+            <QrCode size={24} /> {activeSession ? 'Scan QR' : 'Scan Entry'}
+          </Link>
+          {activeSession && (
             <button 
               onClick={handleCheckOut}
               disabled={isCheckingOut}
-              className="bg-error text-on-error-fixed px-6 py-4 rounded-xl font-headline font-black uppercase tracking-widest flex items-center justify-center gap-3 shadow-xl shadow-error/20 hover:scale-[1.02] active:scale-95 transition-all text-sm sm:text-base disabled:opacity-50"
+              className="bg-error/10 text-error border border-error/20 px-6 py-4 rounded-xl font-headline font-black uppercase tracking-widest flex items-center justify-center gap-3 hover:bg-error/20 active:scale-95 transition-all text-sm sm:text-base disabled:opacity-50"
             >
               <StopCircle size={24} /> {isCheckingOut ? 'Ending...' : 'Check Out'}
             </button>
-          ) : (
-            <Link 
-              to="/scan"
-              className="kinetic-gradient px-6 py-4 rounded-xl font-headline font-black uppercase tracking-widest text-on-primary-fixed flex items-center justify-center gap-3 shadow-[0_0_30px_rgba(255,143,111,0.3)] hover:shadow-[0_0_40px_rgba(255,143,111,0.5)] transition-all active:scale-95 text-sm sm:text-base cursor-pointer"
-            >
-              <QrCode size={24} /> Scan Entry
-            </Link>
           )}
           <button 
             onClick={() => setShowQR(true)}

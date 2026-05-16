@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { collection, query, getDocs, doc, updateDoc, deleteDoc, onSnapshot, where, setDoc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { motion } from 'motion/react';
-import { Shield, MapPin, Mail, Phone, CalendarDays, Key, Trash2, CheckCircle, LayoutDashboard, Database, Activity, RefreshCw, PlusCircle, Loader2, Save } from 'lucide-react';
+import { Shield, MapPin, Mail, Phone, CalendarDays, Key, Trash2, CheckCircle, LayoutDashboard, Database, Activity, RefreshCw, PlusCircle, Loader2, Save, Users } from 'lucide-react';
 import { SEO } from '../components/SEO';
 import { toast } from 'sonner';
 import { UserProfile } from '../types';
@@ -10,10 +10,12 @@ import { initializeApp } from 'firebase/app';
 import { getAuth, createUserWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth';
 import { BulkMemberImport } from '../components/BulkMemberImport';
 import { Download } from 'lucide-react';
+import { subMinutes, parseISO, isAfter } from 'date-fns';
 
 export default function SuperAdminPage({ profile }: { profile: UserProfile | null }) {
   const [gyms, setGyms] = useState<any[]>([]);
   const [owners, setOwners] = useState<any[]>([]);
+  const [liveAttendance, setLiveAttendance] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [activeTab, setActiveTab] = useState<'gyms' | 'system' | 'add_gym' | 'bulk_import'>('gyms');
@@ -40,9 +42,21 @@ export default function SuperAdminPage({ profile }: { profile: UserProfile | nul
       setLoading(false);
     });
 
+    // Global live attendance listener
+    const twoAndHalfHoursAgo = subMinutes(new Date(), 150).toISOString();
+    const qLive = query(
+      collection(db, 'attendance'),
+      where('timestamp', '>=', twoAndHalfHoursAgo)
+    );
+    
+    const liveUnsub = onSnapshot(qLive, (snapshot) => {
+      setLiveAttendance(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+    });
+
     return () => {
       gymsUnsub();
       ownersUnsub();
+      liveUnsub();
     };
   }, [profile]);
 
@@ -281,6 +295,13 @@ export default function SuperAdminPage({ profile }: { profile: UserProfile | nul
             }).map(gym => {
               const owner = owners.find(o => o.gymId === gym.id) || owners.find(o => o.uid === gym.ownerId);
               
+              const gymLiveAttendance = liveAttendance.filter(a => {
+                const checkInTime = parseISO(a.timestamp);
+                const twoAndHalfHoursAgo = subMinutes(new Date(), 150);
+                return a.gymId === gym.id && isAfter(checkInTime, twoAndHalfHoursAgo) && !a.checkOutTime;
+              });
+              const liveOccupancy = new Set(gymLiveAttendance.map(a => a.userId)).size;
+              
               return (
                 <motion.div 
                   initial={{ opacity: 0, y: 10 }}
@@ -298,9 +319,15 @@ export default function SuperAdminPage({ profile }: { profile: UserProfile | nul
                         <Key size={12} /> ID: <span className="text-white bg-white/10 px-1 rounded">{gym.id}</span>
                       </p>
                     </div>
-                    <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest ${gym.subscriptionStatus === 'active' ? 'bg-primary/20 text-primary' : 'bg-amber-500/20 text-amber-500'}`}>
-                      {gym.subscriptionStatus === 'active' ? 'ACTIVE' : 'TRIAL/PENDING'}
-                    </span>
+                    <div className="flex flex-col items-end gap-2">
+                       <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest ${gym.subscriptionStatus === 'active' ? 'bg-primary/20 text-primary' : 'bg-amber-500/20 text-amber-500'}`}>
+                         {gym.subscriptionStatus === 'active' ? 'ACTIVE' : 'TRIAL/PENDING'}
+                       </span>
+                       <span className="flex items-center gap-1 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest bg-white/10 text-white">
+                         <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+                         {liveOccupancy} LIVE
+                       </span>
+                    </div>
                   </div>
 
                   <div className="grid grid-cols-2 gap-4 text-sm mt-2">
@@ -557,6 +584,22 @@ export default function SuperAdminPage({ profile }: { profile: UserProfile | nul
                     <div className="flex justify-between items-center p-4 bg-black/20 rounded-lg">
                         <span className="text-sm text-on-surface-variant font-bold uppercase tracking-wider">Total Owners</span>
                         <span className="font-mono text-2xl font-black text-white">{owners.length}</span>
+                    </div>
+                    <div className="flex justify-between items-center p-4 bg-black/20 rounded-lg border border-primary/20 bg-primary/5">
+                        <span className="text-sm text-primary font-bold uppercase tracking-wider flex items-center gap-2">
+                            <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+                            Platform Live Members
+                        </span>
+                        <span className="font-mono text-2xl font-black text-primary">
+                            {(() => {
+                                const activeLive = liveAttendance.filter(a => {
+                                    const checkInTime = parseISO(a.timestamp);
+                                    const twoAndHalfHoursAgo = subMinutes(new Date(), 150);
+                                    return isAfter(checkInTime, twoAndHalfHoursAgo) && !a.checkOutTime;
+                                });
+                                return new Set(activeLive.map(a => a.userId)).size;
+                            })()}
+                        </span>
                     </div>
                 </div>
             </div>

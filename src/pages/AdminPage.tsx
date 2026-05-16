@@ -73,6 +73,39 @@ export default function AdminPage({ profile }: { profile: UserProfile | null }) 
 
     try {
         const now = new Date();
+        const twoAndHalfHoursAgo = subMinutes(now, 150).toISOString();
+        
+        // Find if user has an active session
+        let activeSession: any = null;
+        try {
+            const qActive = query(
+                collection(db, 'attendance'),
+                where('userId', '==', userId),
+                where('timestamp', '>=', twoAndHalfHoursAgo)
+            );
+            const activeSnap = await getDocs(qActive);
+            const recentRecords = activeSnap.docs
+                .map(d => ({ id: d.id, ...(d.data() as any) }))
+                .filter(d => d.gymId === profile?.gymId && !d.checkOutTime)
+                .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+                
+            if (recentRecords.length > 0) {
+                activeSession = recentRecords[0];
+            }
+        } catch(e) {
+            console.warn("Index missing for active session check", e);
+        }
+
+        if (activeSession) {
+            // Smart Check-Out
+            await updateDoc(doc(db, 'attendance', activeSession.id), {
+                checkOutTime: now.toISOString()
+            });
+            await addPoints(userId, profile.gymId!, 5); // 5 points for checkout
+            toast.success(`See you later, ${member.displayName}! Checked out successfully.`);
+            return;
+        }
+
         const todayStart = startOfDay(now).toISOString();
         const todayEnd = endOfDay(now).toISOString();
         
@@ -2498,6 +2531,25 @@ export default function AdminPage({ profile }: { profile: UserProfile | null }) 
                           }
                         }}
                         className="w-full bg-background border border-white/5 rounded-xl py-3 px-4 text-sm font-bold focus:border-primary/50 outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[8px] font-bold text-outline-variant uppercase tracking-widest mb-2 ml-1">Gym Open Timings</label>
+                      <input 
+                        type="text" 
+                        defaultValue={gymInfo.openTimings || ''}
+                        onBlur={async (e) => {
+                          if (e.target.value !== gymInfo.openTimings) {
+                            try {
+                              await updateDoc(doc(db, 'gyms', gymInfo.id), { openTimings: e.target.value });
+                              toast.success('Open timings updated');
+                            } catch (error) {
+                              toast.error('Failed to update open timings');
+                            }
+                          }
+                        }}
+                        className="w-full bg-background border border-white/5 rounded-xl py-3 px-4 text-sm font-bold focus:border-primary/50 outline-none"
+                        placeholder="e.g. 06:00 AM - 10:00 PM (Mon-Sat)"
                       />
                     </div>
                   </div>
