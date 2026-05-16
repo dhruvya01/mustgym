@@ -47,7 +47,7 @@ export default function AnnouncementsManagementTab({ profile, gymInfo }: { profi
         imageUrl: form.imageUrl || '',
         createdAt: new Date().toISOString(),
         expiryDate: form.expiryDate || '',
-        createdBy: profile.uid,
+        createdBy: profile.uid || profile.id || "unknown",
       });
       toast.success('Announcement broadcasted');
       setShowModal(false);
