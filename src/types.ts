@@ -38,8 +38,20 @@ export interface Gym {
   id: string;
   name: string;
   ownerId: string;
+  logoUrl?: string;
+  branchName?: string;
   address?: string;
+  city?: string;
+  state?: string;
+  phone?: string;
+  whatsapp?: string;
+  email?: string;
+  capacity?: number;
+  openTimings?: string;
+  closeTimings?: string;
   brandingColor?: string;
+  customBannerUrl?: string;
+  welcomeMessage?: string;
   createdAt: string;
   branches?: number;
   expectedMembers?: number;
@@ -141,10 +153,14 @@ export interface PersonalRecord {
 
 export interface Announcement {
   id?: string;
+  gymId: string;
   title: string;
-  content: string;
-  type: 'info' | 'alert' | 'event';
+  message: string;
+  imageUrl?: string;
+  type: 'info' | 'alert' | 'event' | 'maintenance';
+  priority: 'low' | 'normal' | 'high';
   createdAt: string;
+  expiryDate?: string;
   createdBy: string;
 }
 
@@ -157,6 +173,35 @@ export interface Challenge {
   startDate: string;
   endDate: string;
   badgeId?: string;
+  gymId?: string;
+}
+
+export interface PaymentVerificationRequest {
+  id?: string;
+  gymId: string;
+  userId: string;
+  userName: string;
+  amountPaid: number;
+  paymentMethod: string;
+  transactionNote?: string;
+  screenshotUrl?: string; // Optional if you have storage logic elsewhere
+  status: 'pending' | 'approved' | 'rejected';
+  createdAt: string;
+  reviewedAt?: string;
+  planDurationMonths?: number;
+}
+
+export interface Machine {
+  id?: string;
+  gymId: string;
+  name: string;
+  type: string;
+  brand: string;
+  setupDate: string;
+  condition: 'Excellent' | 'Good' | 'Needs Maintenance' | 'Out of Order';
+  notes?: string;
+  imageUrl?: string;
+  lastServiceDate?: string;
 }
 
 export interface ChallengeParticipant {

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { UserProfile, AttendanceRecord, WorkoutPlan, Announcement, PersonalRecord } from '../types';
-import { Play, QrCode, Activity, Dumbbell, Droplets, Target, Shield, Clock, Plus, Minus, Trophy, X, User as UserIcon, StopCircle, Zap } from 'lucide-react';
+import { Play, QrCode, Activity, Dumbbell, Droplets, Target, Shield, Clock, Plus, Minus, Trophy, X, User as UserIcon, StopCircle, Zap, AlertTriangle } from 'lucide-react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { collection, query, where, getDocs, orderBy, limit, onSnapshot, doc, updateDoc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
@@ -12,6 +12,7 @@ import { format, subDays, isSameDay, parseISO, subMinutes, isAfter } from 'date-
 import { cn } from '../lib/utils';
 import { getGamificationData } from '../services/gamificationService';
 import { toast } from 'sonner';
+import { ExpiryScreen } from '../components/ExpiryScreen';
 
 export default function Dashboard({ profile }: { profile: UserProfile | null }) {
   const { gymId: routeGymId } = useParams<{ gymId: string }>();
@@ -135,6 +136,15 @@ export default function Dashboard({ profile }: { profile: UserProfile | null }) 
     );
   }
 
+  const isExpired = profile.role === 'member' && 
+    (profile.membershipStatus === 'expired' || 
+    (profile.membershipExpiry && new Date(profile.membershipExpiry).getTime() < new Date().getTime()));
+
+  if (isExpired) {
+    return <ExpiryScreen profile={profile} gymInfo={gymInfo} />;
+  }
+
+
   const getLatestPR = (lift: 'bench' | 'deadlift' | 'squat') => {
     const liftRecords = personalRecords.filter(r => r.lift === lift);
     return liftRecords.length > 0 ? liftRecords[liftRecords.length - 1].weight : 0;
@@ -174,6 +184,29 @@ export default function Dashboard({ profile }: { profile: UserProfile | null }) 
   return (
     <div className="space-y-8 pb-12">
       <SEO title="Dashboard" />
+      
+      {profile.role === 'member' && profile.membershipExpiry && (
+        (() => {
+           const daysRemaining = Math.ceil((new Date(profile.membershipExpiry).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
+           if (daysRemaining <= 7 && daysRemaining > 0) {
+             return (
+               <div className="bg-error/10 border border-error/50 rounded-2xl p-4 flex items-center justify-between shadow-[0_0_20px_rgba(255,0,0,0.1)] mb-6">
+                 <div className="flex items-center gap-4">
+                   <div className="bg-error/20 p-2 rounded-full">
+                     <AlertTriangle size={20} className="text-error" />
+                   </div>
+                   <div>
+                     <h4 className="text-error font-bold text-xs uppercase tracking-widest mb-1">Membership Expiring</h4>
+                     <p className="text-on-surface text-sm">Your access expires in <strong className="text-error font-black">{daysRemaining} days</strong>. Renew now to avoid interruption.</p>
+                   </div>
+                 </div>
+               </div>
+             );
+           }
+           return null;
+        })()
+      )}
+
       
       <section className="flex flex-col md:flex-row md:items-end justify-between gap-6">
         <div>
@@ -442,14 +475,19 @@ export default function Dashboard({ profile }: { profile: UserProfile | null }) 
                     <div className="flex items-center gap-2 mb-1">
                       <span className={cn(
                         "w-2 h-2 rounded-full",
-                        ann.type === 'alert' ? "bg-red-500" : ann.type === 'event' ? "bg-yellow-500" : "bg-blue-500"
+                        ann.type === 'alert' ? "bg-red-500" : ann.type === 'event' ? "bg-yellow-500" : ann.type === 'maintenance' ? "bg-orange-500" : "bg-blue-500"
                       )} />
                       <span className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">
                         {format(new Date(ann.createdAt), 'MMM dd')}
                       </span>
                     </div>
+                    {ann.imageUrl && (
+                      <div className="mt-2 mb-2 w-full h-24 rounded-lg overflow-hidden opacity-80 hover:opacity-100 transition-opacity">
+                        <img src={ann.imageUrl} alt={ann.title} className="w-full h-full object-cover" />
+                      </div>
+                    )}
                     <h4 className="font-bold text-sm text-white mb-1">{ann.title}</h4>
-                    <p className="text-xs text-on-surface-variant line-clamp-2">{ann.content}</p>
+                    <p className="text-xs text-on-surface-variant line-clamp-2">{ann.message || ann.content}</p>
                   </div>
                 ))}
               </div>

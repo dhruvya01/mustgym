@@ -16,6 +16,9 @@ import { toast } from 'sonner';
 import { generateAdminInsights } from '../services/gemini';
 import { BulkMemberImport } from '../components/BulkMemberImport';
 import Challenges from './Challenges';
+import OwnerSettingsTab from '../components/OwnerSettingsTab';
+import MachineManagementTab from '../components/MachineManagementTab';
+import AnnouncementsManagementTab from '../components/AnnouncementsManagementTab';
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
   LineChart, Line, PieChart, Pie, Cell, AreaChart, Area 
@@ -2323,52 +2326,7 @@ export default function AdminPage({ profile }: { profile: UserProfile | null }) 
 
       {/* Announcements Management */}
       {activeTab === 'announcements' && (
-        <section className="space-y-6">
-          <div className="flex flex-col md:flex-row gap-4 justify-between items-center">
-            <h3 className="font-headline text-xl font-bold uppercase tracking-tight">Gym Announcements</h3>
-            <button 
-              onClick={() => setShowAnnouncementModal(true)}
-              className="bg-primary text-on-primary-fixed px-6 py-2 rounded-lg font-bold uppercase text-[10px] tracking-widest hover:bg-primary-dim transition-all flex items-center gap-2"
-            >
-              <Plus size={16} />
-              New Announcement
-            </button>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {announcements.map((announcement) => (
-              <div key={announcement.id} className="bg-surface-container-low p-6 rounded-xl border border-white/5 relative group">
-                <div className="flex justify-between items-start mb-4">
-                  <div className={cn(
-                    "px-2 py-1 rounded text-[10px] font-black uppercase tracking-widest",
-                    announcement.type === 'alert' ? "bg-error/10 text-error" : 
-                    announcement.type === 'event' ? "bg-primary/10 text-primary" : 
-                    "bg-blue-500/10 text-blue-500"
-                  )}>
-                    {announcement.type}
-                  </div>
-                  <button 
-                    onClick={() => deleteAnnouncement(announcement.id!)}
-                    className="p-1.5 text-on-surface-variant hover:text-error hover:bg-error/10 rounded transition-all opacity-0 group-hover:opacity-100"
-                  >
-                    <Trash2 size={16} />
-                  </button>
-                </div>
-                <h4 className="font-headline font-bold text-lg mb-2">{announcement.title}</h4>
-                <p className="text-sm text-on-surface-variant mb-4 line-clamp-3">{announcement.content}</p>
-                <div className="text-[10px] font-bold uppercase tracking-widest text-outline">
-                  Posted on {format(new Date(announcement.createdAt), 'MMM dd, yyyy')}
-                </div>
-              </div>
-            ))}
-            {announcements.length === 0 && (
-              <div className="col-span-full py-20 text-center bg-surface-container-low rounded-xl border border-dashed border-white/10">
-                <Megaphone size={48} className="mx-auto text-outline mb-4 opacity-20" />
-                <p className="text-on-surface-variant text-sm">No announcements yet. Post one to keep your members informed!</p>
-              </div>
-            )}
-          </div>
-        </section>
+        <AnnouncementsManagementTab profile={profile} gymInfo={gymInfo} />
       )}
 
       {/* Leaderboard */}
