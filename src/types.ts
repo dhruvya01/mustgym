@@ -49,6 +49,11 @@ export interface Gym {
   capacity?: number;
   openTimings?: string;
   closeTimings?: string;
+  weeklyTimings?: Record<string, {
+    isOpen: boolean;
+    open: string;
+    close: string;
+  }>;
   brandingColor?: string;
   customBannerUrl?: string;
   welcomeMessage?: string;

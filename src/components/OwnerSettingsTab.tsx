@@ -142,35 +142,64 @@ export default function OwnerSettingsTab({ gymInfo }: { gymInfo: any }) {
                 className="w-full bg-background/50 border border-white/5 rounded-xl py-3 px-4 text-sm font-bold outline-none"
               />
             </div>
-            <div>
-              <label className="block text-[10px] font-bold text-on-surface-variant uppercase tracking-widest mb-2">Open Hours</label>
-              <input 
-                type="text" 
-                value={localGym.openTimings || ''}
-                onChange={(e) => setLocalGym({...localGym, openTimings: e.target.value})}
-                onBlur={async (e) => {
-                  if (e.target.value !== gymInfo.openTimings) {
-                    try { await updateDoc(doc(db, 'gyms', gymInfo.id), { openTimings: e.target.value }); toast.success('Updated'); } catch (e) {}
-                  }
-                }}
-                className="w-full bg-background/50 border border-white/5 rounded-xl py-3 px-4 text-sm font-bold outline-none"
-                placeholder="e.g. 05:00 AM"
-              />
-            </div>
-            <div>
-              <label className="block text-[10px] font-bold text-on-surface-variant uppercase tracking-widest mb-2">Close Hours</label>
-              <input 
-                type="text" 
-                value={localGym.closeTimings || ''}
-                onChange={(e) => setLocalGym({...localGym, closeTimings: e.target.value})}
-                onBlur={async (e) => {
-                  if (e.target.value !== gymInfo.closeTimings) {
-                    try { await updateDoc(doc(db, 'gyms', gymInfo.id), { closeTimings: e.target.value }); toast.success('Updated'); } catch (e) {}
-                  }
-                }}
-                className="w-full bg-background/50 border border-white/5 rounded-xl py-3 px-4 text-sm font-bold outline-none"
-                placeholder="e.g. 11:00 PM"
-              />
+            <div className="md:col-span-2 space-y-4">
+              <label className="block text-[10px] font-bold text-on-surface-variant uppercase tracking-widest mb-2">Weekly Schedule</label>
+              <div className="space-y-2">
+                {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map((day, idx) => {
+                  const schedule = localGym.weeklyTimings?.[day] || { isOpen: true, open: '06:00', close: '22:00' };
+                  return (
+                    <div key={day} className="flex items-center gap-4 bg-background/50 p-3 rounded-xl border border-white/5">
+                      <div className="flex items-center gap-2 w-32">
+                        <input 
+                          type="checkbox" 
+                          checked={schedule.isOpen}
+                          onChange={async (e) => {
+                            const newTimings = { ...(localGym.weeklyTimings || {}) };
+                            newTimings[day] = { ...schedule, isOpen: e.target.checked };
+                            const newGym = { ...localGym, weeklyTimings: newTimings };
+                            setLocalGym(newGym);
+                            try { await updateDoc(doc(db, 'gyms', gymInfo.id), { weeklyTimings: newTimings }); toast.success('Schedule updated'); } catch (err) { toast.error('Failed to update schedule'); }
+                          }}
+                          className="w-4 h-4 rounded border-white/10 bg-background accent-primary"
+                        />
+                        <span className={`text-sm font-bold ${schedule.isOpen ? 'text-white' : 'text-on-surface-variant line-through'}`}>{day}</span>
+                      </div>
+                      
+                      {schedule.isOpen ? (
+                        <div className="flex items-center gap-2 flex-1">
+                          <input 
+                            type="time" 
+                            value={schedule.open}
+                            onChange={async (e) => {
+                              const newTimings = { ...(localGym.weeklyTimings || {}) };
+                              newTimings[day] = { ...schedule, open: e.target.value };
+                              const newGym = { ...localGym, weeklyTimings: newTimings };
+                              setLocalGym(newGym);
+                              try { await updateDoc(doc(db, 'gyms', gymInfo.id), { weeklyTimings: newTimings }); toast.success('Schedule updated'); } catch (err) { toast.error('Failed to update schedule'); }
+                            }}
+                            className="bg-transparent border border-white/10 rounded-lg px-2 py-1 text-sm font-bold outline-none focus:border-primary/50 text-white"
+                          />
+                          <span className="text-on-surface-variant text-xs">to</span>
+                          <input 
+                            type="time" 
+                            value={schedule.close}
+                            onChange={async (e) => {
+                              const newTimings = { ...(localGym.weeklyTimings || {}) };
+                              newTimings[day] = { ...schedule, close: e.target.value };
+                              const newGym = { ...localGym, weeklyTimings: newTimings };
+                              setLocalGym(newGym);
+                              try { await updateDoc(doc(db, 'gyms', gymInfo.id), { weeklyTimings: newTimings }); toast.success('Schedule updated'); } catch (err) { toast.error('Failed to update schedule'); }
+                            }}
+                            className="bg-transparent border border-white/10 rounded-lg px-2 py-1 text-sm font-bold outline-none focus:border-primary/50 text-white"
+                          />
+                        </div>
+                      ) : (
+                        <div className="flex-1 text-xs font-bold text-error uppercase tracking-widest">Closed</div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           </div>
         </div>

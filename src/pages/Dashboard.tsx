@@ -239,14 +239,25 @@ export default function Dashboard({ profile }: { profile: UserProfile | null }) 
               <span className="text-xs font-black uppercase tracking-[0.2em] italic">Your session starts now, go hard!</span>
             </motion.div>
           )}
-          {gymInfo?.openTimings && !activeSession && (
+          {(gymInfo?.weeklyTimings || gymInfo?.openTimings) && !activeSession && (
             <motion.div 
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               className="mt-4 flex items-center gap-2 text-on-surface-variant bg-surface-container-low px-4 py-2 rounded-full border border-white/5 inline-flex"
             >
               <Clock size={16} className="text-primary" />
-              <span className="text-[10px] font-bold uppercase tracking-[0.1em]">Open Hours: {gymInfo.openTimings}</span>
+              <span className="text-[10px] font-bold uppercase tracking-[0.1em]">
+                {(() => {
+                  if (gymInfo?.weeklyTimings) {
+                    const today = new Date().toLocaleDateString('en-US', { weekday: 'long' });
+                    const todayTiming = gymInfo.weeklyTimings[today];
+                    if (todayTiming) {
+                      return todayTiming.isOpen ? `Today's Hours: ${todayTiming.open} - ${todayTiming.close}` : 'Closed Today';
+                    }
+                  }
+                  return `Open Hours: ${gymInfo.openTimings}`;
+                })()}
+              </span>
             </motion.div>
           )}
         </div>
