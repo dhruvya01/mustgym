@@ -9,7 +9,22 @@ import { toast } from 'sonner';
 
 export default function MemberLogin() {
   const [searchParams] = useSearchParams();
-  const initialGymId = searchParams.get('gym') || '';
+  let initialGymId = searchParams.get('gym') || '';
+  
+  // Try to extract gymId from redirect path if gym param is missing
+  if (!initialGymId) {
+    const redirect = searchParams.get('redirect');
+    if (redirect) {
+      try {
+        const url = new URL(redirect, window.location.origin);
+        initialGymId = url.searchParams.get('gymId') || url.searchParams.get('gym') || '';
+      } catch (e) {
+        // Fallback for non-URL paths
+        const match = redirect.match(/[?&](gymId|gym)=([^&]+)/);
+        if (match) initialGymId = match[2];
+      }
+    }
+  }
   
   const [gymId, setGymId] = useState(initialGymId);
   const [phone, setPhone] = useState('');
@@ -167,8 +182,13 @@ export default function MemberLogin() {
         }
       }
       
-      // Navigate to gym-specific dashboard
-      navigate(`/member-dashboard/${gymInfo.id}`);
+      const redirectPath = searchParams.get('redirect');
+      if (redirectPath) {
+        navigate(redirectPath);
+      } else {
+        // Navigate to gym-specific dashboard
+        navigate(`/member-dashboard/${gymInfo.id}`);
+      }
       
     } catch (error: any) {
       toast.error('Authentication failed: ' + error.message);

@@ -234,7 +234,7 @@ export default function App() {
               <Route path="/reset-password" element={!user ? <ResetPasswordPage /> : <Navigate to="/dashboard" />} />
               
               {/* Protected Routes */}
-              <Route element={user ? <Layout profile={profile}><Outlet /></Layout> : <Navigate to="/login" />}>
+              <Route element={user ? <Layout profile={profile}><Outlet /></Layout> : <Navigate to={`/memberlogin?redirect=${encodeURIComponent(window.location.pathname + window.location.search)}`} />}>
                 <Route path="/dashboard" element={
                   profile?.email === 'tgfhiyfvhtfghug@gmail.com' ? (
                     <Navigate to="/superadmin" />

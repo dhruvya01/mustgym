@@ -8,7 +8,7 @@ import { X, CheckCircle2, AlertCircle, Camera, Lock, StopCircle, Clock, Activity
 import { useNavigate } from 'react-router-dom';
 import { QRCodeSVG } from 'qrcode.react';
 import { handleFirestoreError, OperationType } from '../lib/firestore-errors';
-import { startOfDay, endOfDay, differenceInDays, parseISO, isAfter, subHours, formatDistanceToNow } from 'date-fns';
+import { startOfDay, endOfDay, differenceInDays, parseISO, isAfter, subHours, subMinutes, formatDistanceToNow } from 'date-fns';
 import { addPoints } from '../services/gamificationService';
 
 export default function ScanPage({ profile }: { profile: UserProfile | null }) {
@@ -75,7 +75,7 @@ export default function ScanPage({ profile }: { profile: UserProfile | null }) {
           
           // Check for active session
           const checkInTime = parseISO(lastRecord.timestamp);
-          const isRecent = isAfter(checkInTime, subHours(new Date(), 3));
+          const isRecent = isAfter(checkInTime, subMinutes(new Date(), 150));
           if (isRecent && !lastRecord.checkOutTime) {
             setActiveSession(lastRecord);
           }

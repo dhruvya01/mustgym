@@ -6,7 +6,7 @@ import { db } from '../lib/firebase';
 import { UserProfile, AttendanceRecord, Equipment, PaymentRecord, Announcement, MembershipTier } from '../types';
 import { motion, AnimatePresence } from 'motion/react';
 import { Users, Activity, Search, CheckCircle, XCircle, Clock, QrCode, X, Dumbbell, Plus, IndianRupee, Calendar, TrendingUp, AlertTriangle, PieChart as PieChartIcon, BarChart3, Megaphone, Download, Eye, Trash2, Loader2, Lock, Sparkles, BrainCircuit, LogOut, Globe, Building2, Copy, ArrowUpRight, Share2, MessageCircle, Star, Target, Camera, Scan, Shield } from 'lucide-react';
-import { format, isSameDay, subDays, startOfMonth, endOfMonth, isWithinInterval, subMonths, eachDayOfInterval, isSameMonth, subHours, isAfter, startOfDay, endOfDay } from 'date-fns';
+import { format, isSameDay, subDays, startOfMonth, endOfMonth, isWithinInterval, subMonths, eachDayOfInterval, isSameMonth, subHours, subMinutes, isAfter, startOfDay, endOfDay } from 'date-fns';
 import { addPoints } from '../services/gamificationService';
 import { cn } from '../lib/utils';
 import { handleFirestoreError, OperationType } from '../lib/firestore-errors';
@@ -571,8 +571,8 @@ export default function AdminPage({ profile }: { profile: UserProfile | null }) 
     attendance
       .filter(a => {
         const checkInTime = new Date(a.timestamp);
-        const threeHoursAgo = subHours(now, 3);
-        return isAfter(checkInTime, threeHoursAgo) && !a.checkOutTime;
+        const twoAndHalfHoursAgo = subMinutes(now, 150);
+        return isAfter(checkInTime, twoAndHalfHoursAgo) && !a.checkOutTime;
       })
       .map(a => a.userId)
   ).size;
