@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { UserProfile, AttendanceRecord, WorkoutPlan, Announcement, PersonalRecord } from '../types';
 import { Play, QrCode, Activity, Dumbbell, Droplets, Target, Shield, Clock, Plus, Minus, Trophy, X, User as UserIcon, StopCircle, Zap } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { collection, query, where, getDocs, orderBy, limit, onSnapshot, doc, updateDoc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { SEO } from '../components/SEO';
@@ -14,6 +14,7 @@ import { getGamificationData } from '../services/gamificationService';
 import { toast } from 'sonner';
 
 export default function Dashboard({ profile }: { profile: UserProfile | null }) {
+  const { gymId: routeGymId } = useParams<{ gymId: string }>();
   const navigate = useNavigate();
   const [attendance, setAttendance] = useState<AttendanceRecord[]>([]);
   const [liveAttendance, setLiveAttendance] = useState<AttendanceRecord[]>([]);
@@ -29,10 +30,15 @@ export default function Dashboard({ profile }: { profile: UserProfile | null }) 
   const [showQR, setShowQR] = useState(false);
   const [isCheckingOut, setIsCheckingOut] = useState(false);
 
-  useEffect(() => {
-    if (!profile?.uid || !profile?.gymId) return;
+  const currentGymId = routeGymId || profile?.gymId;
 
-    const unsubGym = onSnapshot(doc(db, 'gyms', profile.gymId), (snapshot) => {
+  useEffect(() => {
+    if (!profile?.uid || !currentGymId) {
+      setLoading(false);
+      return;
+    }
+
+    const unsubGym = onSnapshot(doc(db, 'gyms', currentGymId), (snapshot) => {
       if (snapshot.exists()) {
         setGymInfo({ id: snapshot.id, ...snapshot.data() });
       }
@@ -42,7 +48,7 @@ export default function Dashboard({ profile }: { profile: UserProfile | null }) 
     const qAttendance = query(
       collection(db, attendancePath),
       where('userId', '==', profile.uid),
-      where('gymId', '==', profile.gymId)
+      where('gymId', '==', currentGymId)
     );
     const unsubAttendance = onSnapshot(qAttendance, (snapshot) => {
       const records = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as AttendanceRecord));
@@ -53,14 +59,14 @@ export default function Dashboard({ profile }: { profile: UserProfile | null }) 
     const yesterday = subDays(new Date(), 1).toISOString();
     const qLive = query(
       collection(db, 'attendance'),
-      where('gymId', '==', profile.gymId),
+      where('gymId', '==', currentGymId),
       where('timestamp', '>=', yesterday)
     );
     const unsubLive = onSnapshot(qLive, (snapshot) => {
       setLiveAttendance(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as AttendanceRecord)));
     });
 
-    const qPlans = query(collection(db, 'workoutPlans'), where('userId', '==', profile.uid), where('gymId', '==', profile.gymId));
+    const qPlans = query(collection(db, 'workoutPlans'), where('userId', '==', profile.uid), where('gymId', '==', currentGymId));
     const unsubPlans = onSnapshot(qPlans, (snapshot) => {
       if (!snapshot.empty) {
         const plans = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as WorkoutPlan));
@@ -69,14 +75,14 @@ export default function Dashboard({ profile }: { profile: UserProfile | null }) 
       }
     });
 
-    const qAnnouncements = query(collection(db, 'announcements'), where('gymId', '==', profile.gymId), limit(3));
+    const qAnnouncements = query(collection(db, 'announcements'), where('gymId', '==', currentGymId), limit(3));
     const unsubAnnouncements = onSnapshot(qAnnouncements, (snapshot) => {
       const ann = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Announcement));
       ann.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
       setAnnouncements(ann);
     });
 
-    const qPRs = query(collection(db, 'personalRecords'), where('userId', '==', profile.uid), where('gymId', '==', profile.gymId));
+    const qPRs = query(collection(db, 'personalRecords'), where('userId', '==', profile.uid), where('gymId', '==', currentGymId));
     const unsubPRs = onSnapshot(qPRs, (snapshot) => {
       const prs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as PersonalRecord));
       prs.sort((a,b) => new Date(a.date).getTime() - new Date(b.date).getTime());
@@ -99,7 +105,7 @@ export default function Dashboard({ profile }: { profile: UserProfile | null }) 
       unsubAnnouncements();
       unsubPRs();
     };
-  }, [profile?.uid, profile?.gymId]);
+  }, [profile?.uid, currentGymId]);
 
   if (!profile) return null;
 
@@ -161,7 +167,7 @@ export default function Dashboard({ profile }: { profile: UserProfile | null }) 
     return isAfter(checkInTime, twoAndHalfHoursAgo) && !a.checkOutTime;
   });
 
-  const liveOccupancy = currentLiveAttendance.length;
+  const liveOccupancy = new Set(currentLiveAttendance.map(a => a.userId)).size;
   const occupancyPercentage = gymInfo?.expectedMembers ? Math.min(100, Math.round((liveOccupancy / gymInfo.expectedMembers) * 100)) : 0;
 
   return (

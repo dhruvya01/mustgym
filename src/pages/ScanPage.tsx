@@ -5,6 +5,7 @@ import { db } from '../lib/firebase';
 import { UserProfile, AttendanceRecord } from '../types';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, CheckCircle2, AlertCircle, Camera, Lock, StopCircle, Clock, Activity, Zap, Loader2, Shield, User } from 'lucide-react';
+import { Toaster, toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { QRCodeSVG } from 'qrcode.react';
 import { handleFirestoreError, OperationType } from '../lib/firestore-errors';
@@ -121,7 +122,7 @@ export default function ScanPage({ profile }: { profile: UserProfile | null }) {
       setActiveSession(null);
       setScanResult('session_ended');
       setTimeout(() => {
-        navigate('/scanner');
+        navigate(`/member-dashboard/${profile?.gymId}`);
       }, 1500);
     } catch (err) {
       handleFirestoreError(err, OperationType.UPDATE, `attendance/${activeSession.id}`);
@@ -206,6 +207,15 @@ export default function ScanPage({ profile }: { profile: UserProfile | null }) {
   async function onScanSuccess(decodedText: string) {
     if (!profile || !profile.gymId || isProcessingRef.current) return;
     
+    // Check if we already have an active session
+    if (activeSession) {
+      toast.info('You are already checked in. Redirecting to dashboard...');
+      setTimeout(() => {
+        navigate(`/member-dashboard/${profile.gymId}`);
+      }, 1000);
+      return;
+    }
+
     isProcessingRef.current = true;
 
     // Stop the scanner immediately for speed and to prevent loops
@@ -302,7 +312,7 @@ export default function ScanPage({ profile }: { profile: UserProfile | null }) {
         });
         setScanResult(`used_${equipData.name}`);
         setTimeout(() => {
-          navigate('/scanner');
+          navigate(`/member-dashboard/${profile.gymId}`);
         }, 1500);
         return;
       }
@@ -336,7 +346,7 @@ export default function ScanPage({ profile }: { profile: UserProfile | null }) {
       await addPoints(profile.uid, profile.gymId!, 10);
       
       setTimeout(() => {
-        navigate('/scanner');
+        navigate(`/member-dashboard/${profile.gymId}`);
       }, 1500);
     } catch (err: any) {
       isProcessingRef.current = false;
@@ -354,7 +364,7 @@ export default function ScanPage({ profile }: { profile: UserProfile | null }) {
       {/* Header */}
       <header className="flex justify-between items-center px-6 py-4 w-full bg-black/40 backdrop-blur-md border-b border-white/5 z-30">
         <button 
-          onClick={() => navigate('/scanner')}
+          onClick={() => navigate(`/member-dashboard/${profile?.gymId}`)}
           className="text-white hover:bg-white/10 p-2 rounded-full transition-colors"
         >
           <X size={24} />
