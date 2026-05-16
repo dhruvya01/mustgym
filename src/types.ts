@@ -30,6 +30,8 @@ export interface UserProfile {
   height?: string;
   goal?: string;
   createdAt: string;
+  xp?: number;
+  attendanceStreak?: number;
 }
 
 export interface Gym {
@@ -130,10 +132,11 @@ export interface DietPlan {
 export interface PersonalRecord {
   id?: string;
   userId: string;
-  lift: 'bench' | 'deadlift' | 'squat';
+  lift: 'bench' | 'deadlift' | 'squat' | 'overhead_press' | 'body_weight' | string;
   weight: number;
   date: string;
   notes?: string;
+  gymId?: string;
 }
 
 export interface Announcement {

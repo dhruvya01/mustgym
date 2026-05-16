@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { collection, query, where, getDocs, orderBy, onSnapshot, addDoc } from 'firebase/firestore';
+import { collection, query, where, getDocs, orderBy, onSnapshot, addDoc, doc, updateDoc, getDoc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { UserProfile, AttendanceRecord, PersonalRecord } from '../types';
 import { motion, AnimatePresence } from 'motion/react';
@@ -22,7 +22,7 @@ export default function Progress({ profile }: { profile: UserProfile | null }) {
   const [showPRModal, setShowPRModal] = useState(false);
   const [savingPR, setSavingPR] = useState(false);
   const [prForm, setPrForm] = useState({
-    lift: 'bench' as 'bench' | 'deadlift' | 'squat',
+    lift: 'bench' as 'bench' | 'deadlift' | 'squat' | 'overhead_press' | 'body_weight',
     weight: '',
     notes: ''
   });
@@ -144,16 +144,45 @@ export default function Progress({ profile }: { profile: UserProfile | null }) {
     if (!profile || !prForm.weight || !profile.gymId) return;
     setSavingPR(true);
     try {
+      const parsedWeight = parseFloat(prForm.weight);
       const newPR: any = {
         userId: profile.uid,
         lift: prForm.lift,
-        weight: parseFloat(prForm.weight),
+        weight: parsedWeight,
         date: new Date().toISOString(),
         notes: prForm.notes,
         gymId: profile.gymId
       };
       await addDoc(collection(db, 'personalRecords'), newPR);
-      toast.success(`${prForm.lift.toUpperCase()} PR updated!`);
+      
+      const userRef = doc(db, 'users', profile.uid);
+      const userDoc = await getDoc(userRef);
+      if (userDoc.exists()) {
+        const userData = userDoc.data();
+        const prKey = `${prForm.lift}PR`;
+        const currentScore = userData[prKey] || 0;
+        
+        let updates: any = {};
+        if (prForm.lift !== 'body_weight' && parsedWeight > currentScore) {
+            updates[prKey] = parsedWeight;
+            updates.xp = (userData.xp || 0) + 50; 
+        } else if (prForm.lift === 'body_weight') {
+            updates[prKey] = parsedWeight; 
+        } else {
+            updates.xp = (userData.xp || 0) + 10; 
+        }
+        
+        updates.attendanceStreak = streak;
+
+        const getPR = (key: string, newValue: number, lift: string) => prForm.lift === lift ? newValue : (userData[key] || 0);
+        updates.totalStrength = getPR('benchPR', updates.benchPR || getPR('benchPR', parsedWeight, 'bench'), 'bench') + 
+                                getPR('squatPR', updates.squatPR || getPR('squatPR', parsedWeight, 'squat'), 'squat') + 
+                                getPR('deadliftPR', updates.deadliftPR || getPR('deadliftPR', parsedWeight, 'deadlift'), 'deadlift');
+        
+        await updateDoc(userRef, updates);
+      }
+
+      toast.success(`${prForm.lift.toUpperCase().replace('_', ' ')} PR updated!`);
       setShowPRModal(false);
       setPrForm({ lift: 'bench', weight: '', notes: '' });
     } catch (error) {
@@ -163,13 +192,19 @@ export default function Progress({ profile }: { profile: UserProfile | null }) {
     }
   };
 
-  const getLatestPR = (lift: 'bench' | 'deadlift' | 'squat') => {
+  useEffect(() => {
+     if (profile?.uid && streak > 0) {
+        updateDoc(doc(db, 'users', profile.uid), { attendanceStreak: streak }).catch(console.error);
+     }
+  }, [streak, profile?.uid]);
+
+  const getLatestPR = (lift: string) => {
     const liftRecords = personalRecords.filter(r => r.lift === lift);
     if (liftRecords.length === 0) return null;
     return liftRecords[liftRecords.length - 1];
   };
 
-  const getPreviousPR = (lift: 'bench' | 'deadlift' | 'squat') => {
+  const getPreviousPR = (lift: string) => {
     const liftRecords = personalRecords.filter(r => r.lift === lift);
     if (liftRecords.length < 2) return null;
     return liftRecords[liftRecords.length - 2];
@@ -179,7 +214,7 @@ export default function Progress({ profile }: { profile: UserProfile | null }) {
     const dates = Array.from(new Set(personalRecords.map(r => format(parseISO(r.date), 'MMM dd'))));
     return dates.map(date => {
       const dataPoint: any = { date };
-      ['bench', 'deadlift', 'squat'].forEach(lift => {
+      ['bench', 'deadlift', 'squat', 'overhead_press', 'body_weight'].forEach(lift => {
         const record = personalRecords.filter(r => r.lift === lift && format(parseISO(r.date), 'MMM dd') === date).pop();
         if (record) {
           dataPoint[lift] = record.weight;
@@ -226,19 +261,19 @@ export default function Progress({ profile }: { profile: UserProfile | null }) {
               <div className="space-y-6">
                 <div>
                   <label className="block text-[10px] font-bold uppercase tracking-widest text-primary mb-2">Select Lift</label>
-                  <div className="grid grid-cols-3 gap-2">
-                    {(['bench', 'deadlift', 'squat'] as const).map((lift) => (
+                  <div className="grid grid-cols-2 lg:grid-cols-3 gap-2">
+                    {(['bench', 'deadlift', 'squat', 'overhead_press', 'body_weight'] as const).map((lift) => (
                       <button
                         key={lift}
                         onClick={() => setPrForm({ ...prForm, lift })}
                         className={cn(
-                          "py-3 rounded-lg text-xs font-bold uppercase tracking-widest transition-all border",
+                          "py-3 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all border",
                           prForm.lift === lift 
                             ? "bg-primary border-primary text-on-primary-fixed shadow-[0_0_15px_rgba(255,143,111,0.3)]" 
                             : "bg-surface-container-highest border-transparent text-on-surface-variant hover:border-white/10"
                         )}
                       >
-                        {lift}
+                        {lift.replace('_', ' ')}
                       </button>
                     ))}
                   </div>
@@ -342,8 +377,8 @@ export default function Progress({ profile }: { profile: UserProfile | null }) {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-6">
-          {(['bench', 'deadlift', 'squat'] as const).map((lift) => {
+        <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-6">
+          {(['bench', 'deadlift', 'squat', 'overhead_press', 'body_weight'] as const).map((lift) => {
             const latest = getLatestPR(lift);
             const previous = getPreviousPR(lift);
             const diff = latest && previous ? latest.weight - previous.weight : 0;
@@ -352,7 +387,7 @@ export default function Progress({ profile }: { profile: UserProfile | null }) {
               <motion.div 
                 key={lift}
                 whileHover={{ y: -5 }}
-                className="bg-surface-container-low p-4 sm:p-6 rounded-xl border border-white/5 relative overflow-hidden group"
+                className="bg-surface-container-low p-3 sm:p-5 rounded-xl border border-white/5 relative overflow-hidden group"
               >
                 <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
                   <Dumbbell size={60} />
@@ -360,10 +395,10 @@ export default function Progress({ profile }: { profile: UserProfile | null }) {
                 
                 <div className="relative z-10">
                   <div className="flex justify-between items-start mb-2 sm:mb-4">
-                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">{lift}</span>
+                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-primary break-words max-w-[80%]">{lift.replace('_', ' ')}</span>
                     {diff !== 0 && (
                       <span className={cn(
-                        "text-[10px] font-bold px-2 py-0.5 rounded-full",
+                        "text-[10px] font-bold px-1.5 py-0.5 rounded-full ml-1",
                         diff > 0 ? "bg-green-500/10 text-green-500" : "bg-error/10 text-error"
                       )}>
                         {diff > 0 ? '+' : ''}{diff}kg
@@ -465,6 +500,26 @@ export default function Progress({ profile }: { profile: UserProfile | null }) {
                     dot={{ r: 4, fill: '#22c55e', strokeWidth: 0 }}
                     activeDot={{ r: 6, strokeWidth: 0 }}
                     name="Squat"
+                    connectNulls
+                  />
+                  <Line 
+                    type="monotone" 
+                    dataKey="overhead_press" 
+                    stroke="#eab308" 
+                    strokeWidth={3} 
+                    dot={{ r: 4, fill: '#eab308', strokeWidth: 0 }}
+                    activeDot={{ r: 6, strokeWidth: 0 }}
+                    name="OHP"
+                    connectNulls
+                  />
+                  <Line 
+                    type="monotone" 
+                    dataKey="body_weight" 
+                    stroke="#ec4899" 
+                    strokeWidth={3} 
+                    dot={{ r: 4, fill: '#ec4899', strokeWidth: 0 }}
+                    activeDot={{ r: 6, strokeWidth: 0 }}
+                    name="Body Weight"
                     connectNulls
                   />
                 </LineChart>
