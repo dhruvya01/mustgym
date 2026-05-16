@@ -18,6 +18,7 @@ import { BulkMemberImport } from '../components/BulkMemberImport';
 import Challenges from './Challenges';
 import OwnerSettingsTab from '../components/OwnerSettingsTab';
 import MachineManagementTab from '../components/MachineManagementTab';
+import PaymentsManagementTab from '../components/PaymentsManagementTab';
 import AnnouncementsManagementTab from '../components/AnnouncementsManagementTab';
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
@@ -2050,153 +2051,15 @@ export default function AdminPage({ profile }: { profile: UserProfile | null }) 
 
       {/* Equipment Management */}
       {activeTab === 'equipment' && (
-        <section className="space-y-6">
-            <div className="flex flex-col md:flex-row gap-4 justify-between items-center">
-              <div>
-                <h3 className="font-headline text-xl font-bold uppercase tracking-tight">Gym Equipment</h3>
-                <p className="text-[10px] text-on-surface-variant uppercase tracking-widest font-medium mt-1">
-                  Added machines will be used by AI to suggest workouts to members.
-                </p>
-              </div>
-              <div className="flex gap-2 w-full md:w-auto">
-              <input 
-                type="text" 
-                placeholder="New machine name..."
-                value={newEquipName}
-                onChange={(e) => setNewEquipName(e.target.value)}
-                className="flex-1 md:w-64 bg-surface-container-highest border-none text-on-surface py-2 px-4 rounded-lg focus:ring-2 focus:ring-primary/40 text-sm"
-              />
-              <button 
-                onClick={addEquipment}
-                className="bg-primary text-on-primary-fixed px-4 py-2 rounded-lg font-bold uppercase text-[10px] tracking-widest hover:bg-primary-dim transition-all"
-              >
-                Add
-              </button>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {equipment.map((item) => (
-              <div key={item.id} className="bg-surface-container-low p-4 rounded-lg border border-white/5 flex justify-between items-center group">
-                <div>
-                  <div className="font-bold text-sm">{item.name}</div>
-                  <div className="text-[10px] text-on-surface-variant uppercase tracking-widest font-black mt-1">
-                    {item.status}
-                  </div>
-                </div>
-                <button 
-                  onClick={() => deleteEquipment(item.id)}
-                  className="p-2 text-on-surface-variant hover:text-error hover:bg-error/10 rounded transition-all opacity-0 group-hover:opacity-100"
-                >
-                  <XCircle size={18} />
-                </button>
-              </div>
-            ))}
-            {equipment.length === 0 && (
-              <div className="col-span-full py-12 text-center bg-surface-container-low rounded-lg border border-dashed border-white/10">
-                <p className="text-on-surface-variant text-sm">No equipment added yet. Add machines to restrict AI workout plans.</p>
-              </div>
-            )}
-          </div>
+        <section>
+          <MachineManagementTab profile={profile} gymInfo={gymInfo} />
         </section>
       )}
 
       {/* Payment Management */}
       {activeTab === 'payments' && (
-        <section className="space-y-6">
-          <div className="flex flex-col md:flex-row gap-4 justify-between items-center">
-            <h3 className="font-headline text-xl font-bold uppercase tracking-tight">Payment Records</h3>
-            <div className="flex gap-4 w-full md:w-auto">
-              <button 
-                onClick={() => exportToCSV(payments, 'payment_records')}
-                className="flex items-center justify-center gap-2 px-4 py-2 bg-surface-container-highest rounded-lg text-[10px] font-bold uppercase tracking-widest hover:bg-white/10 transition-all"
-              >
-                <Download size={14} />
-                Export CSV
-              </button>
-              <button 
-                onClick={() => setShowPaymentModal(true)}
-                className="bg-primary text-on-primary-fixed px-6 py-2 rounded-lg font-bold uppercase text-[10px] tracking-widest hover:bg-primary-dim transition-all flex items-center gap-2"
-              >
-                <Plus size={16} />
-                Record Payment
-              </button>
-            </div>
-          </div>
-
-          <div className="bg-surface-container-low rounded-lg overflow-hidden border border-white/5">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left">
-                <thead className="bg-surface-container-highest/50 text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">
-                  <tr>
-                    <th className="px-6 py-4">Member</th>
-                    <th className="px-6 py-4">Amount</th>
-                    <th className="px-6 py-4">Status</th>
-                    <th className="px-6 py-4">Date</th>
-                    <th className="px-6 py-4">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-white/5">
-                  {payments.map((payment) => {
-                    const member = members.find(m => m.uid === payment.userId);
-                    return (
-                      <tr key={payment.id} className="hover:bg-white/5 transition-colors group">
-                        <td className="px-6 py-4">
-                          <div className="text-sm font-bold">{member?.displayName || 'Unknown Member'}</div>
-                          <div className="text-[10px] text-on-surface-variant">{member?.email || 'N/A'}</div>
-                        </td>
-                        <td className="px-6 py-4 font-mono text-sm font-bold text-primary">
-                          ₹{payment.amount.toLocaleString('en-IN')}
-                        </td>
-                        <td className="px-6 py-4">
-                          <span className={cn(
-                            "text-[10px] font-black uppercase tracking-widest px-2 py-1 rounded",
-                            payment.status === 'paid' ? "bg-green-500/10 text-green-500" : 
-                            payment.status === 'failed' ? "bg-error/10 text-error" : 
-                            "bg-primary/10 text-primary"
-                          )}>
-                            {payment.status}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 text-xs text-on-surface-variant">
-                          {format(new Date(payment.date), 'MMM dd, yyyy HH:mm')}
-                        </td>
-                        <td className="px-6 py-4">
-                          <div className="flex gap-2">
-                            {payment.status !== 'paid' && (
-                              <button 
-                                onClick={() => updatePaymentStatus(payment.id!, 'paid')}
-                                className="p-1.5 hover:bg-green-500/10 text-on-surface-variant hover:text-green-500 rounded transition-colors"
-                                title="Mark as Paid"
-                              >
-                                <CheckCircle size={18} />
-                              </button>
-                            )}
-                            {payment.status !== 'failed' && (
-                              <button 
-                                onClick={() => updatePaymentStatus(payment.id!, 'failed')}
-                                className="p-1.5 hover:bg-error/10 text-on-surface-variant hover:text-error rounded transition-colors"
-                                title="Mark as Failed"
-                              >
-                                <XCircle size={18} />
-                              </button>
-                            )}
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                  {payments.length === 0 && (
-                    <tr>
-                      <td colSpan={5} className="px-6 py-12 text-center text-on-surface-variant text-sm">
-                        No payment records found. Record a new payment to get started.
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
+        <section>
+          <PaymentsManagementTab profile={profile} gymInfo={gymInfo} exportToCSV={exportToCSV} />
         </section>
       )}
 

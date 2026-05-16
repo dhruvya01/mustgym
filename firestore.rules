@@ -31,7 +31,7 @@ service cloud.firestore {
     match /gyms/{gymId} {
       allow read: if isSignedIn();
       allow write: if isSuperAdmin();
-      allow update: if isSignedIn() && profileExists(request.auth.uid) && getProfile(request.auth.uid).role == 'owner' && getProfile(request.auth.uid).gymId == gymId;
+      allow update: if isSignedIn() && profileExists(request.auth.uid) && (getProfile(request.auth.uid).role == 'owner' || getProfile(request.auth.uid).role == 'admin') && getProfile(request.auth.uid).gymId == gymId;
     }
 
     match /users/{userId} {
@@ -39,7 +39,7 @@ service cloud.firestore {
       // Allow owners of the same gym to see and manage members
       allow read, write: if isSignedIn() && 
                     profileExists(request.auth.uid) && 
-                    getProfile(request.auth.uid).role == 'owner' && 
+                    (getProfile(request.auth.uid).role == 'owner' || getProfile(request.auth.uid).role == 'admin') && 
                     (resource == null ? request.resource.data.gymId == getProfile(request.auth.uid).gymId : resource.data.gymId == getProfile(request.auth.uid).gymId);
     }
 
@@ -58,14 +58,14 @@ service cloud.firestore {
       allow write: if isSuperAdmin() || (
         isSignedIn() && 
         profileExists(request.auth.uid) && 
-        getProfile(request.auth.uid).role == 'owner' && 
+        (getProfile(request.auth.uid).role == 'owner' || getProfile(request.auth.uid).role == 'admin') && 
         getProfile(request.auth.uid).gymId == (resource != null ? resource.data.gymId : request.resource.data.gymId)
       );
     }
 
     match /payments/{payId} {
       allow read, update: if isSuperAdmin() || (isSignedIn() && (resource.data.userId == request.auth.uid || 
-        (profileExists(request.auth.uid) && getProfile(request.auth.uid).role == 'owner' && getProfile(request.auth.uid).gymId == resource.data.gymId)));
+        (profileExists(request.auth.uid) && (getProfile(request.auth.uid).role == 'owner' || getProfile(request.auth.uid).role == 'admin') && getProfile(request.auth.uid).gymId == resource.data.gymId)));
       allow create: if isSuperAdmin() || (isSignedIn() && request.resource.data.userId == request.auth.uid);
     }
 
@@ -74,7 +74,7 @@ service cloud.firestore {
       allow write: if isSuperAdmin() || (
         isSignedIn() && 
         profileExists(request.auth.uid) && 
-        getProfile(request.auth.uid).role == 'owner' && 
+        (getProfile(request.auth.uid).role == 'owner' || getProfile(request.auth.uid).role == 'admin') && 
         getProfile(request.auth.uid).gymId == (resource != null ? resource.data.gymId : request.resource.data.gymId)
       );
     }
@@ -110,7 +110,7 @@ service cloud.firestore {
       allow read, update: if isSuperAdmin() || (
         isSignedIn() && 
         profileExists(request.auth.uid) && 
-        getProfile(request.auth.uid).role == 'owner' && 
+        (getProfile(request.auth.uid).role == 'owner' || getProfile(request.auth.uid).role == 'admin') && 
         getProfile(request.auth.uid).gymId == resource.data.gymId
       );
       allow create: if isSignedIn();
@@ -130,7 +130,7 @@ service cloud.firestore {
 
     match /membershipTiers/{tId} {
       allow read: if isSignedIn();
-      allow write: if isSuperAdmin() || (isSignedIn() && profileExists(request.auth.uid) && getProfile(request.auth.uid).role == 'owner' && getProfile(request.auth.uid).gymId == (resource == null ? request.resource.data.gymId : resource.data.gymId));
+      allow write: if isSuperAdmin() || (isSignedIn() && profileExists(request.auth.uid) && (getProfile(request.auth.uid).role == 'owner' || getProfile(request.auth.uid).role == 'admin') && getProfile(request.auth.uid).gymId == (resource == null ? request.resource.data.gymId : resource.data.gymId));
     }
 
     // --- Gamification ---
@@ -148,7 +148,7 @@ service cloud.firestore {
       allow read: if isSuperAdmin() || (
         isSignedIn() && 
         profileExists(request.auth.uid) && 
-        getProfile(request.auth.uid).role == 'owner'
+        (getProfile(request.auth.uid).role == 'owner' || getProfile(request.auth.uid).role == 'admin')
       );
       allow create: if isSignedIn();
     }

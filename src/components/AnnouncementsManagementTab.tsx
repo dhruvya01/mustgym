@@ -41,6 +41,7 @@ export default function AnnouncementsManagementTab({ profile, gymInfo }: { profi
         gymId: profile.gymId,
         title: form.title,
         message: form.message,
+        content: form.message,
         type: form.type || 'info',
         priority: form.priority || 'normal',
         imageUrl: form.imageUrl || '',
@@ -51,8 +52,9 @@ export default function AnnouncementsManagementTab({ profile, gymInfo }: { profi
       toast.success('Announcement broadcasted');
       setShowModal(false);
       setForm({ title: '', message: '', type: 'info', priority: 'normal', imageUrl: '', expiryDate: '' });
-    } catch (e) {
-      toast.error('Failed to post announcement');
+    } catch (e: any) {
+      console.error(e);
+      toast.error('Failed to post announcement: ' + e.message);
     } finally {
       setIsSubmitting(false);
     }

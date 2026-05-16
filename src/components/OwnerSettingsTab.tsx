@@ -5,6 +5,11 @@ import { db } from '../lib/firebase';
 import { toast } from 'sonner';
 
 export default function OwnerSettingsTab({ gymInfo }: { gymInfo: any }) {
+  const [localGym, setLocalGym] = React.useState(gymInfo || {});
+  React.useEffect(() => {
+    if (gymInfo) setLocalGym(gymInfo);
+  }, [gymInfo]);
+
   if (!gymInfo) return null;
 
   return (
@@ -36,7 +41,8 @@ export default function OwnerSettingsTab({ gymInfo }: { gymInfo: any }) {
               <label className="block text-[10px] font-bold text-on-surface-variant uppercase tracking-widest mb-2">Facility Name</label>
               <input 
                 type="text" 
-                defaultValue={gymInfo.name}
+                value={localGym.name || ''}
+                onChange={(e) => setLocalGym({...localGym, name: e.target.value})}
                 onBlur={async (e) => {
                   if (e.target.value && e.target.value !== gymInfo.name) {
                     try {
@@ -52,7 +58,8 @@ export default function OwnerSettingsTab({ gymInfo }: { gymInfo: any }) {
               <label className="block text-[10px] font-bold text-on-surface-variant uppercase tracking-widest mb-2">Branch Name</label>
               <input 
                 type="text" 
-                defaultValue={gymInfo.branchName || ''}
+                value={localGym.branchName || ''}
+                onChange={(e) => setLocalGym({...localGym, branchName: e.target.value})}
                 onBlur={async (e) => {
                   if (e.target.value !== gymInfo.branchName) {
                     try {
@@ -69,7 +76,8 @@ export default function OwnerSettingsTab({ gymInfo }: { gymInfo: any }) {
               <label className="block text-[10px] font-bold text-on-surface-variant uppercase tracking-widest mb-2">Address</label>
               <input 
                 type="text" 
-                defaultValue={gymInfo.address || ''}
+                value={localGym.address || ''}
+                onChange={(e) => setLocalGym({...localGym, address: e.target.value})}
                 onBlur={async (e) => {
                   if (e.target.value !== gymInfo.address) {
                     try { await updateDoc(doc(db, 'gyms', gymInfo.id), { address: e.target.value }); toast.success('Updated'); } catch (e) {}
@@ -82,7 +90,8 @@ export default function OwnerSettingsTab({ gymInfo }: { gymInfo: any }) {
               <label className="block text-[10px] font-bold text-on-surface-variant uppercase tracking-widest mb-2">City</label>
               <input 
                 type="text" 
-                defaultValue={gymInfo.city || ''}
+                value={localGym.city || ''}
+                onChange={(e) => setLocalGym({...localGym, city: e.target.value})}
                 onBlur={async (e) => {
                   if (e.target.value !== gymInfo.city) {
                     try { await updateDoc(doc(db, 'gyms', gymInfo.id), { city: e.target.value }); toast.success('Updated'); } catch (e) {}
@@ -95,7 +104,8 @@ export default function OwnerSettingsTab({ gymInfo }: { gymInfo: any }) {
               <label className="block text-[10px] font-bold text-on-surface-variant uppercase tracking-widest mb-2">State</label>
               <input 
                 type="text" 
-                defaultValue={gymInfo.state || ''}
+                value={localGym.state || ''}
+                onChange={(e) => setLocalGym({...localGym, state: e.target.value})}
                 onBlur={async (e) => {
                   if (e.target.value !== gymInfo.state) {
                     try { await updateDoc(doc(db, 'gyms', gymInfo.id), { state: e.target.value }); toast.success('Updated'); } catch (e) {}
@@ -108,7 +118,8 @@ export default function OwnerSettingsTab({ gymInfo }: { gymInfo: any }) {
               <label className="block text-[10px] font-bold text-on-surface-variant uppercase tracking-widest mb-2">Phone</label>
               <input 
                 type="text" 
-                defaultValue={gymInfo.phone || ''}
+                value={localGym.phone || ''}
+                onChange={(e) => setLocalGym({...localGym, phone: e.target.value})}
                 onBlur={async (e) => {
                   if (e.target.value !== gymInfo.phone) {
                     try { await updateDoc(doc(db, 'gyms', gymInfo.id), { phone: e.target.value }); toast.success('Updated'); } catch (e) {}
@@ -121,7 +132,8 @@ export default function OwnerSettingsTab({ gymInfo }: { gymInfo: any }) {
               <label className="block text-[10px] font-bold text-on-surface-variant uppercase tracking-widest mb-2">WhatsApp Line</label>
               <input 
                 type="text" 
-                defaultValue={gymInfo.whatsapp || ''}
+                value={localGym.whatsapp || ''}
+                onChange={(e) => setLocalGym({...localGym, whatsapp: e.target.value})}
                 onBlur={async (e) => {
                   if (e.target.value !== gymInfo.whatsapp) {
                     try { await updateDoc(doc(db, 'gyms', gymInfo.id), { whatsapp: e.target.value }); toast.success('Updated'); } catch (e) {}
@@ -134,7 +146,8 @@ export default function OwnerSettingsTab({ gymInfo }: { gymInfo: any }) {
               <label className="block text-[10px] font-bold text-on-surface-variant uppercase tracking-widest mb-2">Open Hours</label>
               <input 
                 type="text" 
-                defaultValue={gymInfo.openTimings || ''}
+                value={localGym.openTimings || ''}
+                onChange={(e) => setLocalGym({...localGym, openTimings: e.target.value})}
                 onBlur={async (e) => {
                   if (e.target.value !== gymInfo.openTimings) {
                     try { await updateDoc(doc(db, 'gyms', gymInfo.id), { openTimings: e.target.value }); toast.success('Updated'); } catch (e) {}
@@ -148,7 +161,8 @@ export default function OwnerSettingsTab({ gymInfo }: { gymInfo: any }) {
               <label className="block text-[10px] font-bold text-on-surface-variant uppercase tracking-widest mb-2">Close Hours</label>
               <input 
                 type="text" 
-                defaultValue={gymInfo.closeTimings || ''}
+                value={localGym.closeTimings || ''}
+                onChange={(e) => setLocalGym({...localGym, closeTimings: e.target.value})}
                 onBlur={async (e) => {
                   if (e.target.value !== gymInfo.closeTimings) {
                     try { await updateDoc(doc(db, 'gyms', gymInfo.id), { closeTimings: e.target.value }); toast.success('Updated'); } catch (e) {}
@@ -178,7 +192,8 @@ export default function OwnerSettingsTab({ gymInfo }: { gymInfo: any }) {
                 <p className="text-[8px] font-black text-on-surface-variant uppercase tracking-widest mb-1">Total Capacity</p>
                 <input 
                   type="number"
-                  defaultValue={gymInfo.capacity || 100}
+                  value={localGym.capacity || 100}
+                  onChange={(e) => setLocalGym({...localGym, capacity: Number(e.target.value)})}
                   onBlur={async (e) => {
                     if (Number(e.target.value) !== gymInfo.capacity) {
                       try { await updateDoc(doc(db, 'gyms', gymInfo.id), { capacity: Number(e.target.value) }); toast.success('Updated'); } catch (e) {}
@@ -241,7 +256,8 @@ export default function OwnerSettingsTab({ gymInfo }: { gymInfo: any }) {
               <label className="block text-[10px] font-bold text-on-surface-variant uppercase tracking-widest mb-2">Logo URL</label>
               <input 
                 type="text" 
-                defaultValue={gymInfo.logoUrl || ''}
+                value={localGym.logoUrl || ''}
+                onChange={(e) => setLocalGym({...localGym, logoUrl: e.target.value})}
                 onBlur={async (e) => {
                   if (e.target.value !== gymInfo.logoUrl) {
                     try { await updateDoc(doc(db, 'gyms', gymInfo.id), { logoUrl: e.target.value }); toast.success('Updated'); } catch (e) {}
@@ -256,7 +272,8 @@ export default function OwnerSettingsTab({ gymInfo }: { gymInfo: any }) {
               <div className="flex gap-2">
                   <input 
                   type="color" 
-                  defaultValue={gymInfo.brandingColor || '#FF8F6F'}
+                  value={localGym.brandingColor || '#FF8F6F'}
+                  onChange={(e) => setLocalGym({...localGym, brandingColor: e.target.value})}
                   onBlur={async (e) => {
                     if (e.target.value !== gymInfo.brandingColor) {
                       try { await updateDoc(doc(db, 'gyms', gymInfo.id), { brandingColor: e.target.value }); toast.success('Updated Theme'); } catch (e) {}
@@ -276,7 +293,8 @@ export default function OwnerSettingsTab({ gymInfo }: { gymInfo: any }) {
               <label className="block text-[10px] font-bold text-on-surface-variant uppercase tracking-widest mb-2">Welcome Dispatch Message</label>
               <input 
                 type="text" 
-                defaultValue={gymInfo.welcomeMessage || ''}
+                value={localGym.welcomeMessage || ''}
+                onChange={(e) => setLocalGym({...localGym, welcomeMessage: e.target.value})}
                 onBlur={async (e) => {
                   if (e.target.value !== gymInfo.welcomeMessage) {
                     try { await updateDoc(doc(db, 'gyms', gymInfo.id), { welcomeMessage: e.target.value }); toast.success('Updated'); } catch (e) {}

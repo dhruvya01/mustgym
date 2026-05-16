@@ -16,7 +16,7 @@ export default function MachineManagementTab({ profile, gymInfo }: { profile: an
 
   useEffect(() => {
     if (!profile?.gymId) return;
-    const q = query(collection(db, 'machines'), where('gymId', '==', profile.gymId));
+    const q = query(collection(db, 'equipment'), where('gymId', '==', profile.gymId));
     const unsubscribe = onSnapshot(q, (snapshot) => {
       setMachines(snapshot.docs.map(d => ({ id: d.id, ...d.data() } as Machine)));
     });
@@ -26,7 +26,7 @@ export default function MachineManagementTab({ profile, gymInfo }: { profile: an
   const handleSave = async () => {
     if (!form.name || !form.type || !profile?.gymId) return toast.error('Name and Type required.');
     try {
-      await addDoc(collection(db, 'machines'), {
+      await addDoc(collection(db, 'equipment'), {
         ...form,
         gymId: profile.gymId
       });
@@ -40,7 +40,7 @@ export default function MachineManagementTab({ profile, gymInfo }: { profile: an
 
   const updateCondition = async (id: string, condition: string) => {
     try {
-      await updateDoc(doc(db, 'machines', id), { condition });
+      await updateDoc(doc(db, 'equipment', id), { condition });
       toast.success('Condition updated');
     } catch(e) {
       toast.error('Failed to update condition');
@@ -50,7 +50,7 @@ export default function MachineManagementTab({ profile, gymInfo }: { profile: an
   const deleteMachine = async (id: string) => {
     if(!window.confirm('Delete this machine?')) return;
     try {
-      await deleteDoc(doc(db, 'machines', id));
+      await deleteDoc(doc(db, 'equipment', id));
       toast.success('Machine deleted');
     } catch(e) {
       toast.error('Failed to delete machine');
