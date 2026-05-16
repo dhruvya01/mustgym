@@ -70,7 +70,7 @@ export default function Challenges({ profile }: { profile: UserProfile | null })
       <section className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 relative">
         <div className="absolute -top-32 -right-32 w-96 h-96 bg-primary/20 blur-[120px] rounded-full pointer-events-none" />
         <div>
-          <span className="font-headline font-bold uppercase tracking-[0.3em] text-primary text-[10px] sm:text-xs mb-3 block flex items-center gap-2">
+          <span className="font-headline font-bold uppercase tracking-[0.3em] text-primary text-[10px] sm:text-xs mb-3 flex items-center gap-2">
             <Trophy size={14} /> Competitive Ranks
           </span>
           <h2 className="font-headline font-black text-5xl sm:text-7xl uppercase italic leading-none text-white tracking-tighter drop-shadow-lg">
@@ -79,7 +79,7 @@ export default function Challenges({ profile }: { profile: UserProfile | null })
         </div>
         
         {/* User Summary Card */}
-        {profile && (
+        {profile && profile.role === 'member' && (
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}

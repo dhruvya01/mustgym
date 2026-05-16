@@ -15,6 +15,7 @@ import { SEO } from '../components/SEO';
 import { toast } from 'sonner';
 import { generateAdminInsights } from '../services/gemini';
 import { BulkMemberImport } from '../components/BulkMemberImport';
+import Challenges from './Challenges';
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
   LineChart, Line, PieChart, Pie, Cell, AreaChart, Area 
@@ -143,7 +144,7 @@ export default function AdminPage({ profile }: { profile: UserProfile | null }) 
         toast.error("Failed to record attendance.");
     }
   };
-  const [activeTab, setActiveTab] = useState<'members' | 'equipment' | 'payments' | 'attendance' | 'analytics' | 'announcements' | 'ai' | 'settings' | 'tiers'>('analytics');
+  const [activeTab, setActiveTab] = useState<'members' | 'equipment' | 'payments' | 'attendance' | 'analytics' | 'announcements' | 'ai' | 'settings' | 'tiers' | 'leaderboard'>('analytics');
   const [newEquipName, setNewEquipName] = useState('');
 
   // Tiers Helper
@@ -1034,6 +1035,15 @@ export default function AdminPage({ profile }: { profile: UserProfile | null }) 
           )}
         >
           Announcements
+        </button>
+        <button 
+          onClick={() => setActiveTab('leaderboard')}
+          className={cn(
+            "px-4 sm:px-6 py-2 sm:py-3 font-headline font-bold uppercase tracking-widest text-[10px] sm:text-xs transition-all border-b-2 whitespace-nowrap",
+            activeTab === 'leaderboard' ? "border-primary text-primary" : "border-transparent text-on-surface-variant hover:text-on-surface"
+          )}
+        >
+          Leaderboard
         </button>
         <button 
           onClick={() => setActiveTab('settings')}
@@ -2358,6 +2368,13 @@ export default function AdminPage({ profile }: { profile: UserProfile | null }) 
               </div>
             )}
           </div>
+        </section>
+      )}
+
+      {/* Leaderboard */}
+      {activeTab === 'leaderboard' && (
+        <section className="h-[80vh] overflow-y-auto">
+          <Challenges profile={profile} />
         </section>
       )}
 
