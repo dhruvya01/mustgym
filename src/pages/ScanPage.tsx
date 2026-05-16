@@ -318,17 +318,22 @@ export default function ScanPage({ profile }: { profile: UserProfile | null }) {
       }
 
       // Check for existing records today for attendance
-      const q = query(
-        collection(db, path),
-        where('userId', '==', profile.uid),
-        where('gymId', '==', profile.gymId || 'NO_GYM'),
-        where('timestamp', '>=', todayStart),
-        where('timestamp', '<=', todayEnd)
-      );
-      
-      const querySnapshot = await getDocs(q);
-      const existingCount = querySnapshot.size;
-      const isDuplicate = existingCount > 0;
+      let existingCount = 0;
+      let isDuplicate = false;
+      try {
+        const q = query(
+          collection(db, path),
+          where('userId', '==', profile.uid),
+          where('timestamp', '>=', todayStart),
+          where('timestamp', '<=', todayEnd)
+        );
+        const querySnapshot = await getDocs(q);
+        const todayRecords = querySnapshot.docs.filter(d => d.data().gymId === profile.gymId);
+        existingCount = todayRecords.length;
+        isDuplicate = existingCount > 0;
+      } catch (e) {
+        console.warn("Index missing for duplicate check, proceeding anyway", e);
+      }
 
       const record: any = {
         userId: profile.uid,

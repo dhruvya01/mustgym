@@ -76,16 +76,22 @@ export default function AdminPage({ profile }: { profile: UserProfile | null }) 
         const todayStart = startOfDay(now).toISOString();
         const todayEnd = endOfDay(now).toISOString();
         
-        const q = query(
-            collection(db, 'attendance'),
-            where('userId', '==', userId),
-            where('gymId', '==', profile.gymId),
-            where('timestamp', '>=', todayStart),
-            where('timestamp', '<=', todayEnd)
-        );
-        
-        const snap = await getDocs(q);
-        const isDuplicate = !snap.empty;
+        let isDuplicate = false;
+        let entryCount = 1;
+        try {
+            const q = query(
+                collection(db, 'attendance'),
+                where('userId', '==', userId),
+                where('timestamp', '>=', todayStart),
+                where('timestamp', '<=', todayEnd)
+            );
+            const snap = await getDocs(q);
+            const todayRecords = snap.docs.filter(d => d.data().gymId === profile?.gymId);
+            isDuplicate = todayRecords.length > 0;
+            entryCount = todayRecords.length + 1;
+        } catch (e) {
+            console.warn("Index missing for duplicate check, proceeding anyway", e);
+        }
 
         await addDoc(collection(db, 'attendance'), {
             userId,
@@ -93,8 +99,8 @@ export default function AdminPage({ profile }: { profile: UserProfile | null }) 
             timestamp: now.toISOString(),
             terminalId: 'ADMIN_SCANNER',
             isDuplicate,
-            entryCount: snap.size + 1,
-            gymId: profile.gymId
+            entryCount,
+            gymId: profile?.gymId
         });
 
         await addPoints(userId, profile.gymId!, 10);
