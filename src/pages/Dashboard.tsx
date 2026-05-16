@@ -1,16 +1,17 @@
 import React, { useEffect, useState } from 'react';
 import { UserProfile, AttendanceRecord, WorkoutPlan, Announcement, PersonalRecord } from '../types';
-import { Play, QrCode, Activity, Dumbbell, Droplets, Target, Shield, Clock, Plus, Minus, Trophy, X, User as UserIcon } from 'lucide-react';
+import { Play, QrCode, Activity, Dumbbell, Droplets, Target, Shield, Clock, Plus, Minus, Trophy, X, User as UserIcon, StopCircle, Zap } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
-import { collection, query, where, getDocs, orderBy, limit, onSnapshot, doc } from 'firebase/firestore';
+import { collection, query, where, getDocs, orderBy, limit, onSnapshot, doc, updateDoc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { SEO } from '../components/SEO';
 import { motion, AnimatePresence } from 'motion/react';
 import { QRCodeSVG } from 'qrcode.react';
 import { handleFirestoreError, OperationType } from '../lib/firestore-errors';
-import { format, subDays, isSameDay, parseISO } from 'date-fns';
+import { format, subDays, isSameDay, parseISO, subMinutes, isAfter } from 'date-fns';
 import { cn } from '../lib/utils';
 import { getGamificationData } from '../services/gamificationService';
+import { toast } from 'sonner';
 
 export default function Dashboard({ profile }: { profile: UserProfile | null }) {
   const navigate = useNavigate();
@@ -26,6 +27,7 @@ export default function Dashboard({ profile }: { profile: UserProfile | null }) 
   const [level, setLevel] = useState(1);
   const [loading, setLoading] = useState(true);
   const [showQR, setShowQR] = useState(false);
+  const [isCheckingOut, setIsCheckingOut] = useState(false);
 
   useEffect(() => {
     if (!profile?.uid || !profile?.gymId) return;
@@ -126,13 +128,41 @@ export default function Dashboard({ profile }: { profile: UserProfile | null }) 
     );
   }
 
-  const liveOccupancy = liveAttendance.length;
-  const occupancyPercentage = gymInfo?.expectedMembers ? Math.min(100, Math.round((liveOccupancy / gymInfo.expectedMembers) * 100)) : 0;
-
   const getLatestPR = (lift: 'bench' | 'deadlift' | 'squat') => {
     const liftRecords = personalRecords.filter(r => r.lift === lift);
     return liftRecords.length > 0 ? liftRecords[liftRecords.length - 1].weight : 0;
   };
+
+  const activeSession = attendance.find(a => {
+    const checkInTime = parseISO(a.timestamp);
+    const twoAndHalfHoursAgo = subMinutes(new Date(), 150);
+    return isAfter(checkInTime, twoAndHalfHoursAgo) && !a.checkOutTime;
+  });
+
+  const handleCheckOut = async () => {
+    if (!activeSession) return;
+    setIsCheckingOut(true);
+    try {
+      await updateDoc(doc(db, 'attendance', activeSession.id!), {
+        checkOutTime: new Date().toISOString()
+      });
+      toast.success('Session ended. Great workout!');
+    } catch (err) {
+      console.error(err);
+      toast.error('Failed to end session');
+    } finally {
+      setIsCheckingOut(false);
+    }
+  };
+
+  const currentLiveAttendance = liveAttendance.filter(a => {
+    const checkInTime = parseISO(a.timestamp);
+    const twoAndHalfHoursAgo = subMinutes(new Date(), 150);
+    return isAfter(checkInTime, twoAndHalfHoursAgo) && !a.checkOutTime;
+  });
+
+  const liveOccupancy = currentLiveAttendance.length;
+  const occupancyPercentage = gymInfo?.expectedMembers ? Math.min(100, Math.round((liveOccupancy / gymInfo.expectedMembers) * 100)) : 0;
 
   return (
     <div className="space-y-8 pb-12">
@@ -159,14 +189,34 @@ export default function Dashboard({ profile }: { profile: UserProfile | null }) 
           <h2 className="font-headline font-black text-4xl sm:text-6xl md:text-7xl uppercase italic leading-none break-words mt-3">
             Welcome <br/><span className="text-primary-dim">{profile.displayName?.split(' ')[0] || 'Member'}</span>
           </h2>
+          {activeSession && (
+            <motion.div 
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              className="mt-4 flex items-center gap-2 text-primary"
+            >
+              <Zap size={16} fill="currentColor" className="animate-pulse" />
+              <span className="text-xs font-black uppercase tracking-[0.2em] italic">Your session starts now, go hard!</span>
+            </motion.div>
+          )}
         </div>
         <div className="flex flex-col sm:flex-row gap-3">
-          <Link 
-            to="/scan"
-            className="kinetic-gradient px-6 py-4 rounded-xl font-headline font-black uppercase tracking-widest text-on-primary-fixed flex items-center justify-center gap-3 shadow-[0_0_30px_rgba(255,143,111,0.3)] hover:shadow-[0_0_40px_rgba(255,143,111,0.5)] transition-all active:scale-95 text-sm sm:text-base cursor-pointer"
-          >
-            <QrCode size={24} /> Scan Entry
-          </Link>
+          {activeSession ? (
+            <button 
+              onClick={handleCheckOut}
+              disabled={isCheckingOut}
+              className="bg-error text-on-error-fixed px-6 py-4 rounded-xl font-headline font-black uppercase tracking-widest flex items-center justify-center gap-3 shadow-xl shadow-error/20 hover:scale-[1.02] active:scale-95 transition-all text-sm sm:text-base disabled:opacity-50"
+            >
+              <StopCircle size={24} /> {isCheckingOut ? 'Ending...' : 'Check Out'}
+            </button>
+          ) : (
+            <Link 
+              to="/scan"
+              className="kinetic-gradient px-6 py-4 rounded-xl font-headline font-black uppercase tracking-widest text-on-primary-fixed flex items-center justify-center gap-3 shadow-[0_0_30px_rgba(255,143,111,0.3)] hover:shadow-[0_0_40px_rgba(255,143,111,0.5)] transition-all active:scale-95 text-sm sm:text-base cursor-pointer"
+            >
+              <QrCode size={24} /> Scan Entry
+            </Link>
+          )}
           <button 
             onClick={() => setShowQR(true)}
             className="bg-surface-container-highest border border-white/10 px-6 py-4 rounded-xl font-headline font-black uppercase tracking-widest text-on-surface flex items-center justify-center gap-3 hover:bg-white/10 transition-all active:scale-95 text-sm sm:text-base"

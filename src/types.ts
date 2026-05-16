@@ -54,6 +54,7 @@ export interface AttendanceRecord {
   terminalId?: string;
   isDuplicate?: boolean;
   entryCount?: number;
+  gymId?: string;
 }
 
 export interface Exercise {

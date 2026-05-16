@@ -225,6 +225,15 @@ export default function ScanPage({ profile }: { profile: UserProfile | null }) {
       if (decodedText.startsWith('http')) {
         const url = new URL(decodedText);
         const terminalParam = url.searchParams.get('terminal');
+        const gymParam = url.searchParams.get('gymId') || url.searchParams.get('gym');
+        
+        // Verify gym if param exists
+        if (gymParam && gymParam !== profile.gymId) {
+          setError(`This QR code belongs to another studio. Your current studio is ${profile.gymId}.`);
+          isProcessingRef.current = false;
+          return;
+        }
+
         if (terminalParam) {
           terminalId = terminalParam;
         }
@@ -438,13 +447,6 @@ export default function ScanPage({ profile }: { profile: UserProfile | null }) {
                     </>
                   )}
                 </button>
-                
-                <button 
-                  onClick={() => setActiveSession(null)}
-                  className="w-full py-4 bg-white/5 text-on-surface-variant font-headline font-black uppercase tracking-widest text-[10px] rounded-xl hover:bg-white/10 transition-all"
-                >
-                  Continue Scanning
-                </button>
               </div>
             </motion.div>
           ) : scanResult ? (
@@ -460,8 +462,12 @@ export default function ScanPage({ profile }: { profile: UserProfile | null }) {
               <h2 className="font-headline text-3xl font-black text-white uppercase italic mb-2 tracking-tighter">
                 {scanResult === 'session_ended' ? 'SESSION ENDED' : scanResult.startsWith('used_') ? 'MACHINE SYNCED' : 'ACCESS GRANTED'}
               </h2>
+              <div className="flex items-center gap-2 text-primary mb-4">
+                 <Zap size={16} fill="currentColor" className="animate-pulse" />
+                 <span className="text-[10px] font-black uppercase tracking-widest italic">GO HARD. NO EXCUSES.</span>
+              </div>
               <p className="text-on-surface-variant font-medium text-sm uppercase tracking-widest">
-                {scanResult === 'session_ended' ? 'GREAT WORKOUT!' : scanResult.startsWith('used_') ? scanResult.replace('used_', '').toUpperCase() : 'SYNCING SESSION DATA...'}
+                {scanResult === 'session_ended' ? 'GREAT WORKOUT!' : scanResult.startsWith('used_') ? scanResult.replace('used_', '').toUpperCase() : 'YOUR GYM SESSION STARTS NOW!'}
               </p>
             </motion.div>
           ) : error ? (
