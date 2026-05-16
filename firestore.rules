@@ -47,9 +47,7 @@ service cloud.firestore {
       allow read: if isSignedIn() && (
         isSuperAdmin() || 
         resource.data.userId == request.auth.uid || 
-        (profileExists(request.auth.uid) && 
-         getProfile(request.auth.uid).role == 'owner' && 
-         getProfile(request.auth.uid).gymId == resource.data.gymId)
+        (profileExists(request.auth.uid) && getProfile(request.auth.uid).gymId == resource.data.gymId)
       );
       allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
       allow update: if isSuperAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);

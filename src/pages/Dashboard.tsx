@@ -56,14 +56,15 @@ export default function Dashboard({ profile }: { profile: UserProfile | null }) 
       setAttendance(records);
     });
 
-    const yesterday = subDays(new Date(), 1).toISOString();
     const qLive = query(
       collection(db, 'attendance'),
-      where('gymId', '==', currentGymId),
-      where('timestamp', '>=', yesterday)
+      where('gymId', '==', currentGymId)
     );
     const unsubLive = onSnapshot(qLive, (snapshot) => {
-      setLiveAttendance(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as AttendanceRecord)));
+      const allAttendance = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as AttendanceRecord));
+      const yesterday = subDays(new Date(), 1);
+      const recentAttendance = allAttendance.filter(a => isAfter(parseISO(a.timestamp), yesterday));
+      setLiveAttendance(recentAttendance);
     });
 
     const qPlans = query(collection(db, 'workoutPlans'), where('userId', '==', profile.uid), where('gymId', '==', currentGymId));
