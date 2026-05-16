@@ -4,8 +4,9 @@ import { collection, addDoc, query, where, getDocs, orderBy, limit, doc, updateD
 import { db } from '../lib/firebase';
 import { UserProfile, AttendanceRecord } from '../types';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, CheckCircle2, AlertCircle, Camera, Lock, StopCircle, Clock, Activity, Zap, Loader2 } from 'lucide-react';
+import { X, CheckCircle2, AlertCircle, Camera, Lock, StopCircle, Clock, Activity, Zap, Loader2, Shield, User } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { QRCodeSVG } from 'qrcode.react';
 import { handleFirestoreError, OperationType } from '../lib/firestore-errors';
 import { startOfDay, endOfDay, differenceInDays, parseISO, isAfter, subHours, formatDistanceToNow } from 'date-fns';
 import { addPoints } from '../services/gamificationService';
@@ -20,6 +21,7 @@ export default function ScanPage({ profile }: { profile: UserProfile | null }) {
   const [activeSession, setActiveSession] = useState<AttendanceRecord | null>(null);
   const [elapsedTime, setElapsedTime] = useState<string>('');
   const [stoppingSession, setStoppingSession] = useState(false);
+  const [showMyPass, setShowMyPass] = useState(false);
   const navigate = useNavigate();
   const html5QrCodeRef = useRef<Html5Qrcode | null>(null);
   const isProcessingRef = useRef(false);
@@ -144,22 +146,40 @@ export default function ScanPage({ profile }: { profile: UserProfile | null }) {
     try {
       // Clean up any existing instance
       if (html5QrCodeRef.current && html5QrCodeRef.current.isScanning) {
-        await html5QrCodeRef.current.stop();
+        try {
+          await html5QrCodeRef.current.stop();
+        } catch (e) {
+          console.error("Error stopping existing scanner", e);
+        }
       }
 
       const html5QrCode = new Html5Qrcode("reader");
       html5QrCodeRef.current = html5QrCode;
 
-      await html5QrCode.start(
-        { facingMode: { ideal: "environment" } },
-        {
-          fps: 15, // Faster FPS for quicker detection
-          qrbox: { width: 250, height: 250 },
-          aspectRatio: 1.0
-        },
-        onScanSuccess,
-        onScanFailure
-      );
+      // Try with environment-facing camera first
+      try {
+        await html5QrCode.start(
+          { facingMode: "environment" },
+          {
+            fps: 15,
+            qrbox: { width: 250, height: 250 },
+          },
+          onScanSuccess,
+          onScanFailure
+        );
+      } catch (e) {
+        console.warn("Retrying scanner with just camera permission...", e);
+        // Fallback: Just open the camera without specific constraints
+        await html5QrCode.start(
+          { facingMode: "user" },
+          {
+            fps: 15,
+            qrbox: { width: 250, height: 250 },
+          },
+          onScanSuccess,
+          onScanFailure
+        );
+      }
       setCameraReady(true);
       setError(null);
     } catch (err: any) {
@@ -549,12 +569,72 @@ export default function ScanPage({ profile }: { profile: UserProfile | null }) {
       </main>
 
       {/* Bottom Status Bar */}
-      <footer className="bg-black/80 backdrop-blur-md border-t border-white/5 p-6 flex justify-center z-30">
+      <footer className="bg-black/80 backdrop-blur-md border-t border-white/5 p-6 flex flex-col items-center gap-4 z-40">
+        <button 
+          onClick={() => setShowMyPass(true)}
+          className="w-full max-w-xs py-4 bg-primary text-on-primary-fixed font-headline font-black uppercase tracking-widest text-sm rounded-2xl flex items-center justify-center gap-3 shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all"
+        >
+          <User size={20} />
+          My Digital Pass
+        </button>
         <div className="flex items-center gap-3 bg-white/5 px-4 py-2 rounded-full border border-white/10">
           <Camera size={14} className="text-primary" />
-          <span className="text-[9px] font-black text-white/60 uppercase tracking-widest">Rear Camera Active</span>
+          <span className="text-[9px] font-black text-white/60 uppercase tracking-widest">Scanner Active</span>
         </div>
       </footer>
+
+      {/* Profile QR Modal */}
+      <AnimatePresence>
+        {showMyPass && profile && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-6">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowMyPass(false)}
+              className="absolute inset-0 bg-black/90 backdrop-blur-md"
+            />
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="relative bg-white p-10 rounded-2xl max-w-sm w-full shadow-2xl flex flex-col items-center text-center"
+            >
+              <button 
+                onClick={() => setShowMyPass(false)}
+                className="absolute top-4 right-4 text-neutral-400 hover:text-neutral-900 bg-neutral-100 p-2 rounded-full transition-colors"
+              >
+                <X size={20} />
+              </button>
+              
+              <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-primary mb-6 shadow-xl">
+                 <img 
+                    src={profile.photoURL || `https://api.dicebear.com/7.x/avataaars/svg?seed=${profile.uid}`} 
+                    alt="" 
+                    className="w-full h-full object-cover"
+                    referrerPolicy="no-referrer"
+                 />
+              </div>
+              
+              <h3 className="font-headline font-black text-2xl uppercase italic mb-1 text-neutral-900">{profile.displayName || 'MEMBER PASS'}</h3>
+              <p className="text-neutral-500 text-[10px] mb-8 uppercase tracking-[0.2em] font-black">MUSTGYM ACCESS IDENTITY</p>
+              
+              <div className="p-4 bg-white rounded-2xl shadow-inner border-2 border-neutral-100 mb-8">
+                <QRCodeSVG value={`USER_ID:${profile.uid}`} size={200} includeMargin={true} />
+              </div>
+              
+              <div className="flex items-center gap-2 px-6 py-3 bg-neutral-100 rounded-full mb-4">
+                <Shield size={14} className="text-primary" />
+                <span className="text-neutral-600 text-[10px] font-black uppercase tracking-widest">Secure Gym Passport</span>
+              </div>
+              
+              <p className="text-neutral-400 text-[10px] font-medium uppercase tracking-tight max-w-[200px]">
+                Show this code to the front desk or scan at the entry kiosk.
+              </p>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
