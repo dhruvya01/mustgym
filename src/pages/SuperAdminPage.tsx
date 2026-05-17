@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { collection, query, getDocs, doc, updateDoc, deleteDoc, onSnapshot, where, setDoc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { motion } from 'motion/react';
-import { Shield, MapPin, Mail, Phone, CalendarDays, Key, Trash2, CheckCircle, LayoutDashboard, Database, Activity, RefreshCw, PlusCircle, Loader2, Save, Users } from 'lucide-react';
+import { Shield, MapPin, Mail, Phone, CalendarDays, Key, Trash2, CheckCircle, LayoutDashboard, Database, Activity, RefreshCw, PlusCircle, Loader2, Save, Users, Trophy, IndianRupee, Globe, TrendingUp, Building2 } from 'lucide-react';
 import { SEO } from '../components/SEO';
 import { toast } from 'sonner';
 import { UserProfile } from '../types';
@@ -11,6 +11,7 @@ import { getAuth, createUserWithEmailAndPassword, sendPasswordResetEmail } from 
 import { BulkMemberImport } from '../components/BulkMemberImport';
 import { Download } from 'lucide-react';
 import { subMinutes, parseISO, isAfter } from 'date-fns';
+import { cn } from '../lib/utils';
 
 export default function SuperAdminPage({ profile }: { profile: UserProfile | null }) {
   const [gyms, setGyms] = useState<any[]>([]);
@@ -18,7 +19,7 @@ export default function SuperAdminPage({ profile }: { profile: UserProfile | nul
   const [liveAttendance, setLiveAttendance] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-  const [activeTab, setActiveTab] = useState<'gyms' | 'system' | 'add_gym' | 'bulk_import'>('gyms');
+  const [activeTab, setActiveTab] = useState<'gyms' | 'system' | 'add_gym' | 'bulk_import' | 'leaderboard'>('gyms');
   const [searchQuery, setSearchQuery] = useState('');
 
   const [newOwner, setNewOwner] = useState({
@@ -248,9 +249,10 @@ export default function SuperAdminPage({ profile }: { profile: UserProfile | nul
       <div className="flex gap-2 p-1 bg-white/5 rounded-xl border border-white/10 w-max mb-8 flex-wrap">
         {[
           { id: 'gyms', label: 'Gym Directory', icon: LayoutDashboard },
+          { id: 'leaderboard', label: 'Top Gyms', icon: Trophy },
           { id: 'add_gym', label: 'Add Gym Owner', icon: PlusCircle },
           { id: 'bulk_import', label: 'Bulk Members', icon: Download },
-          { id: 'system', label: 'System Health', icon: Activity },
+          { id: 'system', label: 'Platform Dashboard', icon: Globe },
         ].map((tab) => (
           <button
             key={tab.id}
@@ -403,6 +405,48 @@ export default function SuperAdminPage({ profile }: { profile: UserProfile | nul
         </div>
       )}
 
+      {activeTab === 'leaderboard' && (
+        <div className="space-y-6">
+          <div className="flex items-center gap-3 text-white mb-6 border-b border-white/5 pb-4">
+            <Trophy size={24} className="text-primary" />
+            <h3 className="text-xl font-headline font-black uppercase">Top Performing Gyms</h3>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {gyms.sort((a,b) => (b.activeMembers || 0) - (a.activeMembers || 0)).map((gym, index) => {
+              const owner = owners.find(o => o.gymId === gym.id) || owners.find(o => o.uid === gym.ownerId);
+              return (
+                <div key={gym.id} className="bg-surface-container-low border border-white/5 rounded-2xl p-6 relative overflow-hidden group">
+                  <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+                    <Trophy size={80} className="text-primary" />
+                  </div>
+                  <div className="flex items-center gap-4 mb-4">
+                    <div className={`w-12 h-12 flex items-center justify-center rounded-xl font-headline font-black text-2xl ${index === 0 ? 'bg-yellow-500/20 text-yellow-500' : index === 1 ? 'bg-gray-300/20 text-gray-300' : index === 2 ? 'bg-orange-500/20 text-orange-500' : 'bg-primary/10 text-primary'}`}>
+                      #{index + 1}
+                    </div>
+                    <div>
+                      <h4 className="font-headline font-black uppercase text-lg text-white truncate max-w-[200px]">{gym.name}</h4>
+                      <p className="text-xs text-on-surface-variant uppercase tracking-widest">{gym.id}</p>
+                    </div>
+                  </div>
+                  <div className="mt-6 flex justify-between items-end border-t border-white/5 pt-4">
+                    <div>
+                      <p className="text-[10px] uppercase font-bold text-on-surface-variant tracking-wider flex items-center gap-1 mb-1">
+                        <Users size={12} /> Active Members
+                      </p>
+                      <span className="font-headline font-black text-3xl text-primary">{gym.activeMembers || 0}</span>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-[10px] uppercase font-bold text-on-surface-variant tracking-wider mb-1">Owner</p>
+                      <span className="text-sm font-medium text-white">{owner?.displayName || 'Unknown'}</span>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       {activeTab === 'add_gym' && (
         <motion.div
           initial={{ opacity: 0, y: 10 }}
@@ -545,66 +589,133 @@ export default function SuperAdminPage({ profile }: { profile: UserProfile | nul
         </motion.div>
       )}
 
-      {activeTab === 'system' && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="bg-surface-container rounded-2xl p-8 border border-white/5 space-y-6">
-                <div className="flex items-center gap-3 text-primary mb-4">
-                    <Activity size={24} />
-                    <h3 className="text-xl font-headline font-black uppercase">App Testing & Diagnostics</h3>
-                </div>
-                <p className="text-sm text-on-surface-variant">Run system tests to verify connection strings, latencies, and critical paths are operational.</p>
-                
-                <button
-                    onClick={testConnection}
-                    className="w-full py-4 bg-primary text-on-primary-fixed rounded-xl font-bold uppercase tracking-widest text-xs hover:bg-primary-dim transition-colors flex justify-center items-center gap-2 mb-4"
-                >
-                    <RefreshCw size={16} /> Run Firebase Connection Test
-                </button>
+      {activeTab === 'system' && (() => {
+        const platformLiveMembers = (() => {
+          const activeLive = liveAttendance.filter(a => {
+            const checkInTime = parseISO(a.timestamp);
+            const twoAndHalfHoursAgo = subMinutes(new Date(), 150);
+            return isAfter(checkInTime, twoAndHalfHoursAgo) && !a.checkOutTime;
+          });
+          return new Set(activeLive.map(a => a.userId)).size;
+        })();
 
-                <button
-                    onClick={() => {
-                        window.open(window.location.origin + '/onboarding', '_blank');
-                    }}
-                    className="w-full py-4 bg-surface border-2 border-primary text-primary rounded-xl font-bold uppercase tracking-widest text-xs hover:bg-primary/10 transition-colors flex justify-center items-center gap-2"
-                >
-                    Test Gym Registration Flow
-                </button>
+        const totalPlatformMembers = gyms.reduce((acc, curr) => acc + (curr.activeMembers || 0), 0);
+        
+        const mrr = gyms.reduce((acc, gym) => {
+          if (gym.subscriptionStatus === 'suspended') return acc;
+          if (gym.subscriptionTier === 'starter') return acc + 2499;
+          if (gym.subscriptionTier === 'professional') return acc + 4999;
+          if (gym.subscriptionTier === 'elite') return acc + 9999;
+          return acc;
+        }, 0);
+
+        const plansCount = gyms.reduce((acc, gym) => {
+          const tier = gym.subscriptionTier || 'starter';
+          acc[tier] = (acc[tier] || 0) + 1;
+          return acc;
+        }, {} as Record<string, number>);
+
+        return (
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="bg-surface-container rounded-2xl p-6 border border-white/5 relative overflow-hidden group">
+               <div className="absolute -right-4 -top-4 opacity-5 group-hover:opacity-10 transition-opacity">
+                 <Building2 size={120} />
+               </div>
+               <p className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant flex items-center gap-2 mb-2">
+                 <LayoutDashboard size={14} className="text-primary"/> Total Gyms
+               </p>
+               <h4 className="font-headline font-black text-4xl">{gyms.length}</h4>
             </div>
-            
-            <div className="bg-surface-container rounded-2xl p-8 border border-white/5 space-y-6">
-               <div className="flex items-center gap-3 text-error mb-4">
-                    <Database size={24} />
-                    <h3 className="text-xl font-headline font-black uppercase">System Stats</h3>
+            <div className="bg-surface-container rounded-2xl p-6 border border-white/5 relative overflow-hidden group">
+               <div className="absolute -right-4 -top-4 opacity-5 group-hover:opacity-10 transition-opacity">
+                 <Users size={120} />
+               </div>
+               <p className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant flex items-center gap-2 mb-2">
+                 <Users size={14} className="text-blue-500"/> Platform End Users
+               </p>
+               <h4 className="font-headline font-black text-4xl">{totalPlatformMembers}</h4>
+            </div>
+            <div className="bg-surface-container rounded-2xl p-6 border border-white/5 relative overflow-hidden group">
+               <div className="absolute -right-4 -top-4 opacity-5 group-hover:opacity-10 transition-opacity">
+                 <IndianRupee size={120} />
+               </div>
+               <p className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant flex items-center gap-2 mb-2">
+                 <TrendingUp size={14} className="text-green-500"/> Est. Monthly Revenue
+               </p>
+               <h4 className="font-headline font-black text-4xl text-green-500 font-mono">₹{mrr.toLocaleString('en-IN')}</h4>
+            </div>
+            <div className="bg-primary/5 rounded-2xl p-6 border border-primary/20 relative overflow-hidden group">
+               <div className="absolute -right-4 -top-4 opacity-5 group-hover:opacity-10 transition-opacity text-primary">
+                 <Activity size={120} />
+               </div>
+               <div className="text-[10px] font-bold uppercase tracking-widest text-primary flex items-center gap-2 mb-2">
+                 <div className="w-2 h-2 rounded-full bg-primary animate-pulse" /> Live Now
+               </div>
+               <h4 className="font-headline font-black text-4xl text-white">{platformLiveMembers} <span className="text-sm font-normal text-on-surface-variant ml-1 uppercase tracking-widest font-sans">Members</span></h4>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-2 bg-surface-container-low rounded-2xl p-8 border border-white/5">
+                <div className="flex items-center gap-3 text-primary mb-8 border-b border-white/5 pb-4">
+                    <Globe size={24} />
+                    <h3 className="text-xl font-headline font-black uppercase">Gym Plan Distribution</h3>
                 </div>
+                <div className="space-y-6">
+                    {(['starter', 'professional', 'elite'] as const).map(tier => {
+                      const count = plansCount[tier] || 0;
+                      const percentage = gyms.length > 0 ? Math.round((count / gyms.length) * 100) : 0;
+                      return (
+                        <div key={tier}>
+                          <div className="flex justify-between items-end mb-2">
+                            <h4 className="font-headline text-lg uppercase tracking-tight">{tier}</h4>
+                            <span className="font-mono text-sm text-on-surface-variant">{count} Gyms ({percentage}%)</span>
+                          </div>
+                          <div className="h-4 bg-background rounded-full overflow-hidden">
+                            <motion.div 
+                              initial={{ width: 0 }}
+                              animate={{ width: `${percentage}%` }}
+                              transition={{ duration: 1, delay: 0.2 }}
+                              className={cn("h-full rounded-full", tier === 'starter' ? 'bg-gray-400' : tier === 'professional' ? 'bg-primary' : 'bg-amber-500')}
+                            />
+                          </div>
+                        </div>
+                      );
+                    })}
+                </div>
+            </div>
+
+            <div className="bg-surface-container rounded-2xl p-8 border border-white/5 flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center gap-3 text-error mb-4">
+                      <Activity size={24} />
+                      <h3 className="text-xl font-headline font-black uppercase">App Diagnostics</h3>
+                  </div>
+                  <p className="text-sm text-on-surface-variant mb-6">Run system tests to verify database connection strings, latencies, and critical paths are operational.</p>
+                </div>
+                
                 <div className="space-y-4">
-                    <div className="flex justify-between items-center p-4 bg-black/20 rounded-lg">
-                        <span className="text-sm text-on-surface-variant font-bold uppercase tracking-wider">Total Gyms</span>
-                        <span className="font-mono text-2xl font-black text-white">{gyms.length}</span>
-                    </div>
-                    <div className="flex justify-between items-center p-4 bg-black/20 rounded-lg">
-                        <span className="text-sm text-on-surface-variant font-bold uppercase tracking-wider">Total Owners</span>
-                        <span className="font-mono text-2xl font-black text-white">{owners.length}</span>
-                    </div>
-                    <div className="flex justify-between items-center p-4 bg-black/20 rounded-lg border border-primary/20 bg-primary/5">
-                        <span className="text-sm text-primary font-bold uppercase tracking-wider flex items-center gap-2">
-                            <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-                            Platform Live Members
-                        </span>
-                        <span className="font-mono text-2xl font-black text-primary">
-                            {(() => {
-                                const activeLive = liveAttendance.filter(a => {
-                                    const checkInTime = parseISO(a.timestamp);
-                                    const twoAndHalfHoursAgo = subMinutes(new Date(), 150);
-                                    return isAfter(checkInTime, twoAndHalfHoursAgo) && !a.checkOutTime;
-                                });
-                                return new Set(activeLive.map(a => a.userId)).size;
-                            })()}
-                        </span>
-                    </div>
+                  <button
+                      onClick={testConnection}
+                      className="w-full py-4 bg-primary text-on-primary-fixed rounded-xl font-bold uppercase tracking-widest text-xs hover:bg-primary-dim transition-colors flex justify-center items-center gap-2"
+                  >
+                      <RefreshCw size={16} /> Run Connection Test
+                  </button>
+
+                  <button
+                      onClick={() => {
+                          window.open(window.location.origin + '/onboarding', '_blank');
+                      }}
+                      className="w-full py-4 bg-surface border border-primary text-primary rounded-xl font-bold uppercase tracking-widest text-xs hover:bg-primary/10 transition-colors flex justify-center items-center gap-2"
+                  >
+                      <Globe size={16} /> Test Registration Flow
+                  </button>
                 </div>
             </div>
+          </div>
         </div>
-      )}
+      )})()}
     </div>
   );
 }

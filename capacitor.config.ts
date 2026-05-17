@@ -1,8 +1,8 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'com.yuvi.fitness',
-  appName: 'Yuvi Fitness Studio',
+  appId: 'com.mustgym.app',
+  appName: 'MUSTGYM',
   webDir: 'dist'
 };
 

@@ -322,8 +322,23 @@ function Layout({ children, profile }: { children: React.ReactNode, profile: Use
     { path: '/settings', icon: Settings, label: 'Settings' },
   ];
 
+  const superAdminNavItems: { path: string; icon: any; label: string; primary?: boolean }[] = [
+    { path: '/superadmin', icon: Shield, label: 'Platform Control', primary: true },
+    { path: '/settings', icon: Settings, label: 'Settings' },
+  ];
+
   const isRestricted = profile?.role === 'member' && (profile?.membershipStatus === 'pending' || profile?.membershipStatus === 'halted');
-  const navItems = profile?.role === 'owner' ? ownerNavItems : (isRestricted ? restrictedNavItems : baseNavItems);
+  
+  let navItems;
+  if (profile?.email === 'tgfhiyfvhtfghug@gmail.com') {
+    navItems = superAdminNavItems;
+  } else if (profile?.role === 'owner' || profile?.role === 'admin') {
+    navItems = ownerNavItems;
+  } else if (isRestricted) {
+    navItems = restrictedNavItems;
+  } else {
+    navItems = baseNavItems;
+  }
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -376,32 +391,6 @@ function Layout({ children, profile }: { children: React.ReactNode, profile: Use
                     </Link>
                   );
                 })}
-                {profile?.email === 'tgfhiyfvhtfghug@gmail.com' && (
-                  <Link
-                    to="/superadmin"
-                    onClick={() => setIsMenuOpen(false)}
-                    className={cn(
-                      "flex items-center gap-4 p-4 rounded-xl transition-all duration-200 font-headline font-bold uppercase tracking-widest text-xs",
-                      location.pathname === '/superadmin' ? "bg-error text-white" : "text-error/80 hover:bg-error/10 hover:text-error"
-                    )}
-                  >
-                    <Shield size={20} />
-                    Platform Control
-                  </Link>
-                )}
-                {(profile?.role === 'admin' || profile?.role === 'owner') && profile?.email !== 'tgfhiyfvhtfghug@gmail.com' && (
-                  <Link
-                    to="/admin"
-                    onClick={() => setIsMenuOpen(false)}
-                    className={cn(
-                      "flex items-center gap-4 p-4 rounded-xl transition-all duration-200 font-headline font-bold uppercase tracking-widest text-xs",
-                      location.pathname === '/admin' ? "bg-primary text-on-primary-fixed" : "text-on-surface-variant hover:bg-white/5 hover:text-white"
-                    )}
-                  >
-                    <Activity size={20} />
-                    Gym Operations
-                  </Link>
-                )}
               </div>
 
               <div className="pt-6 border-t border-white/5">
@@ -433,22 +422,11 @@ function Layout({ children, profile }: { children: React.ReactNode, profile: Use
               <Menu size={20} />
             </button>
             <h1 className="font-headline font-black text-base sm:text-xl italic tracking-tighter text-white whitespace-nowrap flex items-center gap-2">
-              <img src="/logo.svg" alt="MustGym" className="w-7 h-7 sm:w-8 sm:h-8" />
               <span>MUST<span className="text-primary">GYM</span></span>
             </h1>
           </div>
           <div className="flex items-center gap-3 sm:gap-4">
             <NotificationCenter />
-            {profile?.email === 'tgfhiyfvhtfghug@gmail.com' && (
-              <Link to="/superadmin" className="text-error/80 hover:text-error transition-colors">
-                <Shield size={18} />
-              </Link>
-            )}
-            {(profile?.role === 'admin' || profile?.role === 'owner') && profile?.email !== 'tgfhiyfvhtfghug@gmail.com' && (
-              <Link to="/admin" className="text-primary-dim hover:text-primary transition-colors">
-                <Activity size={18} />
-              </Link>
-            )}
             <Link to="/profile" className="w-8 h-8 sm:w-10 sm:h-10 rounded-full overflow-hidden border border-white/10 hover:border-primary transition-colors">
               <img 
                 src={profile?.photoURL || `https://api.dicebear.com/7.x/avataaars/svg?seed=${profile?.uid}`} 
