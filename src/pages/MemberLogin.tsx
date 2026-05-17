@@ -54,6 +54,12 @@ export default function MemberLogin() {
         const data = docSnap.data();
         setGymInfo({ id: docSnap.id, name: data.name, logoUrl: data.logoUrl });
         setGymId(docSnap.id);
+        
+        // Apply Gym Theme dynamically
+        if (data.themeId) {
+          import('../lib/themes').then(({ applyTheme }) => applyTheme(data.themeId));
+        }
+
         setStep('verify_phone');
       } else {
         toast.error('Gym not found. Please check the ID and try again.');

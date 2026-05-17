@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { Building2, Shield, QrCode, Share2, Copy, Palette } from 'lucide-react';
+import { Building2, Shield, QrCode, Share2, Copy, Palette, Instagram, Facebook, Globe, Twitter, ListChecks, FileText, Check, Webhook, Activity } from 'lucide-react';
 import { updateDoc, doc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { toast } from 'sonner';
+import { GYM_THEMES } from '../lib/themes';
 
 export default function OwnerSettingsTab({ gymInfo }: { gymInfo: any }) {
   const [localGym, setLocalGym] = React.useState(gymInfo || {});
@@ -11,6 +12,11 @@ export default function OwnerSettingsTab({ gymInfo }: { gymInfo: any }) {
   }, [gymInfo]);
 
   if (!gymInfo) return null;
+
+  const amenitiesList = [
+    'WiFi', 'Parking', 'Showers', 'Lockers', 'Water Cooler', 
+    'Cafe', 'Personal Training', 'Group Classes', 'Air Conditioning', 'Steam Room'
+  ];
 
   return (
     <div className="space-y-8 pb-20">
@@ -296,26 +302,28 @@ export default function OwnerSettingsTab({ gymInfo }: { gymInfo: any }) {
                 placeholder="https://..."
               />
             </div>
-            <div>
-              <label className="block text-[10px] font-bold text-on-surface-variant uppercase tracking-widest mb-2">Theme Identity Color (HEX)</label>
-              <div className="flex gap-2">
-                  <input 
-                  type="color" 
-                  value={localGym.brandingColor || '#FF8F6F'}
-                  onChange={(e) => setLocalGym({...localGym, brandingColor: e.target.value})}
-                  onBlur={async (e) => {
-                    if (e.target.value !== gymInfo.brandingColor) {
-                      try { await updateDoc(doc(db, 'gyms', gymInfo.id), { brandingColor: e.target.value }); toast.success('Updated Theme'); } catch (e) {}
-                    }
-                  }}
-                  className="h-11 w-11 rounded-lg border-0 bg-transparent p-0 cursor-pointer"
-                />
-                <input 
-                  type="text" 
-                  readOnly
-                  value={gymInfo.brandingColor || '#FF8F6F'}
-                  className="flex-1 bg-background/50 border border-white/5 rounded-xl py-3 px-4 text-sm font-bold outline-none font-mono"
-                />
+            <div className="md:col-span-2 border-l border-white/5 pl-6">
+              <label className="block text-[10px] font-bold text-on-surface-variant uppercase tracking-widest mb-4">Global App Theme</label>
+              <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
+                {GYM_THEMES.map(theme => {
+                   const isSelected = (localGym.themeId || 'kinetic-orange') === theme.id;
+                   return (
+                     <button
+                       key={theme.id}
+                       onClick={async () => {
+                         setLocalGym({...localGym, themeId: theme.id});
+                         try { 
+                           await updateDoc(doc(db, 'gyms', gymInfo.id), { themeId: theme.id }); 
+                           toast.success('App theme updated universally'); 
+                         } catch (e) { toast.error('Failed to update theme'); }
+                       }}
+                       className={`p-3 rounded-xl border flex items-center justify-between transition-all ${isSelected ? 'border-[var(--theme-primary)] bg-[var(--theme-primary)]/10' : 'border-white/5 bg-background/50 hover:bg-white/5'}`}
+                     >
+                       <span className="text-xs font-bold text-on-surface">{theme.name}</span>
+                       <div className="w-4 h-4 rounded-full shadow-[inset_0_2px_4px_rgba(0,0,0,0.5)]" style={{ backgroundColor: theme.colors['--theme-primary'] }} />
+                     </button>
+                   );
+                })}
               </div>
             </div>
             <div>
@@ -335,6 +343,169 @@ export default function OwnerSettingsTab({ gymInfo }: { gymInfo: any }) {
             </div>
           </div>
         </div>
+
+        {/* Social & Web Presence */}
+        <div className="bg-surface-container-high p-6 rounded-2xl border border-white/5 shadow-xl lg:col-span-2 relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-pink-500/5 rounded-full blur-3xl pointer-events-none" />
+          <h4 className="text-sm font-black uppercase tracking-[0.2em] text-pink-500 mb-6 flex items-center gap-2 relative z-10">
+            <Globe size={16} /> Social Presence
+          </h4>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 relative z-10">
+            <div>
+              <label className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest mb-2 flex items-center gap-2"><Instagram size={12} /> Instagram</label>
+              <input 
+                type="text" 
+                value={localGym.socialLinks?.instagram || ''}
+                onChange={(e) => setLocalGym({...localGym, socialLinks: {...(localGym.socialLinks || {}), instagram: e.target.value}})}
+                onBlur={async (e) => {
+                  try { await updateDoc(doc(db, 'gyms', gymInfo.id), { 'socialLinks.instagram': e.target.value }); toast.success('Updated Instagram URL'); } catch (err) {}
+                }}
+                className="w-full bg-background/50 border border-white/5 rounded-xl py-3 px-4 text-sm font-bold outline-none focus:border-pink-500/50"
+                placeholder="https://instagram.com/..."
+              />
+            </div>
+            <div>
+              <label className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest mb-2 flex items-center gap-2"><Facebook size={12} /> Facebook</label>
+              <input 
+                type="text" 
+                value={localGym.socialLinks?.facebook || ''}
+                onChange={(e) => setLocalGym({...localGym, socialLinks: {...(localGym.socialLinks || {}), facebook: e.target.value}})}
+                onBlur={async (e) => {
+                  try { await updateDoc(doc(db, 'gyms', gymInfo.id), { 'socialLinks.facebook': e.target.value }); toast.success('Updated Facebook URL'); } catch (err) {}
+                }}
+                className="w-full bg-background/50 border border-white/5 rounded-xl py-3 px-4 text-sm font-bold outline-none focus:border-blue-500/50"
+                placeholder="https://facebook.com/..."
+              />
+            </div>
+            <div>
+              <label className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest mb-2 flex items-center gap-2"><Twitter size={12} /> TargetPlatform/X</label>
+              <input 
+                type="text" 
+                value={localGym.socialLinks?.twitter || ''}
+                onChange={(e) => setLocalGym({...localGym, socialLinks: {...(localGym.socialLinks || {}), twitter: e.target.value}})}
+                onBlur={async (e) => {
+                  try { await updateDoc(doc(db, 'gyms', gymInfo.id), { 'socialLinks.twitter': e.target.value }); toast.success('Updated target URL'); } catch (err) {}
+                }}
+                className="w-full bg-background/50 border border-white/5 rounded-xl py-3 px-4 text-sm font-bold outline-none focus:border-white/50"
+                placeholder="https://x.com/..."
+              />
+            </div>
+            <div>
+              <label className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest mb-2 flex items-center gap-2"><Globe size={12} /> Website</label>
+              <input 
+                type="text" 
+                value={localGym.socialLinks?.website || ''}
+                onChange={(e) => setLocalGym({...localGym, socialLinks: {...(localGym.socialLinks || {}), website: e.target.value}})}
+                onBlur={async (e) => {
+                  try { await updateDoc(doc(db, 'gyms', gymInfo.id), { 'socialLinks.website': e.target.value }); toast.success('Updated Website URL'); } catch (err) {}
+                }}
+                className="w-full bg-background/50 border border-white/5 rounded-xl py-3 px-4 text-sm font-bold outline-none focus:border-primary/50"
+                placeholder="https://..."
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Amenities & Rules */}
+        <div className="bg-surface-container-high p-6 rounded-2xl border border-white/5 shadow-xl lg:col-span-2 relative overflow-hidden">
+          <div className="absolute top-0 right-1/2 w-64 h-64 bg-cyan-500/5 rounded-full blur-3xl pointer-events-none" />
+          <h4 className="text-sm font-black uppercase tracking-[0.2em] text-cyan-400 mb-6 flex items-center gap-2 relative z-10">
+            <ListChecks size={16} /> Amenities & Operating Rules
+          </h4>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 relative z-10">
+            <div>
+              <label className="block text-[10px] font-bold text-on-surface-variant uppercase tracking-widest mb-4"><ListChecks size={12} className="inline mr-1" /> Available Amenities</label>
+              <div className="flex flex-wrap gap-2">
+                {amenitiesList.map(amenity => {
+                  const isSelected = localGym.amenities?.includes(amenity);
+                  return (
+                    <button
+                      key={amenity}
+                      onClick={async () => {
+                        const current = localGym.amenities || [];
+                        const next = isSelected ? current.filter((a: string) => a !== amenity) : [...current, amenity];
+                        setLocalGym({ ...localGym, amenities: next });
+                        try { await updateDoc(doc(db, 'gyms', gymInfo.id), { amenities: next }); toast.success('Updated amenities'); } catch (err) { }
+                      }}
+                      className={`px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1 ${isSelected ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30' : 'bg-background/50 text-on-surface-variant border border-white/5 hover:bg-white/5'}`}
+                    >
+                      {isSelected && <Check size={12} />}
+                      {amenity}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+            <div>
+              <label className="block text-[10px] font-bold text-on-surface-variant uppercase tracking-widest mb-4"><FileText size={12} className="inline mr-1"/> Facility Rules & Etiquette</label>
+              <textarea 
+                value={localGym.facilityRules || ''}
+                onChange={(e) => setLocalGym({...localGym, facilityRules: e.target.value})}
+                onBlur={async (e) => {
+                  if (e.target.value !== gymInfo.facilityRules) {
+                    try { await updateDoc(doc(db, 'gyms', gymInfo.id), { facilityRules: e.target.value }); toast.success('Updated Rules'); } catch (err) {}
+                  }
+                }}
+                className="w-full bg-background/50 border border-white/5 rounded-xl py-3 px-4 text-sm outline-none focus:border-cyan-500/50 min-h-[120px] resize-y"
+                placeholder="List your gym rules here..."
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Developer & API Integrations */}
+        <div className="bg-surface-container-high p-6 rounded-2xl border border-white/5 shadow-xl lg:col-span-2 relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-purple-500/5 rounded-full blur-3xl pointer-events-none" />
+          <h4 className="text-sm font-black uppercase tracking-[0.2em] text-purple-400 mb-6 flex items-center gap-2 relative z-10">
+            <Webhook size={16} /> Advanced Event Webhooks
+          </h4>
+          <p className="text-[10px] text-on-surface-variant font-bold mb-6">Connect your gym to Zapier, Make, or custom servers, to trigger actions in real-time when events occur in the system.</p>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 relative z-10">
+            <div className="bg-background/40 p-5 rounded-xl border border-white/5 group hover:border-purple-500/30 transition-all">
+              <label className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest mb-3 flex items-center gap-2"><Activity size={12} className="text-purple-400" /> New Member Joined</label>
+              <input 
+                type="text" 
+                value={localGym.webhooks?.newMember || ''}
+                onChange={(e) => setLocalGym({...localGym, webhooks: {...(localGym.webhooks || {}), newMember: e.target.value}})}
+                onBlur={async (e) => {
+                  try { await updateDoc(doc(db, 'gyms', gymInfo.id), { 'webhooks.newMember': e.target.value }); toast.success('Webhook Saved'); } catch (err) {}
+                }}
+                className="w-full bg-background/80 border border-white/5 rounded-xl py-3 px-4 text-xs font-mono outline-none focus:border-purple-500/50 block"
+                placeholder="https://hooks.zapier.com/..."
+              />
+            </div>
+            <div className="bg-background/40 p-5 rounded-xl border border-white/5 group hover:border-purple-500/30 transition-all">
+              <label className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest mb-3 flex items-center gap-2"><QrCode size={12} className="text-purple-400" /> Member Check-In</label>
+              <input 
+                type="text" 
+                value={localGym.webhooks?.checkIn || ''}
+                onChange={(e) => setLocalGym({...localGym, webhooks: {...(localGym.webhooks || {}), checkIn: e.target.value}})}
+                onBlur={async (e) => {
+                  try { await updateDoc(doc(db, 'gyms', gymInfo.id), { 'webhooks.checkIn': e.target.value }); toast.success('Webhook Saved'); } catch (err) {}
+                }}
+                className="w-full bg-background/80 border border-white/5 rounded-xl py-3 px-4 text-xs font-mono outline-none focus:border-purple-500/50 block"
+                placeholder="https://hooks.zapier.com/..."
+              />
+            </div>
+            <div className="bg-background/40 p-5 rounded-xl border border-white/5 group hover:border-purple-500/30 transition-all">
+              <label className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest mb-3 flex items-center gap-2"><Shield size={12} className="text-purple-400" /> Payment Received</label>
+              <input 
+                type="text" 
+                value={localGym.webhooks?.payment || ''}
+                onChange={(e) => setLocalGym({...localGym, webhooks: {...(localGym.webhooks || {}), payment: e.target.value}})}
+                onBlur={async (e) => {
+                  try { await updateDoc(doc(db, 'gyms', gymInfo.id), { 'webhooks.payment': e.target.value }); toast.success('Webhook Saved'); } catch (err) {}
+                }}
+                className="w-full bg-background/80 border border-white/5 rounded-xl py-3 px-4 text-xs font-mono outline-none focus:border-purple-500/50 block"
+                placeholder="https://hooks.zapier.com/..."
+              />
+            </div>
+          </div>
+        </div>
+
       </div>
     </div>
   );

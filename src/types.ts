@@ -54,6 +54,20 @@ export interface Gym {
     open: string;
     close: string;
   }>;
+  socialLinks?: {
+    instagram?: string;
+    facebook?: string;
+    twitter?: string;
+    website?: string;
+  };
+  amenities?: string[];
+  facilityRules?: string;
+  webhooks?: {
+    newMember?: string;
+    checkIn?: string;
+    payment?: string;
+  };
+  themeId?: string;
   brandingColor?: string;
   customBannerUrl?: string;
   welcomeMessage?: string;

@@ -137,6 +137,25 @@ export default function App() {
   }, []);
 
   useEffect(() => {
+    if (!profile?.gymId) return;
+    const unsub = onSnapshot(doc(db, 'gyms', profile.gymId), (snapshot) => {
+      if (snapshot.exists()) {
+        const data = snapshot.data();
+        if (data.themeId) {
+          import('./lib/themes').then(({ applyTheme }) => {
+            applyTheme(data.themeId);
+          });
+        } else {
+          import('./lib/themes').then(({ applyTheme }) => {
+            applyTheme('kinetic-orange'); // Default if empty
+          });
+        }
+      }
+    });
+    return () => unsub();
+  }, [profile?.gymId]);
+
+  useEffect(() => {
     if (!profile || !user) return;
 
     // Check for membership expiry
