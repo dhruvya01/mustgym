@@ -6,7 +6,7 @@ import { db } from '../lib/firebase';
 import { UserProfile, AttendanceRecord, Equipment, PaymentRecord, Announcement, MembershipTier } from '../types';
 import { motion, AnimatePresence } from 'motion/react';
 import { Users, Activity, Search, CheckCircle, XCircle, Clock, QrCode, X, Dumbbell, Plus, IndianRupee, Calendar, TrendingUp, AlertTriangle, PieChart as PieChartIcon, BarChart3, Megaphone, Download, Eye, Trash2, Loader2, Lock, Sparkles, BrainCircuit, LogOut, Globe, Building2, Copy, ArrowUpRight, Share2, MessageCircle, Star, Target, Camera, Scan, Shield } from 'lucide-react';
-import { format, isSameDay, subDays, startOfMonth, endOfMonth, isWithinInterval, subMonths, eachDayOfInterval, isSameMonth, subHours, subMinutes, isAfter, startOfDay, endOfDay } from 'date-fns';
+import { format, isSameDay, subDays, startOfMonth, endOfMonth, isWithinInterval, subMonths, eachDayOfInterval, isSameMonth, subHours, subMinutes, isAfter, startOfDay, endOfDay, differenceInDays } from 'date-fns';
 import { addPoints } from '../services/gamificationService';
 import { cn } from '../lib/utils';
 import { handleFirestoreError, OperationType } from '../lib/firestore-errors';
@@ -161,7 +161,12 @@ export default function AdminPage({ profile }: { profile: UserProfile | null }) 
   const [savingSettings, setSavingSettings] = useState(false);
 
   // AI Insights State
-  const [aiInsights, setAiInsights] = useState<{ title: string, suggestion: string }[]>([]);
+  const [aiAnalysis, setAiAnalysis] = useState<{
+    healthScore: number;
+    summary: string;
+    insights: string[];
+    predictions: string[];
+  } | null>(null);
   const [generatingAI, setGeneratingAI] = useState(false);
 
   // Member Detail State
@@ -637,7 +642,7 @@ export default function AdminPage({ profile }: { profile: UserProfile | null }) 
         revenueHistory: revenueByMonth
       };
       const result = await generateAdminInsights(metrics);
-      setAiInsights(result.insights);
+      setAiAnalysis(result);
       toast.success('AI Insights generated!');
     } catch (error) {
       toast.error('Failed to generate AI insights');
@@ -1536,22 +1541,77 @@ export default function AdminPage({ profile }: { profile: UserProfile | null }) 
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {aiInsights.length > 0 ? (
-                  aiInsights.map((insight, idx) => (
-                    <motion.div 
-                      key={idx}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: idx * 0.1 }}
-                      className="bg-surface-container-low p-6 rounded-xl border border-white/5 hover:bg-surface-container transition-colors group"
-                    >
-                      <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center text-primary mb-4 group-hover:scale-110 transition-transform">
-                        <BrainCircuit size={20} />
+                {aiAnalysis ? (
+                  <>
+                    <div className="col-span-full md:col-span-2 flex flex-col items-center justify-center p-8 bg-surface-container-low rounded-xl border border-white/5 mb-4">
+                      <div className="relative w-32 h-32 mb-4">
+                        <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+                          <circle cx="50" cy="50" r="45" fill="none" stroke="currentColor" strokeWidth="10" className="text-white/10" />
+                          <motion.circle 
+                            initial={{ strokeDasharray: "0 283" }}
+                            animate={{ strokeDasharray: `${(aiAnalysis.healthScore / 100) * 283} 283` }}
+                            transition={{ duration: 1.5, ease: "easeOut" }}
+                            cx="50" cy="50" r="45" fill="none" stroke="currentColor" strokeWidth="10" 
+                            className={cn("stroke-current", 
+                              aiAnalysis.healthScore > 80 ? "text-green-500" : 
+                              aiAnalysis.healthScore > 60 ? "text-amber-500" : "text-red-500")}
+                            strokeLinecap="round" 
+                          />
+                        </svg>
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <span className="font-headline font-black text-4xl">{aiAnalysis.healthScore}</span>
+                        </div>
                       </div>
-                      <h4 className="font-headline font-bold text-lg uppercase mb-2 group-hover:text-primary transition-colors">{insight.title}</h4>
-                      <p className="text-sm text-on-surface-variant leading-relaxed">{insight.suggestion}</p>
-                    </motion.div>
-                  ))
+                      <h4 className="font-headline font-bold text-xl uppercase tracking-widest text-on-surface mb-2">Gym Health Score</h4>
+                      <p className="text-on-surface-variant text-center max-w-lg mb-4">{aiAnalysis.summary}</p>
+                    </div>
+
+                    <div className="bg-surface-container-low p-6 rounded-xl border border-white/5 hover:bg-surface-container transition-colors group">
+                      <div className="flex items-center gap-3 mb-6 border-b border-white/5 pb-4">
+                        <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center text-primary">
+                          <Target size={20} />
+                        </div>
+                        <h4 className="font-headline font-bold text-lg uppercase">Actionable Insights</h4>
+                      </div>
+                      <ul className="space-y-4">
+                        {aiAnalysis.insights.map((insight, idx) => (
+                           <motion.li 
+                            key={idx}
+                            initial={{ opacity: 0, x: -20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: idx * 0.1 }}
+                            className="flex items-start gap-3 text-sm text-on-surface-variant"
+                           >
+                             <CheckCircle size={16} className="text-green-500 shrink-0 mt-0.5" />
+                             <span>{insight}</span>
+                           </motion.li>
+                        ))}
+                      </ul>
+                    </div>
+
+                    <div className="bg-surface-container-low p-6 rounded-xl border border-white/5 hover:bg-surface-container transition-colors group">
+                      <div className="flex items-center gap-3 mb-6 border-b border-white/5 pb-4">
+                        <div className="w-10 h-10 bg-amber-500/10 rounded-lg flex items-center justify-center text-amber-500">
+                          <TrendingUp size={20} />
+                        </div>
+                        <h4 className="font-headline font-bold text-lg uppercase text-amber-500">Predictive Forecasts</h4>
+                      </div>
+                      <ul className="space-y-4">
+                        {aiAnalysis.predictions.map((prediction, idx) => (
+                           <motion.li 
+                            key={idx}
+                            initial={{ opacity: 0, x: -20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: 0.3 + (idx * 0.1) }}
+                            className="flex items-start gap-3 text-sm text-on-surface-variant"
+                           >
+                             <AlertTriangle size={16} className="text-amber-500 shrink-0 mt-0.5" />
+                             <span>{prediction}</span>
+                           </motion.li>
+                        ))}
+                      </ul>
+                    </div>
+                  </>
                 ) : !generatingAI && (
                   <div className="col-span-full py-20 text-center border-2 border-dashed border-white/5 rounded-2xl">
                     <p className="text-on-surface-variant italic">Click the button above to generate AI-powered insights for your gym.</p>
@@ -1770,8 +1830,45 @@ export default function AdminPage({ profile }: { profile: UserProfile | null }) 
       )}
 
       {/* Member Management */}
-      {activeTab === 'members' && (
+      {activeTab === 'members' && (() => {
+        const expiringMembers = members.filter(m => {
+          if (!m.membershipExpiry) return false;
+          if (m.membershipStatus === 'expired') return false;
+          const diff = differenceInDays(new Date(m.membershipExpiry), new Date());
+          return diff >= 0 && diff <= 3;
+        });
+
+        return (
         <section className="space-y-6">
+          {expiringMembers.length > 0 && (
+            <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-4 sm:p-6 mb-6">
+              <div className="flex items-center gap-3 mb-4">
+                <AlertTriangle className="text-amber-500" size={24} />
+                <h3 className="font-headline font-bold text-amber-500 uppercase tracking-widest text-sm">Fee Renewal Alerts (Expiring in 3 Days)</h3>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {expiringMembers.map(member => (
+                  <div key={member.uid} className="bg-surface-container-low p-4 rounded-lg flex flex-col gap-3 border border-white/5">
+                    <div>
+                      <p className="font-bold text-sm">{member.displayName || 'Anonymous Member'}</p>
+                      <p className="text-xs text-on-surface-variant font-mono">Expires: {format(new Date(member.membershipExpiry!), 'MMM dd, yyyy')}</p>
+                    </div>
+                    {member.phoneNumber && (
+                      <a
+                        href={`https://wa.me/${member.phoneNumber.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(`Hi ${member.displayName || 'Member'}, this is a reminder from ${gymInfo?.name} that your gym membership expires on ${format(new Date(member.membershipExpiry!), 'MMM dd, yyyy')}. Please renew to continue your fitness journey with us!`)}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="bg-green-500/20 text-green-500 hover:bg-green-500/30 px-3 py-2 rounded-lg text-xs font-bold uppercase tracking-widest transition-colors flex items-center justify-center gap-2"
+                      >
+                        <MessageCircle size={14} />
+                        Send Reminder
+                      </a>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
           <div className="flex flex-col md:flex-row gap-4 justify-between items-center">
             <h3 className="font-headline text-xl font-bold uppercase tracking-tight">Member Directory</h3>
             <div className="flex flex-wrap gap-2 w-full md:w-auto">
@@ -2050,7 +2147,8 @@ export default function AdminPage({ profile }: { profile: UserProfile | null }) 
             </div>
           </div>
         </section>
-      )}
+        );
+      })()}
 
       {/* Equipment Management */}
       {activeTab === 'equipment' && (

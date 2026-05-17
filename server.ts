@@ -161,22 +161,28 @@ async function startServer() {
       const apiKey = process.env.GEMINI_API_KEY;
       
       if (!apiKey) {
-        // Fallback to mock data if no API key
-        return res.json({ insights: [
-          "Engagement Alert: Please set GEMINI_API_KEY in environment variables to get real AI insights.",
-          "Growth Trend: High number of recent signups.",
-          "Class Popularity: Review attendance logs to see which group classes are most popular."
-        ] });
+        return res.json({ 
+          healthScore: 65,
+          summary: "Please set GEMINI_API_KEY to enable real AI tracking.",
+          insights: ["Set GEMINI_API_KEY in environment variables."],
+          predictions: ["Without data, growth trajectory is unknown."]
+        });
       }
 
       const ai = new GoogleGenAI({ apiKey });
       
       const prompt = `
-You are a highly advanced AI Gym Manager and Analyst.
-Please analyze the following gym performance metrics and provide exactly 3-5 actionable, insightful sentences for the gym owner. 
-Focus on member retention, revenue growth, and facility utilization.
-Important: Your response should ONLY be a valid JSON array of strings, where each string is an insight.
-Example output format: ["Insight 1 here.", "Insight 2 here.", "Insight 3 here."]
+You are an elite AI Gym Data Scientist.
+Analyze the following gym performance metrics and return a JSON object with this exact structure:
+{
+  "healthScore": <number between 0 and 100 based on the metrics>,
+  "summary": "<a 2-3 sentence executive summary of the gym's current state>",
+  "insights": ["<string>", "<string>", "<string>"],
+  "predictions": ["<string>", "<string>"]
+}
+
+The insights should focus on concrete facts (retention, revenue).
+The predictions should forecast next month's likely scenarios (churn risk, growth potential) based on attendance and revenue history.
 
 Gym Metrics:
 ${JSON.stringify(metrics, null, 2)}
@@ -186,20 +192,26 @@ ${JSON.stringify(metrics, null, 2)}
         model: 'gemini-3-flash-preview',
         contents: prompt,
         config: {
-            temperature: 0.7,
+            temperature: 0.2, // Be somewhat deterministic
             responseMimeType: "application/json"
         }
       });
       
       const responseText = aiResponse.text;
-      let insightsList = [];
+      let parsedResponse = { 
+        healthScore: 70, 
+        summary: "No summary generated.", 
+        insights: ["Check back later."], 
+        predictions: ["Check back later."] 
+      };
+
       try {
-          insightsList = JSON.parse(responseText);
+          parsedResponse = JSON.parse(responseText);
       } catch(e) {
           console.error("Failed to parse Gemini response", responseText);
       }
 
-      res.json({ insights: Array.isArray(insightsList) && insightsList.length > 0 ? insightsList : ["No insights generated."] });
+      res.json(parsedResponse);
     } catch (error: any) {
       console.error('Gemini error:', error);
       res.status(500).json({ error: 'Failed to generate insights from AI model.' });

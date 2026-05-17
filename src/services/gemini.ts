@@ -215,10 +215,20 @@ export async function generateAdminInsights(metrics: any) {
     }
 
     const data = await response.json();
-    return { insights: data.insights || [] };
+    return { 
+      healthScore: data.healthScore || 50,
+      summary: data.summary || "Summary generation failed.",
+      insights: data.insights || [],
+      predictions: data.predictions || []
+    };
   } catch (error) {
     console.error('Error fetching admin insights:', error);
-    return { insights: ["Unable to fetch AI insights. Please ensure the server is running and GEMINI_API_KEY is configured."] };
+    return { 
+      healthScore: 0,
+      summary: "Error communicating with AI service.",
+      insights: ["Unable to fetch AI insights. Please ensure the server is running and GEMINI_API_KEY is configured."],
+      predictions: []
+    };
   }
 }
 

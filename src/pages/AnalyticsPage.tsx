@@ -33,6 +33,7 @@ export default function AnalyticsPage({ profile }: { profile: UserProfile | null
   const [attendance, setAttendance] = useState<AttendanceRecord[]>([]);
   const [payments, setPayments] = useState<PaymentRecord[]>([]);
   const [usage, setUsage] = useState<EquipmentUsage[]>([]);
+  const [expenses, setExpenses] = useState({ rent: 50000, staff: 30000, utils: 15000 });
   
   const navigate = useNavigate();
 
@@ -457,6 +458,40 @@ export default function AnalyticsPage({ profile }: { profile: UserProfile | null
           </div>
         </div>
 
+        {/* Profit and Loss Projections - New Feature */}
+        <div className="lg:col-span-3 bg-surface-container-low p-8 rounded-3xl border border-white/5 space-y-6">
+           <div className="flex justify-between items-center">
+             <div className="flex items-center gap-3">
+               <TrendingUp className="text-primary" size={24} />
+               <h3 className="font-headline font-black text-xl uppercase italic">Profit & Loss Projections</h3>
+             </div>
+             <span className="bg-primary/20 text-primary px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest">Beta Planner</span>
+           </div>
+           
+           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+             <div className="bg-background/50 p-4 rounded-xl border border-white/5">
+                <label className="block text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mb-2">Monthly Rent</label>
+                <input type="number" value={expenses.rent} onChange={e => setExpenses(prev => ({...prev, rent: Number(e.target.value)}))} className="w-full bg-transparent border-none font-mono text-xl focus:ring-0 p-0 text-white" />
+             </div>
+             <div className="bg-background/50 p-4 rounded-xl border border-white/5">
+                <label className="block text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mb-2">Staff Salaries</label>
+                <input type="number" value={expenses.staff} onChange={e => setExpenses(prev => ({...prev, staff: Number(e.target.value)}))} className="w-full bg-transparent border-none font-mono text-xl focus:ring-0 p-0 text-white" />
+             </div>
+             <div className="bg-background/50 p-4 rounded-xl border border-white/5">
+                <label className="block text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mb-2">Maintenance/Utilities</label>
+                <input type="number" value={expenses.utils} onChange={e => setExpenses(prev => ({...prev, utils: Number(e.target.value)}))} className="w-full bg-transparent border-none font-mono text-xl focus:ring-0 p-0 text-white" />
+             </div>
+             <div className="bg-primary/10 p-4 rounded-xl border border-primary/20">
+                <label className="block text-[10px] font-bold uppercase tracking-widest text-primary mb-2">Est. Net Profit</label>
+                <div className="font-headline font-black text-2xl italic text-primary">
+                  ₹{(summary.revenue - (expenses.rent + expenses.staff + expenses.utils)).toLocaleString('en-IN')}
+                </div>
+             </div>
+           </div>
+           <p className="text-xs text-on-surface-variant leading-relaxed">
+             This dynamic P&L tool subtracts your fixed estimated overheads from the real-time collected revenue in this period. Use these projections to determine cashflow runway and hiring capacity.
+           </p>
+        </div>
       </section>
 
       {/* Raw Data Insights Table */}
