@@ -5,6 +5,7 @@ import path from 'path';
 import cors from 'cors';
 import nodemailer from 'nodemailer';
 import admin from 'firebase-admin';
+import { GoogleGenAI } from '@google/genai';
 
 // Initialize Firebase Admin (Only needed if we are generating links backend side)
 // Note: We need a Service Account JSON for this. If the user doesn't have it, we will load it from env later.
@@ -151,6 +152,57 @@ async function startServer() {
         errorMessage = 'Invalid sender email. Please set SMTP_FROM_EMAIL in the secrets panel (Settings -> Environment) to a verified sender email address in your Brevo account (e.g., "Your Name" <youremail@yourdomain.com>).';
       }
       res.status(500).json({ error: errorMessage });
+    }
+  });
+
+  app.post('/api/insights', async (req, res) => {
+    try {
+      const { metrics } = req.body;
+      const apiKey = process.env.GEMINI_API_KEY;
+      
+      if (!apiKey) {
+        // Fallback to mock data if no API key
+        return res.json({ insights: [
+          "Engagement Alert: Please set GEMINI_API_KEY in environment variables to get real AI insights.",
+          "Growth Trend: High number of recent signups.",
+          "Class Popularity: Review attendance logs to see which group classes are most popular."
+        ] });
+      }
+
+      const ai = new GoogleGenAI({ apiKey });
+      
+      const prompt = `
+You are a highly advanced AI Gym Manager and Analyst.
+Please analyze the following gym performance metrics and provide exactly 3-5 actionable, insightful sentences for the gym owner. 
+Focus on member retention, revenue growth, and facility utilization.
+Important: Your response should ONLY be a valid JSON array of strings, where each string is an insight.
+Example output format: ["Insight 1 here.", "Insight 2 here.", "Insight 3 here."]
+
+Gym Metrics:
+${JSON.stringify(metrics, null, 2)}
+`;
+
+      const aiResponse = await ai.models.generateContent({
+        model: 'gemini-3-flash-preview',
+        contents: prompt,
+        config: {
+            temperature: 0.7,
+            responseMimeType: "application/json"
+        }
+      });
+      
+      const responseText = aiResponse.text;
+      let insightsList = [];
+      try {
+          insightsList = JSON.parse(responseText);
+      } catch(e) {
+          console.error("Failed to parse Gemini response", responseText);
+      }
+
+      res.json({ insights: Array.isArray(insightsList) && insightsList.length > 0 ? insightsList : ["No insights generated."] });
+    } catch (error: any) {
+      console.error('Gemini error:', error);
+      res.status(500).json({ error: 'Failed to generate insights from AI model.' });
     }
   });
 

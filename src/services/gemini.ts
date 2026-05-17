@@ -201,30 +201,25 @@ export async function generateWorkoutPlan(userId: string, preferences: string, f
 }
 
 export async function generateAdminInsights(metrics: any) {
-  // Simulate network delay
-  await new Promise(resolve => setTimeout(resolve, 1500));
+  try {
+    const response = await fetch(`${API_BASE}/api/insights`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ metrics }),
+    });
+    
+    if (!response.ok) {
+        throw new Error('Network response was not ok');
+    }
 
-  const insights = [];
-
-  const { activeUsers = 0, totalUsers = 0, recentSignups = 0 } = metrics;
-  const activeRatio = (activeUsers / (totalUsers || 1)) * 100;
-
-  if (activeRatio < 50) {
-      insights.push("Engagement Alert: Active user ratio is below 50%. Consider launching a challenge or push notification campaign to re-engage inactive members.");
-  } else {
-      insights.push("Great Engagement: Over 50% of your user base is active. Keep up the good work with current member retention strategies.");
+    const data = await response.json();
+    return { insights: data.insights || [] };
+  } catch (error) {
+    console.error('Error fetching admin insights:', error);
+    return { insights: ["Unable to fetch AI insights. Please ensure the server is running and GEMINI_API_KEY is configured."] };
   }
-
-  if (recentSignups > 10) {
-      insights.push("Growth Trend: High number of recent signups. Ensure your onboarding process is welcoming and efficient to retain these new members.");
-  } else {
-      insights.push("Growth Opportunity: Recent signups have been slow. Consider offering a referral program or a temporary discount on memberships.");
-  }
-
-  insights.push("Class Popularity: Review attendance logs to see which group classes are most popular, and consider adding more slots for them.");
-  insights.push("Equipment Maintenance: based on general gym trends, ensure cardio equipment like treadmills have scheduled periodic maintenance.");
-
-  return { insights };
 }
 
 export async function generateDietPlan(userId: string, preferences: string, fitnessLevel: string, goals: string, dietType: string = 'nonveg') {

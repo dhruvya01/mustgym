@@ -625,13 +625,16 @@ export default function AdminPage({ profile }: { profile: UserProfile | null }) 
     setGeneratingAI(true);
     try {
       const metrics = {
+        gymName: gymInfo?.name || 'MustGym',
         totalMembers: members.length,
         activeMembers: members.filter(m => m.membershipStatus === 'active').length,
         haltedMembers: members.filter(m => m.membershipStatus === 'halted').length,
         pendingMembers: members.filter(m => !m.membershipStatus || m.membershipStatus === 'pending').length,
         revenueThisMonth: totalRevenueThisMonth,
         attendanceToday: new Set(attendance.filter(a => isSameDay(new Date(a.timestamp), new Date())).map(a => a.userId)).size,
-        atRiskCount: atRiskMembers.length
+        atRiskCount: atRiskMembers.length,
+        attendanceHistory: attendanceByDay,
+        revenueHistory: revenueByMonth
       };
       const result = await generateAdminInsights(metrics);
       setAiInsights(result.insights);
