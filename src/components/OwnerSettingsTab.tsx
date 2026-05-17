@@ -317,10 +317,10 @@ export default function OwnerSettingsTab({ gymInfo }: { gymInfo: any }) {
                            toast.success('App theme updated universally'); 
                          } catch (e) { toast.error('Failed to update theme'); }
                        }}
-                       className={`p-3 rounded-xl border flex items-center justify-between transition-all ${isSelected ? 'border-[var(--theme-primary)] bg-[var(--theme-primary)]/10' : 'border-white/5 bg-background/50 hover:bg-white/5'}`}
+                       className={`p-3 rounded-xl border flex items-center justify-between transition-all ${isSelected ? 'border-primary bg-primary/10' : 'border-white/5 bg-background/50 hover:bg-white/5'}`}
                      >
                        <span className="text-xs font-bold text-on-surface">{theme.name}</span>
-                       <div className="w-4 h-4 rounded-full shadow-[inset_0_2px_4px_rgba(0,0,0,0.5)]" style={{ backgroundColor: theme.colors['--theme-primary'] }} />
+                       <div className="w-4 h-4 rounded-full shadow-[inset_0_2px_4px_rgba(0,0,0,0.5)]" style={{ backgroundColor: theme.colors['--color-primary'] }} />
                      </button>
                    );
                 })}

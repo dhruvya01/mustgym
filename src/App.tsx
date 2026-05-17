@@ -16,6 +16,7 @@ import { Toaster, toast } from 'sonner';
 import { collection, query, where, getDocs, addDoc } from 'firebase/firestore';
 import { NotificationCenter } from './components/NotificationCenter';
 import { differenceInDays, parseISO, format } from 'date-fns';
+import { applyTheme } from './lib/themes';
 
 // Pages
 import LoginPage from './pages/LoginPage';
@@ -142,13 +143,9 @@ export default function App() {
       if (snapshot.exists()) {
         const data = snapshot.data();
         if (data.themeId) {
-          import('./lib/themes').then(({ applyTheme }) => {
-            applyTheme(data.themeId);
-          });
+          applyTheme(data.themeId);
         } else {
-          import('./lib/themes').then(({ applyTheme }) => {
-            applyTheme('kinetic-orange'); // Default if empty
-          });
+          applyTheme('kinetic-orange'); // Default if empty
         }
       }
     });

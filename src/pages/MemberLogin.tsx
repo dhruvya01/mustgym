@@ -6,6 +6,7 @@ import { auth, db } from '../lib/firebase';
 import { Dumbbell, ArrowRight, Loader2, Key, Phone } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { toast } from 'sonner';
+import { applyTheme } from '../lib/themes';
 
 export default function MemberLogin() {
   const [searchParams] = useSearchParams();
@@ -57,7 +58,7 @@ export default function MemberLogin() {
         
         // Apply Gym Theme dynamically
         if (data.themeId) {
-          import('../lib/themes').then(({ applyTheme }) => applyTheme(data.themeId));
+          applyTheme(data.themeId);
         }
 
         setStep('verify_phone');
