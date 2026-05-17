@@ -315,7 +315,10 @@ export default function OwnerSettingsTab({ gymInfo }: { gymInfo: any }) {
                          try { 
                            await updateDoc(doc(db, 'gyms', gymInfo.id), { themeId: theme.id }); 
                            toast.success('App theme updated universally'); 
-                         } catch (e) { toast.error('Failed to update theme'); }
+                         } catch (e) { 
+                           console.error("Theme update error:", e);
+                           toast.error('Failed to update theme: ' + (e as Error).message); 
+                         }
                        }}
                        className={`p-3 rounded-xl border flex items-center justify-between transition-all ${isSelected ? 'border-primary bg-primary/10' : 'border-white/5 bg-background/50 hover:bg-white/5'}`}
                      >

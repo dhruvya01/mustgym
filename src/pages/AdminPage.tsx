@@ -221,7 +221,7 @@ export default function AdminPage({ profile }: { profile: UserProfile | null }) 
     if (profile.gymId) {
       unsubGym = onSnapshot(doc(db, 'gyms', profile.gymId), (snapshot) => {
         if (snapshot.exists()) {
-          setGymInfo(snapshot.data());
+          setGymInfo({ id: snapshot.id, ...snapshot.data() });
         }
       }, (error) => {
         setTimeout(() => {
