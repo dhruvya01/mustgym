@@ -70,27 +70,37 @@ export default function SettingsPage({ profile }: { profile: UserProfile | null 
 
   const sections = [
     {
-      title: 'App Distribution',
-      items: [
-        { icon: Share2, label: 'Share App', description: 'Invite others to join the studio', onClick: handleShare },
-      ]
-    },
-    {
-      title: 'Membership',
+      title: 'Membership & Billing',
       items: [
         { icon: CreditCard, label: 'Digital Membership Card', onClick: () => setShowMembershipCard(true) },
         { icon: Award, label: 'Subscription Details', value: profile?.membershipType?.toUpperCase() || 'STANDARD', onClick: () => setShowSubscriptionDetails(true) },
+        { icon: FileText, label: 'Invoices & Receipts', description: 'View past payments' },
       ]
     },
     {
-      title: 'Account',
+      title: 'Fitness & Progress',
       items: [
-        { icon: UserCircle, label: 'Elite Identity', description: 'Customize your avatar & symbols', link: '/profile' },
-        { icon: Bell, label: 'Notification Settings', description: 'Manage workout alerts' },
+        { icon: Ruler, label: 'Body Measurements', description: `${profile?.currentWeight || '--'} kg • ${profile?.height || '--'} cm`, link: '/profile' },
+        { icon: Award, label: 'Fitness Goals', description: profile?.goal || 'Not set', link: '/profile' },
       ]
     },
     {
-      title: 'Support',
+      title: 'Account Settings',
+      items: [
+        { icon: UserCircle, label: 'Personal Information', description: 'Update name, email, phone & photo', link: '/profile' },
+        { icon: Shield, label: 'Privacy & Security', description: 'Password, connected accounts' },
+        { icon: Bell, label: 'Notification Preferences', description: 'Manage push and email alerts' },
+      ]
+    },
+    {
+      title: 'App & Community',
+      items: [
+        { icon: Share2, label: 'Share App', description: 'Invite friends to MustGym', onClick: handleShare },
+        { icon: Globe, label: 'Language & Region', value: 'English (US)' },
+      ]
+    },
+    {
+      title: 'Support & Legal',
       items: [
         { icon: HelpCircle, label: 'Help Center', description: 'FAQs and tutorials' },
         { icon: FileText, label: 'Terms & Conditions', onClick: () => setShowTerms(true) },
@@ -105,10 +115,10 @@ export default function SettingsPage({ profile }: { profile: UserProfile | null 
       <TermsModal isOpen={showTerms} onClose={() => setShowTerms(false)} />
       {/* Profile Header Section */}
       <section>
-        <div className="flex items-center gap-6 p-6 bg-surface-container-low rounded-lg border border-white/5">
-          <div className="relative">
+        <div className="flex items-center gap-6 p-6 bg-surface-container-low rounded-xl border border-white/5">
+          <div className="relative shrink-0">
             <Link to="/profile" className="block">
-              <div className="w-20 h-20 rounded-lg overflow-hidden border-2 border-primary/30 hover:border-primary transition-colors">
+              <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full overflow-hidden border-2 border-primary/30 hover:border-primary transition-colors">
                 <img 
                   src={profile?.photoURL || `https://api.dicebear.com/7.x/avataaars/svg?seed=${profile?.uid}`} 
                   alt="Profile" 
@@ -119,20 +129,33 @@ export default function SettingsPage({ profile }: { profile: UserProfile | null 
             </Link>
             <Link 
               to="/profile"
-              className="absolute -bottom-1 -right-1 bg-primary p-1.5 rounded-sm shadow-lg hover:scale-110 transition-transform"
+              className="absolute bottom-0 right-0 bg-primary p-2 rounded-full shadow-lg hover:scale-110 transition-transform"
             >
               <Edit2 size={14} className="text-on-primary" />
             </Link>
           </div>
-          <div className="flex-1">
-            <h1 className="text-2xl font-bold tracking-tight text-on-surface">{profile?.displayName || 'Elite Member'}</h1>
-            <div className="flex gap-2 mt-1">
+          <div className="flex-1 min-w-0">
+            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-on-surface truncate">
+              {profile?.displayName || 'Elite Member'}
+            </h1>
+            <p className="text-xs sm:text-sm text-on-surface-variant font-medium mt-1 truncate">
+              {profile?.email}
+            </p>
+            {profile?.phoneNumber && (
+              <p className="text-xs text-on-surface-variant mt-0.5 truncate">{profile.phoneNumber}</p>
+            )}
+            <div className="flex flex-wrap gap-2 mt-3">
               <div className="inline-flex items-center px-2 py-0.5 bg-primary/10 rounded text-primary text-[10px] font-black uppercase tracking-[0.1em]">
-                {profile?.membershipType || 'ELITE MEMBER'}
+                {profile?.membershipType || 'PREMIUM'}
               </div>
-              <div className="inline-flex items-center px-2 py-0.5 bg-surface-container-highest rounded text-on-surface-variant text-[10px] font-black uppercase tracking-[0.1em]">
-                {profile?.role || 'MEMBER'}
+              <div className={cn("inline-flex items-center px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-[0.1em]", profile?.membershipStatus === 'active' ? "bg-green-500/10 text-green-500" : "bg-error/10 text-error")}>
+                {profile?.membershipStatus || 'PENDING'}
               </div>
+              {profile?.membershipExpiry && (
+                <div className="inline-flex items-center px-2 py-0.5 bg-surface-container-highest rounded text-on-surface-variant text-[10px] font-black uppercase tracking-[0.1em] border border-white/5">
+                  Valid till: {new Date(profile.membershipExpiry).toLocaleDateString()}
+                </div>
+              )}
             </div>
           </div>
         </div>
