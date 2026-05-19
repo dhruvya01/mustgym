@@ -35,6 +35,7 @@ import ScannerPortal from './pages/ScannerPortal';
 import Challenges from './pages/Challenges';
 import OnboardingPage from './pages/OnboardingPage';
 import AnalyticsPage from './pages/AnalyticsPage';
+import DemoPage from './pages/DemoPage';
 
 async function testConnection() {
   try {
@@ -65,15 +66,24 @@ export default function App() {
 
   useEffect(() => {
     testConnection();
+    let unsubProfile: (() => void) | undefined;
 
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       setUser(firebaseUser);
+      
+      // Cleanup previous profile listener if it exists
+      if (unsubProfile) {
+        unsubProfile();
+        unsubProfile = undefined;
+      }
+
       if (firebaseUser) {
+        setLoading(true);
         // Listen to profile
         const path = `users/${firebaseUser.uid}`;
         const docRef = doc(db, 'users', firebaseUser.uid);
         
-        const unsubProfile = onSnapshot(docRef, async (docSnap) => {
+        unsubProfile = onSnapshot(docRef, async (docSnap) => {
           if (docSnap.exists()) {
             setProfile(docSnap.data() as UserProfile);
             setLoading(false);
@@ -103,7 +113,7 @@ export default function App() {
                 delete newProfile.gymId;
                 newProfile.membershipStatus = 'pending';
               } else {
-                toast.success(`Welcome to ${gymSnap.data().name}!`);
+                toast.success(`Welcome to ${gymSnap.data()?.name}!`);
               }
             }
 
@@ -126,15 +136,16 @@ export default function App() {
           }, 0);
         });
 
-        // Add unsubProfile to window or ignore since App mostly stays mounted
-        // Alternatively, return an effect cleanup (we can't easily within onAuthStateChanged unless we handle it outside)
       } else {
         setProfile(null);
         setLoading(false);
       }
     });
 
-    return () => unsubscribe();
+    return () => {
+      if (unsubProfile) unsubProfile();
+      unsubscribe();
+    };
   }, []);
 
   useEffect(() => {
@@ -248,9 +259,10 @@ export default function App() {
               <Route path="/login" element={!user ? <LoginPage /> : <Navigate to="/dashboard" />} />
               <Route path="/memberlogin" element={!user ? <MemberLogin /> : <Navigate to="/dashboard" />} />
               <Route path="/reset-password" element={!user ? <ResetPasswordPage /> : <Navigate to="/dashboard" />} />
+              <Route path="/demo" element={<DemoPage />} />
               
               {/* Protected Routes */}
-              <Route element={user ? <Layout profile={profile}><Outlet /></Layout> : <Navigate to={`/memberlogin?redirect=${encodeURIComponent(window.location.pathname + window.location.search)}`} />}>
+              <Route element={user ? <Layout profile={profile}><Outlet /></Layout> : <Navigate to={`/`} />}>
                 <Route path="/dashboard" element={
                   profile?.email === 'tgfhiyfvhtfghug@gmail.com' ? (
                     <Navigate to="/superadmin" />
@@ -259,7 +271,12 @@ export default function App() {
                   ) : profile?.gymId ? (
                     <Navigate to={`/member-dashboard/${profile.gymId}`} />
                   ) : (
-                    <Navigate to="/login" />
+                    <div className="pt-32 pb-16 flex items-center justify-center px-4 w-full h-full">
+                      <div className="max-w-md w-full bg-surface-container p-8 rounded-3xl border border-white/5 text-center">
+                        <h2 className="text-xl font-headline font-bold mb-4 text-white">No Gym Linked</h2>
+                        <p className="text-on-surface-variant text-sm mb-6">Your account is not associated with any gym. Please ask your gym owner for an invitation link or make sure you are using the correct email/phone number.</p>
+                      </div>
+                    </div>
                   )
                 } />
                 <Route path="/member-dashboard/:gymId" element={
@@ -328,6 +345,7 @@ function Layout({ children, profile }: { children: React.ReactNode, profile: Use
   ];
 
   const isRestricted = profile?.role === 'member' && (profile?.membershipStatus === 'pending' || profile?.membershipStatus === 'halted');
+  const isDemoMode = profile?.email === 'dhruvyamalhotra143@gmail.com' || profile?.email === 'demo-member@mustgym.com';
   
   let navItems;
   if (profile?.email === 'tgfhiyfvhtfghug@gmail.com') {
@@ -411,8 +429,21 @@ function Layout({ children, profile }: { children: React.ReactNode, profile: Use
         )}
       </AnimatePresence>
 
+      {/* Demo Top Bar */}
+      {isDemoMode && (
+        <div className="fixed top-0 left-0 w-full z-[60] bg-primary text-black text-[10px] sm:text-xs font-bold py-1.5 px-4 flex justify-between items-center sm:pt-[max(env(safe-area-inset-top),6px)]" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
+          <span className="uppercase tracking-widest flex items-center gap-1.5">Sandbox Mode</span>
+          <button onClick={async () => { 
+            await signOut(auth); 
+            window.location.href = '/'; 
+          }} className="underline flex items-center gap-1 hover:opacity-80">
+            Exit Demo
+          </button>
+        </div>
+      )}
+
       {/* Top Bar */}
-      <header className="fixed top-0 w-full z-50 bg-background/80 backdrop-blur-xl border-b border-white/5 pt-[env(safe-area-inset-top)]">
+      <header className={cn("fixed w-full z-50 bg-background/80 backdrop-blur-xl border-b border-white/5", isDemoMode ? "top-8 sm:top-9" : "top-0")} style={{ paddingTop: isDemoMode ? '0' : 'env(safe-area-inset-top)' }}>
         <div className="flex justify-between items-center px-4 sm:px-6 h-14 sm:h-16 max-w-7xl mx-auto w-full">
           <div className="flex items-center gap-2 sm:gap-4">
             <button 
@@ -440,7 +471,7 @@ function Layout({ children, profile }: { children: React.ReactNode, profile: Use
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 pt-14 sm:pt-16 pb-16 sm:pb-24">
+      <main className={cn("flex-1 pb-16 sm:pb-24", isDemoMode ? "pt-24 sm:pt-28" : "pt-14 sm:pt-16")}>
         <AnimatePresence mode="wait">
           <motion.div
             key={location.pathname}

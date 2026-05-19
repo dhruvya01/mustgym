@@ -5,7 +5,7 @@ import {
   Activity, Dumbbell, Users, BarChart3, ChevronRight, CheckCircle2, 
   Smartphone, QrCode, TrendingUp, Zap, Shield, PlayCircle,
   Menu, X, Calendar, DollarSign, SmartphoneNfc, ArrowRight,
-  MessageCircle, Star, Quote
+  MessageCircle, Star, Quote, Sparkles
 } from 'lucide-react';
 import { SEO } from '../components/SEO';
 
@@ -58,16 +58,19 @@ export default function LandingPage() {
             <a href="#faq" className="text-gray-400 hover:text-white transition-colors text-sm font-medium">FAQ</a>
           </div>
 
-          <div className="hidden md:flex items-center gap-4">
-            <Link to="/login" className="text-white hover:text-[#00f0ff] font-medium text-sm transition-colors border border-white/10 px-4 py-2 rounded-lg hover:border-[#00f0ff]/50 bg-white/5 backdrop-blur-sm">
-              Gym Owner Login
+          <div className="hidden md:flex items-center gap-3">
+            <Link to="/demo" className="bg-[#39ff14]/10 hover:bg-[#39ff14]/20 border border-[#39ff14]/30 text-[#39ff14]/90 px-4 py-2 rounded-lg font-black text-xs uppercase tracking-wider transition-colors">
+              ⚡ Try Sandbox Demo
+            </Link>
+            <Link to="/login" className="text-white hover:text-[#00f0ff] font-medium text-xs transition-colors border border-white/10 px-3.5 py-2 rounded-lg hover:border-[#00f0ff]/50 bg-white/5 backdrop-blur-sm">
+              Owner Login
             </Link>
             <a 
               href={WHATSAPP_URL}
               target="_blank" rel="noopener noreferrer"
-              className="bg-[#00f0ff] hover:bg-[#00d0ff] text-black px-5 py-2.5 rounded-lg font-bold text-sm transition-all hover:shadow-[0_0_20px_rgba(0,240,255,0.4)] flex items-center gap-2"
+              className="bg-[#00f0ff] hover:bg-[#00d0ff] text-black px-4 py-2 rounded-lg font-bold text-xs transition-all hover:shadow-[0_0_20px_rgba(0,240,255,0.4)] flex items-center gap-1.5"
             >
-              <Zap size={16} /> Book Demo
+              Book Setup
             </a>
           </div>
 
@@ -86,7 +89,8 @@ export default function LandingPage() {
             exit={{ opacity: 0, y: -20 }}
             className="fixed inset-0 z-40 bg-[#050505]/95 backdrop-blur-xl pt-24 px-6 md:hidden flex flex-col gap-6"
           >
-            <Link to="/login" className="text-xl font-bold border-b border-white/10 pb-4">Gym Owner Login</Link>
+            <Link to="/demo" className="text-xl font-bold text-[#39ff14] border-b border-white/10 pb-4 flex items-center gap-2" onClick={() => setMobileMenuOpen(false)}>⚡ Launch Action Sandbox</Link>
+            <Link to="/login" className="text-xl font-bold border-b border-white/10 pb-4" onClick={() => setMobileMenuOpen(false)}>Gym Owner Login</Link>
             <a href={WHATSAPP_URL} target="_blank" rel="noopener noreferrer" className="text-xl font-bold text-[#00f0ff] flex items-center gap-2">Book Demo on WhatsApp</a>
           </motion.div>
         )}
@@ -127,19 +131,19 @@ export default function LandingPage() {
               </motion.p>
               
               <motion.div variants={fadeInUp} className="flex flex-col sm:flex-row items-center gap-4">
+                <Link
+                  to="/demo"
+                  className="w-full sm:w-auto flex items-center justify-center gap-2 bg-[#39ff14] text-black hover:bg-[#2be00c] px-8 py-4 rounded-xl font-black uppercase tracking-wider text-xs transition-all shadow-[0_0_20px_rgba(57,255,20,0.3)] hover:shadow-[0_0_35px_rgba(57,255,20,0.5)] hover:-translate-y-1"
+                >
+                  <Sparkles size={16} /> Launch Playable Demo
+                </Link>
                 <a
                   href={WHATSAPP_URL}
                   target="_blank" rel="noopener noreferrer"
-                  className="w-full sm:w-auto flex items-center justify-center gap-2 bg-[#00f0ff] text-black hover:bg-[#00d0ff] px-8 py-4 rounded-xl font-bold tracking-wide transition-all shadow-[0_0_20px_rgba(0,240,255,0.2)] hover:shadow-[0_0_30px_rgba(0,240,255,0.4)] hover:-translate-y-1"
+                  className="w-full sm:w-auto flex items-center justify-center gap-2 bg-[#111] hover:bg-[#1a1a1a] text-white border border-white/10 px-8 py-4 rounded-xl font-bold tracking-wide transition-all shadow-xl hover:-translate-y-1"
                 >
-                  <MessageCircle size={20} /> Book Free Demo
+                  <MessageCircle size={16} /> Book Free Setup
                 </a>
-                <Link
-                  to="/login"
-                  className="w-full sm:w-auto flex items-center justify-center gap-2 bg-[#111] hover:bg-[#1a1a1a] text-white border border-white/10 px-8 py-4 rounded-xl font-bold tracking-wide transition-all shadow-xl"
-                >
-                  Gym Owner Login
-                </Link>
               </motion.div>
 
               <motion.p variants={fadeInUp} className="mt-8 text-sm text-gray-500 font-medium border-l-2 border-[#00f0ff]/50 pl-4 py-1">
@@ -483,20 +487,20 @@ export default function LandingPage() {
             <p className="text-xl text-gray-400 mb-12 max-w-2xl mx-auto font-medium">
               Book a free WhatsApp demo and see how your gym can run smarter, attract more members, and scale easily.
             </p>
-            <div className="flex flex-col sm:flex-row justify-center gap-6">
+            <div className="flex flex-col sm:flex-row justify-center gap-4">
+              <Link
+                to="/demo"
+                className="flex items-center justify-center gap-3 bg-[#39ff14] text-black hover:bg-[#2be00c] px-10 py-5 rounded-2xl font-black uppercase tracking-widest text-xs transition-all shadow-[0_0_30px_rgba(57,255,20,0.3)] hover:shadow-[0_0_40px_rgba(57,255,20,0.5)] hover:-translate-y-1"
+              >
+                <Sparkles size={18} /> Play Interactive Demo
+              </Link>
                <a
                   href={WHATSAPP_URL}
                   target="_blank" rel="noopener noreferrer"
-                  className="flex items-center justify-center gap-3 bg-[#00f0ff] text-black hover:bg-[#00d0ff] px-10 py-5 rounded-2xl font-black uppercase tracking-widest transition-all shadow-[0_0_40px_rgba(0,240,255,0.3)] hover:-translate-y-1"
+                  className="flex items-center justify-center gap-3 bg-white/5 hover:bg-white/10 text-white border border-white/10 px-10 py-5 rounded-2xl font-black uppercase tracking-widest text-xs backdrop-blur-sm transition-all hover:border-white/20 hover:-translate-y-1"
                 >
-                  <MessageCircle size={24} /> Book Demo on WhatsApp
+                  <MessageCircle size={18} /> WhatsApp Booking
                 </a>
-                <Link
-                  to="/login"
-                  className="flex items-center justify-center gap-3 bg-white/5 hover:bg-white/10 text-white border border-white/10 px-10 py-5 rounded-2xl font-black uppercase tracking-widest backdrop-blur-sm transition-all focus:ring-2 focus:ring-white/20 hover:border-white/20"
-                >
-                  Create Account <ChevronRight size={20}/>
-                </Link>
             </div>
           </motion.div>
         </div>
