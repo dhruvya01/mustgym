@@ -211,11 +211,14 @@ export default function Dashboard({ profile }: { profile: UserProfile | null }) 
       <section className="flex flex-col md:flex-row md:items-end justify-between gap-6">
         <div>
           <div className="flex items-center gap-3 mb-2">
-            {gymInfo?.logoUrl ? (
-              <img src={gymInfo.logoUrl} alt={gymInfo?.name} className="w-8 h-8 rounded-lg object-cover border border-white/10" />
-            ) : (
-              <img src="/logo.svg" alt="MustGym" className="w-8 h-8 rounded-lg object-cover" />
-            )}
+            <img 
+              src={gymInfo?.logoUrl || "/logo.svg"} 
+              alt={gymInfo?.name || "MustGym"} 
+              onError={(e) => {
+                (e.target as HTMLImageElement).src = "/logo.svg";
+              }}
+              className="w-8 h-8 rounded-lg object-cover border border-white/10" 
+            />
             <div className="flex flex-col">
                <span className="font-headline font-bold uppercase tracking-[0.3em] text-primary text-[10px] break-words">
                  {gymInfo?.name ? `${gymInfo.name.toUpperCase()} MEMBER` : 'ELITE MEMBER ACCESS'}

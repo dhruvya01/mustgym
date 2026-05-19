@@ -217,11 +217,14 @@ export default function MemberLogin() {
       >
         <div className="bg-surface-container/50 backdrop-blur-xl border border-white/10 rounded-3xl p-8 sm:p-10 shadow-2xl">
           <div className="flex justify-center mb-10">
-            {gymInfo?.logoUrl ? (
-              <img src={gymInfo.logoUrl} alt={gymInfo.name} className="h-16 w-16 rounded-2xl object-cover border border-white/10" />
-            ) : (
-              <img src="/logo.svg" alt="MustGym" className="h-16 w-16 rounded-2xl object-cover" />
-            )}
+            <img 
+              src={gymInfo?.logoUrl || "/logo.svg"} 
+              alt={gymInfo?.name || "MustGym"} 
+              onError={(e) => {
+                (e.target as HTMLImageElement).src = "/logo.svg";
+              }}
+              className="h-16 w-16 rounded-2xl object-cover border border-white/10 shadow-lg" 
+            />
           </div>
 
           <h1 className="text-3xl font-headline font-black text-center mb-2 tracking-tight uppercase italic">

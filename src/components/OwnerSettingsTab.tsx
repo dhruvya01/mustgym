@@ -7,9 +7,17 @@ import { GYM_THEMES } from '../lib/themes';
 
 export default function OwnerSettingsTab({ gymInfo }: { gymInfo: any }) {
   const [localGym, setLocalGym] = React.useState(gymInfo || {});
+  const [logoPreviewError, setLogoPreviewError] = useState(false);
+
   React.useEffect(() => {
-    if (gymInfo) setLocalGym(gymInfo);
+    if (gymInfo) {
+      setLocalGym(gymInfo);
+    }
   }, [gymInfo]);
+
+  React.useEffect(() => {
+    setLogoPreviewError(false);
+  }, [localGym.logoUrl]);
 
   if (!gymInfo) return null;
 
@@ -287,20 +295,81 @@ export default function OwnerSettingsTab({ gymInfo }: { gymInfo: any }) {
           </h4>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 relative z-10">
-            <div>
-              <label className="block text-[10px] font-bold text-on-surface-variant uppercase tracking-widest mb-2">Logo URL</label>
-              <input 
-                type="text" 
-                value={localGym.logoUrl || ''}
-                onChange={(e) => setLocalGym({...localGym, logoUrl: e.target.value})}
-                onBlur={async (e) => {
-                  if (e.target.value !== gymInfo.logoUrl) {
-                    try { await updateDoc(doc(db, 'gyms', gymInfo.id), { logoUrl: e.target.value }); toast.success('Updated'); } catch (e) {}
-                  }
-                }}
-                className="w-full bg-background/50 border border-white/5 rounded-xl py-3 px-4 text-sm font-bold outline-none"
-                placeholder="https://..."
-              />
+            <div className="flex flex-col gap-4">
+              <div>
+                <label className="block text-[10px] font-bold text-on-surface-variant uppercase tracking-widest mb-2">Facility Logo URL</label>
+                <input 
+                  type="text" 
+                  value={localGym.logoUrl || ''}
+                  onChange={(e) => setLocalGym({...localGym, logoUrl: e.target.value})}
+                  onBlur={async (e) => {
+                    if (e.target.value !== gymInfo.logoUrl) {
+                      try { await updateDoc(doc(db, 'gyms', gymInfo.id), { logoUrl: e.target.value }); toast.success('Branding logo updated'); } catch (e) {}
+                    }
+                  }}
+                  className="w-full bg-background/50 border border-white/5 rounded-xl py-3 px-4 text-xs font-bold outline-none focus:border-primary/50 transition-colors placeholder:text-neutral-600"
+                  placeholder="e.g. https://res.cloudinary.com/... or any URL"
+                />
+                <span className="block text-[10px] text-on-surface-variant mt-2 leading-relaxed">
+                  Provide any direct image link (from <strong>Cloudinary</strong>, Imgur, or your website). Make sure the URL starts with secure <span className="text-primary font-mono select-all">https://</span>.
+                </span>
+              </div>
+
+              {/* Real-time Brand Preview Block */}
+              <div className="p-4 rounded-xl bg-background/30 border border-white/5 space-y-3">
+                <span className="block text-[9px] font-black uppercase tracking-[0.2em] text-on-surface-variant">Live Branding Preview</span>
+                
+                <div className="flex items-center gap-4">
+                  {/* Option 1: Launcher Card view */}
+                  <div className="flex flex-col items-center">
+                    <div className="w-12 h-12 bg-surface-container rounded-xl flex items-center justify-center border border-white/10 shadow-lg overflow-hidden shrink-0">
+                      {localGym.logoUrl && !logoPreviewError ? (
+                        <img 
+                          src={localGym.logoUrl} 
+                          alt="Gym Logo" 
+                          onError={() => setLogoPreviewError(true)} 
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <img src="/logo.svg" alt="MustGym" className="w-8 h-8 object-contain" />
+                      )}
+                    </div>
+                    <span className="text-[8px] font-bold text-on-surface-variant uppercase tracking-wider mt-1.5">Large Card</span>
+                  </div>
+
+                  {/* Option 2: Dashboard circular view */}
+                  <div className="flex flex-col items-center">
+                    <div className="w-8 h-8 rounded-full bg-surface-container flex items-center justify-center border border-white/10 overflow-hidden shrink-0">
+                      {localGym.logoUrl && !logoPreviewError ? (
+                        <img 
+                          src={localGym.logoUrl} 
+                          alt="Gym Logo" 
+                          onError={() => setLogoPreviewError(true)} 
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <img src="/logo.svg" alt="MustGym" className="w-5 h-5 object-contain" />
+                      )}
+                    </div>
+                    <span className="text-[8px] font-bold text-on-surface-variant uppercase tracking-wider mt-1.5">Dashboard</span>
+                  </div>
+
+                  <div className="flex-1 text-left min-w-0">
+                    {localGym.logoUrl ? (
+                      logoPreviewError ? (
+                        <span className="block text-[10px] font-bold text-error uppercase tracking-wider">⚠️ Invalid or Broken Link</span>
+                      ) : (
+                        <span className="block text-[10px] font-bold text-green-500 uppercase tracking-wider">✓ Logo Active</span>
+                      )
+                    ) : (
+                      <span className="block text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">Default Brand</span>
+                    )}
+                    <span className="block text-[9px] text-on-surface-variant/80 mt-0.5 truncate leading-tight">
+                      {localGym.logoUrl ? (logoPreviewError ? 'Please check the URL address' : 'Rendering from host server...') : 'Standard system branding'}
+                    </span>
+                  </div>
+                </div>
+              </div>
             </div>
             <div className="md:col-span-2 border-l border-white/5 pl-6">
               <label className="block text-[10px] font-bold text-on-surface-variant uppercase tracking-widest mb-4">Global App Theme</label>
