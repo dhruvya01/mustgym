@@ -209,8 +209,6 @@ export default function DemoPage() {
       } catch (signInErr: any) {
         if (signInErr.code === 'auth/user-not-found' || signInErr.code === 'auth/invalid-credential' || signInErr.code === 'auth/wrong-password') {
           userCredential = await createUserWithEmailAndPassword(auth, email, password);
-        } else if (signInErr.code === 'auth/network-request-failed') {
-          throw new Error('Network issue. If you are using Incognito mode or an AdBlocker, Firebase authentication may be blocked. Please try in a normal window.');
         } else {
           throw signInErr;
         }
@@ -226,7 +224,23 @@ export default function DemoPage() {
       navigate('/dashboard');
     } catch (err: any) {
       console.error('Demo auth failed:', err);
-      toast.error('Could not authenticate sandbox session: ' + err.message);
+      if (err.code === 'auth/network-request-failed' || err.message?.includes('Network issue')) {
+         toast.error(
+          <div className="flex flex-col gap-2">
+            <span className="font-bold">Sandbox Authentication Blocked</span>
+            <span className="text-sm">Your browser is blocking Firebase Auth inside this preview window (likely due to third-party cookie restrictions or Incognito mode).</span>
+            <button 
+              onClick={() => window.open(window.location.href, '_blank')}
+              className="bg-primary text-black px-3 py-1.5 rounded text-xs font-bold mt-1 uppercase"
+            >
+              Open safely in new tab
+            </button>
+          </div>,
+          { duration: 10000 }
+         );
+      } else {
+         toast.error('Could not authenticate sandbox session: ' + err.message);
+      }
       setLoading(false);
     }
   };
